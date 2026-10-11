@@ -1,0 +1,9 @@
+name: ridenite-demo
+region: nyc
+static_sites:
+  - name: ridenite-demo
+    source_dir: /
+    index_document: index.html
+    git:
+      repo_clone_url: https://github.com/ThumbsDobry-Sequel/ridenite-demo.git
+      branch: main
