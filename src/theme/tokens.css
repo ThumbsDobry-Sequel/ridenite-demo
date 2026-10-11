@@ -1,0 +1,118 @@
+/* Source of truth for the base tokens: /workspace/ridenite-v1/ui/tokens.css (Riley, design-system.md).
+   Section A is copied verbatim; section B adds app tokens built on top of it. Components use tokens only. */
+
+/* ===== A. Riley tokens (verbatim) ===== */
+/* RideNite tokens v1 theme pass. Night is default; day via [data-theme="day"]. */
+:root {
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-venue: "Libre Baskerville", Georgia, serif;
+
+  --bg: #0A0D12; --bg-elevated: #12171F; --surface: #1A212B; --surface-2: #242D39;
+  --material: rgba(18,23,31,.72); --separator: rgba(174,185,199,.18);
+  --text: #F4F6FA; --text-2: #AEB9C7; --text-3: #7E8A99;
+  --primary: #FFC83D; --on-primary: #0A0D12;
+  --venue: #6FA3BD; --venue-ink: #3F738D; --accent-soft: #1A212B;
+  --success: #41D99A; --info: #6CC1FF; --warning: #FFB547; --danger: #FF7A7A;
+
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s7: 32px; --s8: 48px;
+  --r-control: 12px; --r-card: 16px; --r-button: 14px; --r-sheet: 10px; --r-pill: 999px;
+  --tap-bar: 44px; --tap-booking: 56px; --tap-guest: 56px; --btn-guest: 64px;
+
+  --ease-spring: cubic-bezier(.32,.72,0,1); --ease-state: cubic-bezier(.2,.8,.2,1);
+  --dur-state: 150ms; --dur-sheet: 350ms;
+  --blur-material: blur(20px) saturate(180%);
+  --shadow-float: none;
+}
+[data-theme="day"] {
+  --bg: #F2F2F7; --bg-elevated: #FFFFFF; --surface: #FFFFFF; --surface-2: #E9EEF1;
+  --material: rgba(249,249,251,.78); --separator: rgba(60,60,67,.18);
+  --text: #111827; --text-2: #4B5563; --text-3: #6B7280;
+  --primary: #2A4D5E; --on-primary: #FFFFFF;
+  --venue: #3F738D; --venue-ink: #3F738D; --accent-soft: #FFF0F9;
+  --success: #0F7B4F; --info: #1D4ED8; --warning: #8A5A00; --danger: #B42318;
+  --shadow-float: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06);
+}
+@media (prefers-reduced-motion: reduce) { :root { --dur-state: 0ms; --dur-sheet: 0ms; } }
+@media (prefers-reduced-transparency: reduce) { :root { --blur-material: none; --material: var(--bg-elevated); } }
+
+/* ===== B. App tokens (RideNite v1), built on section A ===== */
+:root {
+  color-scheme: dark;
+  /* type: rem so iOS Larger Text (font: -apple-system-body on html) scales everything.
+     Sizes assume a 16px root; on iPhone the root follows Dynamic Type. */
+  --t-large-title: 2.125rem;   /* 34 */
+  --t-title-1: 1.75rem;        /* 28 */
+  --t-title-2: 1.5rem;         /* 24 */
+  --t-headline: 1.375rem;      /* 22 */
+  --t-body: 1.375rem;          /* 22, guest minimum */
+  --t-callout: 1.25rem;        /* 20 */
+  --t-footnote: 1.125rem;      /* 18, guest minimum */
+  --t-caption: 0.8125rem;      /* 13 */
+  --t-price: 2.75rem;          /* 44 */
+  --t-price-xl: clamp(3rem, 14vw, 3.5rem); /* 48 on SE, 56 at 390+ (mockup) */
+  --t-eta: 3.25rem;            /* 52 */
+  --t-plate: 3.25rem;          /* 52 mono */
+  --t-venue: 1.375rem;         /* 22 Libre Baskerville */
+  --t-countdown: 4.5rem;       /* 72 undo countdown */
+  --t-hero: 2.25rem;           /* Ride home button label */
+  --t-button: 1.375rem;
+  --w-regular: 400; --w-medium: 500; --w-semibold: 600; --w-bold: 700; --w-heavy: 800;
+  --lh-tight: 1.1; --lh-body: 1.35;
+  --tracking-plate: 4px;
+
+  /* layout */
+  --page-pad: var(--s5);
+  --page-max: 480px;
+  --hero-min: 88px;             /* Ride home minimum height */
+  --hero-pref: 132px;           /* Riley mockup: 132pt Ride home */
+  --choice-min: 72px;
+  --tile: 30px;
+  --icon: 24px;
+  --icon-lg: 32px;
+  --mic: 12.5rem;
+  --grabber-w: 36px; --grabber-h: 5px;
+  --hairline: 0.5px;
+  --border-w: 2px;
+  --focus-w: 3px;
+  --press-scale: .98;
+  --demo-label-h: 28px;
+
+  /* color extensions (derived; keep contrast per UI 2b) */
+  --canvas: #05070a;
+  --border: #5A6878;              /* input and control outlines, 3:1 non-text */
+  --focus: var(--primary);
+  --scrim: rgba(0,0,0,.6);
+  --tint-info: rgba(108,193,255,.14);
+  --tint-success: rgba(65,217,154,.14);
+  --tint-warning: rgba(255,181,71,.14);
+  --tint-bad: rgba(255,122,122,.14);
+  --on-status: #0A0D12;
+  --plate-bg: #FFFFFF; --plate-text: #0A0D12; --plate-border: transparent;
+  --input-ring: rgba(255,200,61,.4);
+  --map-bg: #121922; --map-grid: rgba(255,255,255,.04); --map-road: #2B3644;
+  --bubble: #26262A; --bubble-text: #FFFFFF; --link: #6CC1FF;
+  --venue-band: linear-gradient(135deg, #3F738D 0%, #2A4D5E 100%);
+  --on-venue: #FFFFFF;
+  /* demo label capsule (design-system 6: on --material, caption style) */
+  --sim-bg: #FFB547; --sim-text: #0A0D12;
+  --hero-ring: rgba(255,200,61,.14);
+  --ring-w: 6px;
+  --track-wide: .4px;
+  --track-tight: -.3px;
+  --track-tighter: -1px;
+  --tile: 36px;
+  --tile-icon: 20px;
+  --map-cell: 28px;
+}
+[data-theme="day"] {
+  color-scheme: light;
+  --canvas: #F2F2F7;
+  --border: #8B95A3;
+  --focus: #1D4ED8;
+  --tint-info: #E8EFFF; --tint-success: #E7F6EF; --tint-warning: #FFF4DB; --tint-bad: #FDECEA;
+  --on-status: #FFFFFF;
+  --plate-border: #111827;
+  --input-ring: rgba(29,78,216,.35);
+  --bubble: #E5E5EA; --bubble-text: #111827; --link: #1D4ED8;
+}

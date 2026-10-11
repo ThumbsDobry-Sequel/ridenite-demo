@@ -1,0 +1,27 @@
+# RideNite v1 CI. Order matters: a failing copy lint stops the build, and a failing
+# build or test stops any deploy step added later. Committed locally only; not pushed.
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Copy lint (blocks deploy)
+        run: npm run lint:copy
+      - name: Build
+        run: npm run build
+      - name: Install WebKit
+        run: npx playwright install --with-deps webkit
+      - name: Test (unit + Playwright WebKit)
+        run: npm test
+        env:
+          CI: 'true'
