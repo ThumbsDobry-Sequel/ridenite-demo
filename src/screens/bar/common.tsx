@@ -4,6 +4,7 @@ import { navigate } from '../../router';
 import { useDemoState, useStore } from '../../store';
 import { useNow } from '../../hooks';
 import { T, venue } from '../../venue.config';
+import { VenueLogo } from '../../components/layout';
 import { fmtET } from '../../lib/confirmRecord';
 import { Icon, type IconName } from '../../components/Icon';
 import type { Tone } from '../../components/primitives';
@@ -66,7 +67,7 @@ export function BarHeader() {
   return (
     <div className="bhead" data-testid="bar-header">
       <div className="bhead__row">
-        <span className="bhead__venue"><img src="/venue/maison-cheryl-window.png" alt="" width="38" height="32" />{venue.name}</span>
+        <span className="bhead__venue"><VenueLogo /></span>
         {wide && pill}
         <span className="bhead__clock num" data-testid="bar-clock">{fmtET(now)}</span>
         {wide && (

@@ -481,15 +481,25 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
   });
 });
 
-test('slider at rest: lit fill ends at the thumb right edge with a soft fade, never past it', async ({ page }) => {
+test('slider at rest (README rev 04.1): 76 pt thumb 24 px in, 6 pt vertical inset, lit fill to the thumb edge then a 10 px fade to surface-2', async ({ page }) => {
   await open(page, '/g/p3');
+  const track = (await page.getByTestId('confirm').boundingBox())!;
   const fill = (await page.locator('[data-testid=confirm] .slide__fill').boundingBox())!;
   const thumb = (await page.getByTestId('confirm-thumb').boundingBox())!;
-  expect(fill.width).toBeGreaterThan(0);
-  expect(Math.abs(fill.x + fill.width - (thumb.x + thumb.width))).toBeLessThanOrEqual(1);
+  expect(Math.round(thumb.width)).toBe(76);
+  expect(Math.round(track.height)).toBe(88);
+  expect(Math.abs(thumb.y - track.y - 6)).toBeLessThanOrEqual(1.5);
+  const border = await page.getByTestId('confirm').evaluate((e) => parseFloat(getComputedStyle(e).borderLeftWidth));
+  expect(Math.abs(thumb.x - (track.x + border) - 24)).toBeLessThanOrEqual(1);
+  // fill ends 10 px past the thumb's right edge (the fade), never further
+  expect(Math.abs(fill.x + fill.width - (thumb.x + thumb.width) - 10)).toBeLessThanOrEqual(1);
   const bg = await page.locator('[data-testid=confirm] .slide__fill').evaluate((e) => getComputedStyle(e).backgroundImage);
-  expect(bg).toMatch(/transparent|rgba\(0, 0, 0, 0\)/);
-  expect(Number(await page.locator('[data-testid=confirm] .slide__fill').evaluate((e) => getComputedStyle(e).opacity))).toBe(1);
+  expect(bg).toContain('rgb(255, 200, 61)');   // #FFC83D
+  expect(bg).toContain('rgb(255, 186, 69)');   // #FFBA45 at 100 px
+  expect(bg).toContain('rgba(255, 169, 77, 0.4)');
+  expect(bg).toContain('rgb(42, 50, 67)');     // --surface-2 at 110 px
+  expect(bg).toContain('100px'); expect(bg).toContain('104px'); expect(bg).toContain('110px');
+  expect(await page.getByTestId('confirm-thumb').evaluate((e) => getComputedStyle(e).backgroundColor)).toBe('rgb(255, 212, 94)'); // #FFD45E
 });
 
 test('morning receipt itemized ride line: areas, pickup time and the final ride total ($27.40 in the P9 scenario)', async ({ page }) => {

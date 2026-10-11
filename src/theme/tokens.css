@@ -1,19 +1,52 @@
-/* Source of truth for the base tokens: /workspace/ridenite-v1/ui/tokens.css (Riley, design-system.md).
-   Section A is copied verbatim; section B adds app tokens built on top of it. Components use tokens only. */
+/* Base token names: /workspace/ridenite-v1/ui/tokens.css (Riley). Values: Vera's night palette (design rev 04.1).
+   Section B adds app tokens built on top of section A. Components use tokens only. */
 
-/* ===== A. Riley tokens (verbatim) ===== */
-/* RideNite tokens v1 theme pass. Night is default; day via [data-theme="day"]. */
+/* ===== A. Base tokens: Riley's names, Vera's night palette rev 04.1 merged in =====
+   Source: design/moodboard/palette-tokens-draft.css (draft 02, contrast in palette.md). No token renamed.
+   Lines marked NEW are Vera's additions. --font-venue removed (the venue header is the venue's PNG logo). */
 :root {
   --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --font-venue: Georgia, "Times New Roman", serif; /* no web font loaded; logo is the Maison Cheryl PNG mark */
 
-  --bg: #0A0D12; --bg-elevated: #12171F; --surface: #1A212B; --surface-2: #242D39;
-  --material: rgba(18,23,31,.72); --separator: rgba(174,185,199,.18);
-  --text: #F4F6FA; --text-2: #AEB9C7; --text-3: #7E8A99;
-  --primary: #FFC83D; --on-primary: #0A0D12;
-  --venue: #6FA3BD; --venue-ink: #3F738D; --accent-soft: #1A212B;
-  --success: #41D99A; --info: #6CC1FF; --warning: #FFB547; --danger: #FF7A7A;
+  --bg: #0B0F14;            /* Midnight Ink, equals manifest theme and background color */
+  --bg-elevated: #141A24;   /* Tar Roof */
+  --surface: #1D2431;       /* Brownstone Shadow */
+  --surface-2: #2A3243;     /* Fire Escape */
+  --material: rgba(20,26,36,.78);
+  --separator: rgba(210,198,177,.16);
+  --text: #FFF3E0;          /* Tungsten White */
+  --text-2: #D2C6B1;        /* Lamplit Plaster */
+  --text-3: #A69C8C;        /* Wet Asphalt */
+  --primary: #FFC83D;       /* Lamp Amber, the one main action per screen */
+  --on-primary: #0B0F14;
+  --venue: #6FA3BD; --venue-ink: #3F738D;
+  --accent-soft: #1D2431;
+  --success: #5ED6A0;       /* Patina Green */
+  --info: #8DB9F2;          /* Mercury Lamp Blue */
+  --warning: #FFA94D;       /* Sodium Amber */
+  --danger: #FF7A72;        /* Neon Tube Red */
+
+  /* NEW light layer (background only, never behind prices, the cap line or body text) */
+  --glow: 255,169,77;
+  --light-window: #E2A85F;
+  --glow-porch: radial-gradient(ellipse 290px 200px at 50% 64%, rgba(var(--glow),.34), rgba(var(--glow),.13) 48%, rgba(var(--glow),.04) 76%, transparent 100%);
+  --glow-strength: 1;
+  --grain-opacity: .3;
+  --lintel: rgba(210,198,177,.30);
+  --lintel-mark: #FFA94D;
+  --dock-fade: linear-gradient(to top, var(--bg) 62%, rgba(11,15,20,0));
+  --dur-porch: 1200ms;
+  /* NEW confirm slider (README Handoff: 88 pt track, 76 pt thumb, 6 pt vertical inset, thumb rests 24 px in, completes at 70%) */
+  --slide-h: 88px;
+  --slide-thumb: 76px;
+  --slide-inset: 24px;
+  --slide-complete: .7;
+  --slide-track: var(--surface-2);
+  --slide-ring: rgba(255,200,61,.32);
+  --slide-fill: linear-gradient(90deg, rgba(var(--glow),.08), rgba(var(--glow),.30) 40%, rgba(var(--glow),.60) 80%, rgba(255,200,61,.85));
+  --slide-tick: rgba(255,243,224,.34);
+  --slide-bloom: var(--primary);
+  --record-text: var(--text-2);
 
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s7: 32px; --s8: 48px;
   --r-control: 12px; --r-card: 16px; --r-button: 14px; --r-sheet: 10px; --r-pill: 999px;
@@ -25,16 +58,18 @@
   --shadow-float: none;
 }
 [data-theme="day"] {
-  --bg: #F2F2F7; --bg-elevated: #FFFFFF; --surface: #FFFFFF; --surface-2: #E9EEF1;
-  --material: rgba(249,249,251,.78); --separator: rgba(60,60,67,.18);
-  --text: #111827; --text-2: #4B5563; --text-3: #6B7280;
+  --bg: #F4EFE6; --bg-elevated: #FFFDF8; --surface: #FFFDF8; --surface-2: #E9E3D7;
+  --material: rgba(250,247,240,.80); --separator: rgba(60,52,40,.18);
+  --text: #1A1712; --text-2: #4E473D; --text-3: #6B6356;
   --primary: #2A4D5E; --on-primary: #FFFFFF;
   --venue: #3F738D; --venue-ink: #3F738D; --accent-soft: #FFF0F9;
   --success: #0F7B4F; --info: #1D4ED8; --warning: #8A5A00; --danger: #B42318;
+  --glow-strength: 0; --grain-opacity: 0;
   --shadow-float: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06);
 }
-@media (prefers-reduced-motion: reduce) { :root { --dur-state: 0ms; --dur-sheet: 0ms; } }
-@media (prefers-reduced-transparency: reduce) { :root { --blur-material: none; --material: var(--bg-elevated); } }
+@media (prefers-reduced-motion: reduce) { :root { --dur-state: 0ms; --dur-sheet: 0ms; --dur-porch: 0ms; } }
+@media (prefers-reduced-transparency: reduce) { :root { --blur-material: none; --material: var(--bg-elevated); --grain-opacity: 0; } }
+@media (prefers-contrast: more) { :root { --glow-strength: .5; --grain-opacity: 0; } }
 
 /* ===== B. App tokens (RideNite v1), built on section A ===== */
 :root {
@@ -53,7 +88,7 @@
   --t-price-xl: clamp(3rem, 14vw, 3.5rem); /* 48 on SE, 56 at 390+ (mockup) */
   --t-eta: 3.25rem;            /* 52 */
   --t-plate: 3.25rem;          /* 52 mono */
-  --t-venue: 1.375rem;         /* 22 venue serif (system) */
+  --venue-logo-h: 32px;        /* venue PNG logo height in headers */
   --t-countdown: 4.5rem;       /* 72 undo countdown */
   --t-hero: 2.25rem;           /* Ride home button label */
   --t-button: 1.375rem;
@@ -83,27 +118,29 @@
   --border: #5A6878;              /* input and control outlines, 3:1 non-text */
   --focus: var(--primary);
   --scrim: rgba(0,0,0,.6);
-  --tint-info: rgba(108,193,255,.14);
-  --tint-success: rgba(65,217,154,.14);
-  --tint-warning: rgba(255,181,71,.14);
-  --tint-bad: rgba(255,122,122,.14);
-  --on-status: #0A0D12;
-  --plate-bg: #FFFFFF; --plate-text: #0A0D12; --plate-border: transparent;
+  --tint-info: rgba(141,185,242,.14);
+  --tint-success: rgba(94,214,160,.14);
+  --tint-warning: rgba(255,169,77,.14);
+  --tint-bad: rgba(255,122,114,.14);
+  --on-status: #0B0F14;
+  --plate-bg: #FFFFFF; --plate-text: #0B0F14; --plate-border: transparent;
   --input-ring: rgba(255,200,61,.4);
   --map-bg: #121922; --map-grid: rgba(255,255,255,.04); --map-road: #2B3644;
-  --bubble: #26262A; --bubble-text: #FFFFFF; --link: #6CC1FF;
+  --bubble: #26262A; --bubble-text: #FFFFFF; --link: #8DB9F2;
   --venue-band: linear-gradient(135deg, #3F738D 0%, #2A4D5E 100%);
   --on-venue: #FFFFFF;
   /* demo label capsule (design-system 6: on --material, caption style) */
-  --sim-bg: #FFB547; --sim-text: #0A0D12;
+  --sim-bg: #FFA94D; --sim-text: #0B0F14;
   --hero-ring: rgba(255,200,61,.14);
   --ring-w: 6px;
   /* Porch Light (signature): warm glow, used on the confirm slider only */
   --porch-glow: rgba(255,200,61,.55);
   --porch-glow-soft: rgba(255,200,61,.18);
-  --slide-h: 88px;
-  --slide-thumb: 72px;
-  --slide-inset: 8px; --slide-fade: 10px;
+  --slide-fade: 10px;                       /* soft fade past the thumb's right edge at rest */
+  --slide-thumb-rest: #FFD45E;              /* resting thumb (Riley signed off) */
+  --slide-fill-rest: #FFC83D;               /* resting lit fill start */
+  --slide-fill-rest-edge: #FFBA45;          /* resting lit fill at the thumb's right edge */
+  --slide-fill-rest-fade: rgba(255,169,77,.40);
   --track-wide: .4px;
   --track-tight: -.3px;
   --track-tighter: -1px;

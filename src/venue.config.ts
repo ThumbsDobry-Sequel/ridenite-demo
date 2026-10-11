@@ -20,6 +20,8 @@ export const venue = {
   name: 'Maison Cheryl',
   addressLine: '2900 Wilson Blvd, Suite 104, Arlington, VA 22201',
   neighborhood: 'Clarendon, Arlington',
+  /** Venue header is the venue's own PNG logo (design rev 04.1: no venue font). Light recolor on night, teal on day. */
+  logo: { night: '/venue/mc-horizontal-light.png', day: '/venue/mc-horizontal-teal.png', width: 471, height: 96 },
   /** Venue words (Nico 22:40): v1 is bars only, so the bill is a tab and staff are bartenders. Screens read these. */
   terms: { bill: 'tab', Bill: 'Tab', bills: 'tabs', staff: 'bartender', Staff: 'Bartender', staffs: 'bartenders' },
   /** Night summary heading (SCOPE: night summary, built after M2). */

@@ -38,8 +38,11 @@ img { max-width: 100%; }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: var(--tap-guest); }
 .topbar__ctx { font-size: var(--t-footnote); color: var(--text-2); text-align: right; }
 .venue-chip { display: inline-flex; align-items: center; gap: var(--s2); min-width: 0; }
-.venue-chip img { height: var(--icon-lg); width: auto; }
-.venue-name { font-family: var(--font-venue); font-weight: var(--w-bold); font-size: var(--t-venue); color: var(--venue); }
+.venue-logo { display: inline-flex; align-items: center; min-width: 0; }
+.venue-logo img { height: var(--venue-logo-h); width: auto; max-width: 100%; object-fit: contain; object-position: left center; }
+.venue-logo__day { display: none; }
+[data-theme="day"] .venue-logo__night { display: none; }
+[data-theme="day"] .venue-logo__day { display: block; }
 .brand { font-weight: var(--w-heavy); font-size: var(--t-headline); letter-spacing: var(--track-wide); }
 
 /* ---------- type ---------- */
@@ -92,7 +95,6 @@ img { max-width: 100%; }
 .card--tap { display: flex; align-items: center; gap: var(--s3); width: 100%; min-height: var(--tap-guest); border: 0; text-align: left; cursor: pointer; color: var(--text); text-decoration: none; }
 .card--tap:active { transform: scale(var(--press-scale)); }
 .card--venue { background: var(--venue-band); color: var(--on-venue); }
-.card--venue .venue-name { color: var(--on-venue); }
 .card--venue .foot { color: var(--on-venue); }
 .row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); }
 .row--center { align-items: center; }
@@ -287,6 +289,9 @@ select.input:disabled { opacity: 1; color: var(--text-2); }
 .navbar--center .navbar__title { grid-column: 1 / -1; text-align: center; }
 [data-screen=P3] .cap-note, [data-screen=P3] .quote-para, [data-screen=P3] .cap-more { color: var(--text); }
 [data-screen=P3] .cancel-bottom { min-height: var(--tap-guest); }
+/* rev 04.1 (all sizes): confirm title and card padding tightened so the over-cap line clears the slider fade */
+[data-screen=P3] .card { padding: var(--s3) var(--s4); }
+[data-screen=P3] .navbar { min-height: var(--tap-bar); }
 .sticky-actions--slide .slide__hint { text-align: center; }
 .pickup-card { display: flex; flex-direction: column; gap: var(--s3); }
 .kvrow { display: flex; align-items: flex-start; gap: var(--s3); }
@@ -334,19 +339,24 @@ select.input:disabled { opacity: 1; color: var(--text-2); }
   border-color: color-mix(in srgb, var(--primary) 45%, transparent);
 }
 /* Lit fill: at rest and while sliding it stops at the thumb's right edge, with a short soft fade (never past the thumb). */
-.slide__fill { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--slide-inset) + var(--thumb-x) + var(--slide-thumb)); background: linear-gradient(90deg, var(--porch-glow-soft), var(--porch-glow) calc(100% - var(--slide-fade)), transparent); pointer-events: none; }
-.slide.is-holding .slide__fill { width: calc(var(--slide-inset) + var(--slide-thumb) + var(--fill) * (100% - 2 * var(--slide-inset) - var(--slide-thumb))); }
+/* Rest (README rev 04.1): lit fill to the thumb's right edge (24 + 76 = 100 px), then a 10 px soft fade to --surface-2:
+   linear-gradient(90deg,#FFC83D 0,#FFBA45 100px,rgba(255,169,77,.40) 104px,var(--surface-2) 110px). Mid and done unchanged. */
+.slide__fill { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--slide-inset) + var(--slide-thumb) + var(--slide-fade)); pointer-events: none;
+  background: linear-gradient(90deg, var(--slide-fill-rest) 0, var(--slide-fill-rest-edge) calc(var(--slide-inset) + var(--slide-thumb)), var(--slide-fill-rest-fade) calc(var(--slide-inset) + var(--slide-thumb) + var(--s1)), var(--surface-2) calc(var(--slide-inset) + var(--slide-thumb) + var(--slide-fade))); }
+.slide.is-dragging .slide__fill { width: calc(var(--slide-inset) + var(--thumb-x) + var(--slide-thumb)); background: linear-gradient(90deg, var(--porch-glow-soft), var(--porch-glow) calc(100% - var(--slide-fade)), transparent); }
+.slide.is-holding .slide__fill { background: linear-gradient(90deg, var(--porch-glow-soft), var(--porch-glow) calc(100% - var(--slide-fade)), transparent); width: calc(var(--slide-inset) + var(--slide-thumb) + var(--fill) * (100% - 2 * var(--slide-inset) - var(--slide-thumb))); }
 .slide__tick { position: absolute; top: var(--s3); bottom: var(--s3); width: var(--hairline); background: var(--separator); pointer-events: none; }
-.slide__label { opacity: var(--label-op); position: relative; font-size: var(--t-button); font-weight: var(--w-bold); color: var(--text); padding-left: calc(var(--slide-thumb) + var(--s3)); padding-right: var(--s4); text-align: center; pointer-events: none; }
+.slide__label { opacity: var(--label-op); position: relative; font-size: var(--t-button); font-weight: var(--w-bold); color: var(--text); padding-left: calc(var(--slide-inset) + var(--slide-thumb) + var(--s2)); padding-right: var(--s4); text-align: center; pointer-events: none; }
 .slide__thumb {
   position: absolute; left: var(--slide-inset); top: 50%; margin-top: calc(var(--slide-thumb) / -2);
   width: var(--slide-thumb); height: var(--slide-thumb); border-radius: var(--r-pill);
-  background: var(--primary); color: var(--on-primary); display: flex; align-items: center; justify-content: center;
+  background: var(--slide-thumb-rest); color: var(--on-primary); display: flex; align-items: center; justify-content: center;
   box-shadow: 0 0 var(--s5) var(--porch-glow); cursor: grab;
   touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
   transition: transform var(--dur-sheet) var(--ease-spring);
 }
-.slide.is-dragging .slide__thumb { transition: none; cursor: grabbing; }
+.slide.is-dragging .slide__thumb { transition: none; cursor: grabbing; background: var(--primary); }
+.slide.is-holding .slide__thumb, .slide.is-done .slide__thumb { background: var(--primary); }
 .slide__thumb .icon { width: var(--s7); height: var(--s7); }
 .slide__ring { position: absolute; inset: calc(var(--s1) * -1); width: calc(100% + var(--s2)); height: calc(100% + var(--s2)); transform: rotate(-90deg); }
 .slide__ring circle { fill: none; stroke: var(--text); stroke-width: 3; }

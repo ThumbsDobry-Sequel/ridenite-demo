@@ -47,10 +47,17 @@ CI: `.github/workflows/ci.yml` runs lint:copy, then build, then test. A failing 
 - Then "Ride requested. Finding a driver." with "$21.00 goes on your tab when you're picked up. Final fare may differ by up to $4.20." (live values). On accept: "Ride booked." / "Fare goes on your tab at pickup."
 - The fare line and "Confirmed by guest, h:mm PM" post at PICKUP, not accept. No driver: "Requested by guest, h:mm PM. No driver found. Not charged." Driver accepts then cancels: "Requested by guest, h:mm PM. Driver cancelled. Not charged." Demo controls: force no driver, driver accepts then cancels, force stale quote.
 - Quotes are valid 5 minutes (`QUOTE_VALID_MS`). Keep looking after that shows the new price and needs a new slide; never a silent rebook.
+- Slider (design rev 04.1): 88 px track, 76 px thumb resting 24 px in (6 px vertical inset); resting thumb `#FFD45E`, lit fill `#FFC83D` to the thumb edge, then a 10 px fade to `--surface-2`.
 - Confirm shows "You pay the final fare, never more than $X unless you approve a change." (X = live quote + cap).
 - Receipt / night summary: "[Night date]. Tab closed. Ride home on your tab." right before the itemized ride line, only after pickup.
 - Morning receipt (P9, M1) itemized ride line, after pickup only: "RideNite car home, [pickup area] area to [drop-off area] area, picked up h:mm PM, $XX.XX". Areas, never street addresses (pickup = venue neighborhood, drop-off = neighborhood of the ride's destination area). The fare is the final ride total on the tab (quote + adjustment + any approved over-cap amount): $24.60 in the default sample, $27.40 in the over-cap-approved scenario. The marketing tagline is not used in the app.
 - Bar: B6 shows the POS line "RideNite car home, [area] area, [pickup time]"; the guest record is shown separately as the RideNite record, never on the POS line. Closing a tab with a ride not yet picked up shows "Ride pending pickup"; it finishes closing at pickup (ride line posts) or closes clean on cancel, inside the 24 h hold.
+
+## Theme (design rev 04.1)
+
+- `src/theme/tokens.css`: Vera's night palette (`design/moodboard/palette-tokens-draft.css`) merged into Riley's token names; nothing renamed, NEW tokens added, `--font-venue` removed. No web fonts (no Libre Baskerville).
+- Venue header is the venue PNG logo (`venue.logo` in `venue.config.ts`; light recolor on night, teal on day), with the venue name as its accessible label.
+- Icons copied from `design/icon/` at the same public paths; manifest lists any + maskable at 192 and 512. Theme and background color `#0B0F14`; iOS startup images from `design/splash/` (mark only, no text).
 
 ## Dates (device clock, America/New_York)
 

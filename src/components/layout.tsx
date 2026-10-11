@@ -11,11 +11,21 @@ export function Screen({ id, children, tight }: { id: string; children: ReactNod
   );
 }
 
+/** Venue logo PNG (night and day recolors; CSS shows the one for the current theme). The name is the alt text. */
+export function VenueLogo() {
+  const { night, day, width, height } = venue.logo;
+  return (
+    <span className="venue-logo" role="img" aria-label={venue.name}>
+      <img className="venue-logo__night" src={night} alt="" width={width} height={height} />
+      <img className="venue-logo__day" src={day} alt="" width={width} height={height} />
+    </span>
+  );
+}
+
 export function VenueChip() {
   return (
     <span className="venue-chip">
-      <img src="/venue/maison-cheryl-window.png" alt="" width="38" height="32" />
-      <span className="venue-name">{venue.name}</span>
+      <VenueLogo />
     </span>
   );
 }

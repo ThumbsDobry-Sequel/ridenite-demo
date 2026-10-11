@@ -28,8 +28,7 @@
 .bshell__main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .bhead { padding: var(--s2) max(var(--b-pad), env(safe-area-inset-right)) var(--s1) max(var(--b-pad), env(safe-area-inset-left)); border-bottom: var(--hairline) solid var(--separator); }
 .bhead__row { display: flex; align-items: center; gap: var(--s2); min-height: var(--b-head); }
-.bhead__venue { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-flex; align-items: center; gap: var(--s2); font-family: var(--font-venue); font-weight: var(--w-bold); font-size: var(--t-bar-title); color: var(--venue); }
-.bhead__venue img { height: var(--icon-lg); width: auto; flex: none; }
+.bhead__venue { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-flex; align-items: center; gap: var(--s2); }
 .bhead__pill { font-size: var(--t-caption); padding: 0 var(--s3); flex: none; }
 .bhead__clock { font-weight: var(--w-bold); flex: none; }
 .bhead__book { width: auto; flex: none; }
