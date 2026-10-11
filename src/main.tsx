@@ -1,3 +1,4 @@
+import './pinClock';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './theme/tokens.css';

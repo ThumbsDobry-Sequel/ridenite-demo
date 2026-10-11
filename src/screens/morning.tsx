@@ -215,7 +215,7 @@ export function P9() {
               <span className="note" data-testid="ride-route">{rideRouteLine(s, N.pickedUp)}</span>
               <span className="note" data-testid="ride-id">Ride ID <span className="ride-id">{rideId}</span></span>
               <span className="note">{venue.driver.partner}</span>
-              {stop && <span className="note" data-testid="stop-note">Includes {fmt(stop.cents)} over the cap, approved by you. {venue.overCapReason}.</span>}
+              {stop && <span className="note" data-testid="stop-note">Adds the {fmt(stop.cents)} over the cap you approved. {venue.overCapReason}.</span>}
               {cl && <><span className="note confirm-record" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</span><span className="note" data-testid="confirm-record-amounts">{cl.amounts}</span></>}
             </td></tr>
           </>          ) : (
@@ -352,7 +352,7 @@ export function SampleTrafficReceipt({ route }: { route?: Route }) {
         </tbody>
         <tbody>
           <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
-          <tr data-testid="ride-line"><th scope="row">{RIDE_GUEST_LINE}<span className="note" data-testid="ride-id">Ride ID <span className="ride-id">{t.rideId}</span></span>{ok && <span className="note">Includes the {fmt(t.finalCents - t.quoteCents - t.capCents)} over the cap you approved.</span>}</th><td className="amt" data-testid="ride-line-amt">{fmt(t.rideCents)}</td></tr>
+          <tr data-testid="ride-line"><th scope="row">{RIDE_GUEST_LINE}<span className="note" data-testid="ride-id">Ride ID <span className="ride-id">{t.rideId}</span></span>{ok && <span className="note">Adds the {fmt(t.finalCents - t.quoteCents - t.capCents)} over the cap you approved.</span>}</th><td className="amt" data-testid="ride-line-amt">{fmt(t.rideCents)}</td></tr>
           {!ok && <tr data-testid="max-approved"><th scope="row" colSpan={2}>{maxApprovedLine(t.quoteCents + t.capCents)}</th></tr>}
           <tr className="subtotal"><th scope="row">RideNite rides subtotal</th><td className="amt" data-testid="ride-subtotal">{fmt(t.rideCents)}</td></tr>
         </tbody>

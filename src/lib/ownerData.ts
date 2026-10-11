@@ -87,7 +87,8 @@ export function sampleOwnerRides(now: number): SampleOwnerRide[] {
   return seeds.map(([ago, cents], i) => {
     const pickupMs = sampleAnchor(now) - ago * DAY;
     const end = returnWindowEnds(pickupMs);
-    return { rideId: rideRef(`sample-owner-${i}-${venue.slug}`), rideNo: String(4818 + i), pickupMs, feeChargedCents: venue.perRideFeeCents, rideCents: cents, returnWindowEnds: ymdIso(end), status: returnWindowStatus(end, now), tone: STATUS_TONE, label: SAMPLE_LABEL };
+    // fixed seed (not the venue slug) so every build (Sample Venue too) shows the same sample IDs (RN-NHMCXN)
+    return { rideId: rideRef(`sample-owner-${i}-maison-cheryl`), rideNo: String(4818 + i), pickupMs, feeChargedCents: venue.perRideFeeCents, rideCents: cents, returnWindowEnds: ymdIso(end), status: returnWindowStatus(end, now), tone: STATUS_TONE, label: SAMPLE_LABEL };
   });
 }
 

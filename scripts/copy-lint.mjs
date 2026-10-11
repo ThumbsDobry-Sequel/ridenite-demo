@@ -114,7 +114,8 @@ function cssContentStrings(css) {
  * the morning receipt and email, and their libs must never contain it or reference the POS constant.
  */
 export const GUEST_FILES = [/^src\/screens\/(confirm|demo|edges|entry|home|morning|trip|where)\.tsx$/, /^src\/components\/RideStatus\.tsx$/, /^src\/lib\/(morning|brand|night|confirmRecord)\.ts$/];
-export const GUEST_BANNED = /quoted fare|RIDE_POS_LINE|RIDE_QUOTE_LINE/i;
+/** Also 'Includes' / 'Covers' (team lead, Oct 11): an approved over-cap amount 'Adds the $X'; never reads as bundled or covered. */
+export const GUEST_BANNED = /quoted fare|RIDE_POS_LINE|RIDE_QUOTE_LINE|(?<!\.)\b(includes|covers)\b/i;
 export function lintGuestText(text, file = '<text>') {
   const problems = [];
   text.split(/\r?\n/).forEach((line, i) => { const m = line.match(GUEST_BANNED); if (m) problems.push({ file, line: i + 1, match: `${m[0]} (guest-facing: POS quote line only)` }); });

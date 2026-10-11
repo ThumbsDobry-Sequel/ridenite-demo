@@ -30,3 +30,13 @@ describe('copy-lint guest guard: lintGuestText', () => {
     expect(GUEST_FILES.some((re: RegExp) => re.test('src/screens/bar/tab.tsx'))).toBe(false);
   });
 });
+
+describe('copy-lint guest guard: Includes / Covers in money lines', () => {
+  it('flags "Includes the $3.10" and "Covers the $3.10"; passes "Adds the $3.10" and code .includes()', async () => {
+    const { lintGuestText } = await import('../../scripts/copy-lint.mjs');
+    expect(lintGuestText('Includes the $3.10 over the cap you approved.', 'src/screens/morning.tsx')).toHaveLength(1);
+    expect(lintGuestText('Covers the $3.10 over the cap you approved.', 'src/screens/morning.tsx')).toHaveLength(1);
+    expect(lintGuestText('Adds the $3.10 over the cap you approved.', 'src/screens/morning.tsx')).toHaveLength(0);
+    expect(lintGuestText('if (s.dismissedNudges.includes(key)) return null;', 'src/screens/trip.tsx')).toHaveLength(0);
+  });
+});
