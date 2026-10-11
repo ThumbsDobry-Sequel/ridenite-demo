@@ -9,6 +9,11 @@ export type Stage = 'pending' | LiveStage | TerminalStage;
 /** Undo window after Confirm, before the ride counts as booked. */
 export const UNDO_MS = 10_000;
 
+/** Demo: with "no driver found" forced, the search gives up this long after the request. */
+export const NO_DRIVER_MS = 20_000;
+/** A quote stays valid this long (demo constant, SCOPE: Ride status and charge timing). */
+export const QUOTE_VALID_MS = 5 * 60_000;
+
 /** Stage start offsets in ms after booking (demo speed). */
 export const DEMO_TIMELINE: Record<LiveStage, number> = {
   requested: 0,
@@ -52,14 +57,30 @@ export const STAGE_ROUTE: Record<Stage, string> = {
 
 /** Patron status words (UI 4e). */
 export const STAGE_LABEL: Record<Stage, string> = {
-  pending: 'Booking in a moment',
-  requested: 'Your car is requested',
+  pending: 'Requesting your ride',
+  requested: 'Ride requested',
   en_route: 'Driver on the way',
   near: '2 min away',
   arrived: 'Your car is here',
   picked_up: 'Picked up',
-  complete: 'Ride complete',
+  complete: 'Dropped off',
   canceled_by_driver: 'Driver cancelled',
-  no_cars: 'No cars nearby',
+  no_cars: 'No driver found yet',
   canceled_by_guest: 'Cancelled',
 };
+
+/** Minimal ride shape for stage math (keeps this module free of store types). */
+export interface StageInput { bookedAt: number; pending?: boolean; hold?: LiveStage; terminal?: TerminalStage; noDriver?: boolean }
+
+/** Stage of a ride at `now`. No driver can accept during the undo window (stage stays pending). */
+export function rideStage(r: StageInput, now: number): Stage {
+  if (r.terminal) return r.terminal;
+  if (r.pending && now < r.bookedAt) return 'pending';
+  if (r.hold) return r.hold;
+  if (r.noDriver) return now - r.bookedAt >= NO_DRIVER_MS ? 'no_cars' : 'requested';
+  return stageAt(r.bookedAt, now);
+}
+
+/** A driver has accepted: the fare line and the record line post to the tab from here on. */
+export const ACCEPTED: Stage[] = ['en_route', 'near', 'arrived', 'picked_up', 'complete'];
+export const isAcceptedStage = (st: Stage | null | undefined): boolean => !!st && ACCEPTED.includes(st);

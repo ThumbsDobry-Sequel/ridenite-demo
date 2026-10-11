@@ -1,15 +1,25 @@
+import type { DemoState } from '../store/types';
 import { useState } from 'react';
 import { venue } from '../venue.config';
 import { navigate } from '../router';
 import { useDemoState, useStore } from '../store';
 import { morningFor } from '../lib/morning';
-import { confirmLine } from '../lib/confirmRecord';
+import { nightTagline } from '../lib/brand';
+import { noDriverLine, confirmLine } from '../lib/confirmRecord';
+import { useNow } from '../hooks';
 import { fmt, fmtSigned } from '../lib/money';
 import { Banner, Button, Card, Chip, Fict, ListRow } from '../components/primitives';
 import { Icon } from '../components/Icon';
 import { BackButton, Screen, Top, VenueChip } from '../components/layout';
 
 const N = venue.night;
+
+/** Morning receipt wording follows the venue setting (B8): Neutral (recommended) or Detailed. */
+export function receiptSubject(s: DemoState): string {
+  return s.bar.settings.receipt === 'detailed'
+    ? `Your receipt from ${venue.name}: tab and ${s.bar.settings.tabLineName} ride`
+    : `Your receipt from ${venue.name}`;
+}
 
 /** Morning inbox: simulated Messages and Email (neutral default subject, UI 0a item 7). */
 export function Inbox() {
@@ -20,8 +30,8 @@ export function Inbox() {
       <Top back="/g/home" ctx="Sat 9:00 AM" />
       <h1 className="h2">Morning inbox</h1>
       <p className="foot">Simulated messages on this phone. Nothing was really sent.</p>
-      <ListRow icon="chat" title="Messages: RideNite" subtitle={`Your receipt from ${venue.name} is ready`} testId="open-m2" onClick={() => navigate('/g/m2')} />
-      <ListRow icon="mail" title={`Email: Your receipt from ${venue.name}`} subtitle={`Last night's tab, ready to review. ${fmt(m.totalCents)}`} testId="open-m1" onClick={() => navigate('/g/m1')} />
+      <ListRow icon="chat" title="Messages: RideNite" subtitle={`${receiptSubject(s)} is ready`} testId="open-m2" onClick={() => navigate('/g/m2')} />
+      <ListRow icon="mail" title={`Email: ${receiptSubject(s)}`} subtitle={`Last night's tab, ready to review. ${fmt(m.totalCents)}`} testId="open-m1" onClick={() => navigate('/g/m1')} />
       <Fict>Sample messages. Names, numbers and links are fictional.</Fict>
     </Screen>
   );
@@ -29,6 +39,7 @@ export function Inbox() {
 
 /** M2 / M2d SMS thread with the neutral morning text (default). */
 export function M2() {
+  const s = useDemoState();
   return (
     <Screen id="M2">
       <Top back="/g/inbox" ctx={`RideNite ${venue.smsFrom}`} />
@@ -40,7 +51,7 @@ export function M2() {
         <p className="stamp">{N.complete}</p>
         <p className="bubble">RideNite: You've arrived. Your ride from {venue.name} is on your tab.</p>
         <p className="stamp">Sat 9:00 AM</p>
-        <p className="bubble">RideNite: Your receipt from {venue.name} is ready: <a href="#/g/p9" data-testid="sms-link">rdnt.example/m/abc123</a> Reply STOP to opt out, HELP for help.</p>
+        <p className="bubble">RideNite: {receiptSubject(s)} is ready: <a href="#/g/p9" data-testid="sms-link">rdnt.example/m/abc123</a> Reply STOP to opt out, HELP for help.</p>
       </div>
       <Fict>SAMPLE: no real charge. Messages are simulated.</Fict>
     </Screen>
@@ -58,7 +69,7 @@ export function M1() {
         <div className="mail-hdr">
           <div><b>RideNite for {venue.name}</b></div>
           <div>To: {venue.guest.email}</div>
-          <div>Subject: <b>Your receipt from {venue.name}</b></div>
+          <div>Subject: <b data-testid="m1-subject">{receiptSubject(s)}</b></div>
           <div className="muted">Sat, Oct 10, 9:00 AM</div>
         </div>
       </Card>
@@ -68,11 +79,12 @@ export function M1() {
         <tbody>
           <tr><th scope="row">Drinks and food</th><td className="amt">{fmt(m.tipBaseCents)}</td></tr>
           <tr><th scope="row">{venue.taxLabel}</th><td className="amt">{fmt(m.taxCents)}</td></tr>
-          <tr><th scope="row">{venue.tabLineName}, {N.pickedUp} to {N.complete}<span className="note">{venue.driver.partner}, {venue.driver.plate}</span></th><td className="amt">{fmt(m.rideCents)}</td></tr>
+          <tr><th scope="row">{s.bar.settings.tabLineName}, {N.pickedUp} to {N.complete}<span className="note">{venue.driver.partner}, {venue.driver.plate}</span></th><td className="amt">{fmt(m.rideCents)}</td></tr>
           <tr><th scope="row">Staff tip ({s.tipPct}%)</th><td className="amt">{fmt(m.tipCents)}</td></tr>
           <tr className="total"><th scope="row">Total</th><td className="amt">{fmt(m.totalCents)}</td></tr>
         </tbody>
       </table>
+      <p className="night-tagline" data-testid="night-tagline">{nightTagline(m.hasRide)}</p>
       <Button onClick={() => navigate('/g/p9')}>Review and pay</Button>
       <p className="foot">Your card ending {venue.card.last4} is on hold. If you do nothing, it's charged {venue.card.holdDeadline}. Question about a charge? Open Review and tap "Something's wrong."</p>
       <p className="fict">{venue.addressLine}. {venue.disclaimer} SAMPLE: no real charge.</p>
@@ -84,8 +96,10 @@ export function M1() {
 export function P9() {
   const store = useStore();
   const s = useDemoState();
+  useNow(1000);
   const m = morningFor(s);
   const cl = confirmLine(s);
+  const nd = noDriverLine(s);
   const r = m.recon ?? { postedAdjCents: 0, heldCents: 0, declinedCents: 0, finalCents: 0, quoteCents: 0, capCents: 0, diffCents: 0, outcome: 'none' as const };
   const adjName = r.postedAdjCents < 0 ? 'Ride fare credit' : 'Ride fare adjustment';
   return (
@@ -100,7 +114,7 @@ export function P9() {
           {m.hasRide && <>
           <li><b className="num">{N.booked}</b><span>Ride home booked (you confirmed)</span></li>
           <li><b className="num">{N.pickedUp}</b><span>Picked up. {venue.driver.name}, {venue.driver.carShort}, {venue.driver.plate}</span></li>
-          <li><b className="num">{N.complete}</b><span>Ride complete near {s.ride?.dest.line ?? venue.guest.home.line}. Final fare {fmt(m.finalCents)}</span></li>
+          <li><b className="num">{N.complete}</b><span>Dropped off near {s.ride?.dest.line ?? venue.guest.home.line}. Final fare {fmt(m.finalCents)}</span></li>
           </>}
         </ul>
       </Card>
@@ -113,10 +127,11 @@ export function P9() {
           <tr><th scope="row">{venue.taxLabel}<span className="note">{venue.taxNote}</span></th><td className="amt" data-testid="tax">{fmt(m.taxCents)}</td></tr>
           <tr className="sec"><th colSpan={2} scope="colgroup">Ride</th></tr>
           {m.hasRide ? (
-            <tr data-testid="ride-line"><th scope="row">{venue.tabLineName}, quoted fare<span className="note">{venue.driver.partner}</span>
+            <tr data-testid="ride-line"><th scope="row">{s.bar.settings.tabLineName}, quoted fare<span className="note">{venue.driver.partner}</span>
               {cl && <><span className="note confirm-record" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</span><span className="note" data-testid="confirm-record-amounts">{cl.amounts}</span></>}</th><td className="amt">{fmt(m.quoteCents)}</td></tr>
           ) : (
-            <tr data-testid="no-ride-line"><th scope="row">No ride on this tab<span className="note">Nothing was added for a ride.</span></th><td className="amt">{fmt(0)}</td></tr>
+            <tr data-testid="no-ride-line"><th scope="row">No ride on this tab<span className="note">Nothing was added for a ride.</span>
+              {nd && <span className="note" data-testid="no-driver-record">{nd}</span>}</th><td className="amt">{fmt(0)}</td></tr>
           )}
           {r.postedAdjCents !== 0 && (
             <tr data-testid="adj-line"><th scope="row">{adjName} (final fare {fmt(r.finalCents)}, quoted {fmt(r.quoteCents)})<span className="note">{r.postedAdjCents > 0 ? `Within the ${fmt(r.capCents)} you saw before booking.` : 'The fare came in lower, so you get the difference back.'}</span></th><td className="amt">{fmtSigned(r.postedAdjCents)}</td></tr>
@@ -139,6 +154,7 @@ export function P9() {
           <tr className="total"><th scope="row">Total</th><td className="amt" data-testid="total" aria-live="polite">{fmt(m.totalCents)}</td></tr>
         </tbody>
       </table>
+      <p className="night-tagline" data-testid="night-tagline">{nightTagline(m.hasRide)}</p>
       {!s.paid && <Button testId="pay" onClick={() => { store.pay(); navigate('/g/p11'); }}>Approve and pay {fmt(m.totalCents)}</Button>}
       <Button variant="secondary" onClick={() => navigate('/g/p10')}>Something's wrong</Button>
       <p className="foot">Card ending {venue.card.last4} is on hold. If you do nothing, it's charged {venue.card.holdDeadline}.</p>

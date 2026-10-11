@@ -14,8 +14,10 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(fileURLToPath(import.meta.url), '..', '..');
 
-export const BANNED = /safe ride|get home safe|home safe|guarantee|ensure your safety|protect|certified|date rape|assault|spiking|drugged|predator|danger|free ride with|included with drinks|liability|dram shop|angela|angel shot|nightcap|secret code|had too much|over-served|overserved|overdone it|crawl|bar hop|next bar|next stop|came from|previous venue|comes with your tab|every guest gets a ride|automatic ride|your limit|legal amount|offered, declined|coverage|covered if|just in case|ride insurance|peace of mind|worry-free|legal protection|drunk|intoxicat|\u2014|\u2013/i;
+export const BANNED = /safe ride|get home safe|home safe|leave the light on|every guest home|guarantee|ensure your safety|protect|certified|date rape|assault|spiking|drugged|predator|danger|free ride with|included with drinks|liability|dram shop|angela|angel shot|nightcap|secret code|had too much|over-served|overserved|overdone it|crawl|bar hop|next bar|next stop|came from|previous venue|comes with your tab|every guest gets a ride|automatic ride|your limit|legal amount|offered, declined|coverage|covered if|just in case|ride insurance|peace of mind|worry-free|legal protection|drunk|intoxicat|\u2014|\u2013/i;
 export const SAFE = /\bsafe\b|unsafe/i;
+/** Standalone 'lit' reads as alcohol related (founder, Oct 10). Whole word only: little, split, literally pass. */
+export const LIT = /\blit\b/i;
 export const APPROVED = [
   'If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment.',
   'Guest says they feel unsafe?',
@@ -34,6 +36,8 @@ export function lintText(text, file = '<text>') {
     if (m) problems.push({ file, line: i + 1, match: m[0] === '\u2014' ? 'em dash' : m[0] === '\u2013' ? 'en dash' : m[0] });
     const s = line.match(SAFE);
     if (s) problems.push({ file, line: i + 1, match: s[0] });
+    const l = line.match(LIT);
+    if (l) problems.push({ file, line: i + 1, match: l[0] });
     if (/where you were/i.test(line)) problems.push({ file, line: i + 1, match: 'where you were' });
   });
   return problems;

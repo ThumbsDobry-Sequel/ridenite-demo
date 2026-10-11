@@ -65,11 +65,18 @@ test.describe('home @sizes', () => {
     await expect(undo).toBeVisible();
     expect((await undo.boundingBox())!.height).toBeGreaterThanOrEqual(88);
     expect((await inViewport(page, 'undo')).inside).toBe(true);
-    await expect(page.getByText('Nothing is booked yet.', { exact: false })).toBeVisible();
+    // Vera rev 03 undo copy
+    await expect(page.getByTestId('status-requesting')).toHaveText('Requesting your ride...');
+    await expect(page.getByTestId('undo-quote')).toHaveText('$21.00 quote to 655 N Harrison St.');
+    await expect(page.getByTestId('undo-line-1')).toHaveText('Nothing is requested yet.');
+    await expect(page.getByTestId('undo-line-2')).toHaveText('We request your ride when the timer ends.');
+    await expect(page.getByText('Requesting in a moment.')).toHaveCount(0);
     await expect(page.getByTestId('undo-countdown')).toHaveText('10');
     await page.clock.runFor(5_000);
     await expect(page.getByTestId('undo-countdown')).toHaveText('5');
-    await page.clock.runFor(4_000);
+    await page.clock.runFor(2_000);
+    await expect(page.getByTestId('undo-soon')).toHaveText('Requesting in a moment.');
+    await page.clock.runFor(2_000);
     await expect(undo).toBeVisible();
     await undo.tap();
     await expect(page.getByTestId('ride-home')).toBeVisible();
@@ -131,12 +138,12 @@ test.describe('home @sizes', () => {
     expect((await page.getByTestId('confirm').boundingBox())!.height).toBeGreaterThanOrEqual(88);
   });
 
-  test('Confirm: nothing sits half hidden behind the sticky buttons at rest @sizes', async ({ page }) => {
+  test('Confirm: only the Pickup card may scroll behind the pinned slider @sizes', async ({ page }) => {
     await open(page, '/g/p3');
     const straddling = await page.evaluate(() => {
       const foot = document.querySelector('[data-screen=P3] .sticky-actions')!.getBoundingClientRect();
       const els = Array.from(document.querySelectorAll('main p, main h1, main h2, main h3, main button, main a, main .seg, main .card, main .banner'))
-        .filter((e) => !e.closest('.sticky-actions') && (e as HTMLElement).offsetParent !== null);
+        .filter((e) => !e.closest('.sticky-actions') && !e.closest('.pickup-card') && (e as HTMLElement).offsetParent !== null);
       return els.filter((e) => { const r = e.getBoundingClientRect(); return r.height > 0 && r.top < foot.top - 0.5 && r.bottom > foot.top + 0.5; })
         .map((e) => `${e.tagName}.${e.className} "${(e.textContent ?? '').trim().slice(0, 30)}"`);
     });
@@ -158,11 +165,11 @@ test.describe('home @sizes', () => {
     await expect(page.locator('[data-screen=P3]')).toBeVisible();
   });
 
-  test('quote older than 2 minutes refreshes before booking and needs Confirm again', async ({ page }) => {
+  test('quote older than 5 minutes refreshes before booking and needs Confirm again', async ({ page }) => {
     await page.clock.install();
     await open(page, '/g/p3');
     await store(page, 's.setPriceMovesOnRefresh(true)');
-    await page.clock.fastForward(121_000);
+    await page.clock.fastForward(301_000);
     await slide(page);
     await expect(page.getByText('The price was updated')).toBeVisible();
     await expect(page.getByTestId('quote')).toHaveText('$23.50');

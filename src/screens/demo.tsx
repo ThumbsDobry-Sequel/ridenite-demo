@@ -50,6 +50,19 @@ export function DemoPanel() {
           <Button key={f.id} variant="secondary" testId={`fault-${f.id}`} onClick={() => { store.applyFault(f.id); navigate(f.route); }}>{f.label}</Button>
         ))}
       </div>
+      <p className="section-title">Driver search</p>
+      <div className="stack">
+        <Button variant="secondary" testId="force-no-driver" onClick={() => {
+          store.setForceNoDriver(!s.forceNoDriver);
+          const r = store.getState().ride;
+          if (r && store.stageOf(r) === 'no_cars') navigate('/g/e1');
+        }}>
+          {s.forceNoDriver ? 'No driver found: on for the next request' : 'Force "No driver found"'}
+        </Button>
+        <Button variant="secondary" testId="force-stale" onClick={() => store.setForceStaleQuote(!s.forceStaleQuote)}>
+          {s.forceStaleQuote ? 'Stale quote: on (new price, new slide)' : 'Force "stale quote" (older than 5 min)'}
+        </Button>
+      </div>
       <p className="section-title">Tab link</p>
       <Card>
         <p className="callout" data-testid="link-status">{s.linkedTab ? `Linked to ${s.linkedTab.seat}, tab #${s.linkedTab.tab}` : 'Not linked to a tab'}</p>

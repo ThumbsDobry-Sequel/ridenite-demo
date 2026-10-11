@@ -1,4 +1,4 @@
-# RideNite v1 (M0 + M1)
+# RideNite v1 (M0 + M1 + M2)
 
 iPhone web app (PWA), Vite + TypeScript + React. SIMULATED DEMO: fictional sample data only, no real cars, charges, texts or POS.
 
@@ -10,8 +10,10 @@ npx playwright install --with-deps webkit   # once
 npm run dev          # http://localhost:5173
 npm run lint:copy    # copy rules (UI spec section 1 + em/en dashes); exits non-zero on a hit
 npm run build        # type check + production build into dist/
-npm test             # vitest unit tests, then Playwright WebKit (390x844, 375x667, 430x932)
+npm test             # vitest unit tests, then Playwright WebKit (390x844, 375x667, 430x932, iPad 1024x768 for @bar)
 npm run shots        # screenshots into ../shots/m1 (needs a build first)
+node scripts/shots-m2.mjs ../shots/m2              # bartender screens at 390x844
+W=375 H=667 node scripts/shots-m2.mjs ../shots/m2 -se
 ```
 
 CI: `.github/workflows/ci.yml` runs lint:copy, then build, then test. A failing lint stops everything after it.
@@ -32,6 +34,20 @@ CI: `.github/workflows/ci.yml` runs lint:copy, then build, then test. A failing 
 - Opening a trip screen directly with no ride sends you home (a reload mid-ride resets). Add `?preview=1` to view a trip screen with sample data, e.g. `/#/g/p5?preview=1`. Demo controls list every screen this way.
 - Menu > Demo controls: E1 to E7 faults (each starts from a fresh ride), fare scenarios, unlink tab, forget saved home, price moves on refresh, second-phone link.
 - Menu > Owner preview: static placeholder screens; every number is tagged Sample data.
+
+## Bartender view (M2)
+
+- Routes: `/#/b` (B0 welcome, then B1 Tonight), `/#/b/new` (B2 who asked), `/#/b/book?tab=` (B3 book: link, QR or staff-saw-price modes; Book needs a quote AND "Guest saw the price"), `/#/b/booked`, `/#/b/live` (B4), `/#/b/history` (B5), `/#/b/tab?tab=` (B6), `/#/b/plate?tab=` (B9), `/#/b/help` (B10), `/#/b/more`, `/#/b/settings` (B8 with Reset). Menu > "Switch to bartender view" / "Switch to guest view". At 768 px and wider, sheets open as a right drawer over Tonight.
+- No free text on bar screens. New guests come from the sample list in `venue.config.ts`.
+- B6: ride lines post only once a driver accepts; adjustment is its own line; tip base excludes the ride.
+
+## Ride status and charge timing
+
+- Guest slide starts a 10 s undo ("Requesting your ride..."). Nothing is requested and no driver can accept during it. The guest confirmation is logged when the undo ends, stamped with the slide time.
+- Then "Ride requested. Finding a driver." with "$21.00 goes on your tab when a driver accepts. Final fare may differ by up to $4.20." (live values). On accept: "Ride booked. Fare on your tab." The fare line and "Confirmed by guest, h:mm PM" appear on the tab and receipt only after accept.
+- No driver: "No driver found yet." with Ask staff for a car / Keep looking; nothing charged; receipt reads "Requested by guest, h:mm PM. No driver found. Not charged."
+- Quotes are valid 5 minutes (demo constant `QUOTE_VALID_MS`). Keep looking after that shows the new price and needs a new slide; never a silent rebook. Demo controls: force no driver, force stale quote.
+- "Tab closed. Ride booked." appears only on the morning receipt / night summary, under the total, after a date ("Friday, Oct 9. Tab closed. Ride booked."), and only if a ride was booked.
 
 ## Freshness and the service worker
 

@@ -57,6 +57,11 @@ describe('copy lint', () => {
     expect(lintText('Certified drivers')).toHaveLength(1);
     expect(lintText('Get home safe tonight').length).toBeGreaterThan(0);
     expect(lintText('You made it home safe.').length).toBeGreaterThan(0);
+    expect(lintText('We will Leave The Light On for you').length).toBeGreaterThan(0);
+    expect(lintText('Get LIT tonight').length).toBeGreaterThan(0);
+    expect(lintText('We get Every Guest Home').length).toBeGreaterThan(0);
+    expect(lintText('lit.').length).toBeGreaterThan(0);
+    expect(lintText('A little split, literally, splitting').length).toBe(0);
     expect(lintText('We guarantee a car')).toHaveLength(1);
     expect(lintText('No liability for the bar')).toHaveLength(1);
   });

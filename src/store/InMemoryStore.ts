@@ -1,10 +1,19 @@
 import { venue, type Address } from '../venue.config';
 import { capFor, type OverCapAnswer } from '../lib/fare';
 import type { Handoff } from '../lib/handoff';
-import { bookedAtFor, nextStage, stageAt, UNDO_MS, type LiveStage, type Stage } from '../lib/rideState';
+import { bookedAtFor, nextStage, QUOTE_VALID_MS, rideStage, UNDO_MS, type LiveStage, type Stage } from '../lib/rideState';
 import { seedState } from './seed';
 import type { UrlLink } from '../lib/urlLink';
-import type { ConfirmInput, CreateResult, DemoState, DemoStore, FareScenario, Fault, LinkedTab, Ride } from './types';
+import type {
+  BarBookResult, BarDraft, BarRide, BarSettings, BarState, CarInfo, ConfirmInput, CreateResult, DemoState, DemoStore, DropMode,
+  FareScenario, Fault, LinkedTab, Ride, Role,
+} from './types';
+import type { EntryPoint } from '../lib/handoff';
+
+const TERMINAL_OR_DONE = ['complete', 'canceled_by_driver', 'no_cars', 'canceled_by_guest'];
+const GUEST_CAR: CarInfo = { car: venue.driver.car, plate: venue.driver.plate, plateSpoken: venue.driver.plateSpoken, driver: venue.driver.name, partner: venue.driver.partner };
+const REBOOK_CAR: CarInfo = { car: 'Blue Hyundai Sonata', plate: 'JMC-8813', plateSpoken: 'J M C 8 8 1 3', driver: 'Tess', partner: venue.bar.rebookPartner };
+const OTHER_CAR: CarInfo = { car: 'Gray Kia K5', plate: 'PLW-6620', plateSpoken: 'P L W 6 6 2 0', driver: 'Andre', partner: 'Ballston Car Co.' };
 
 /**
  * v1 data layer: memory only. Every page load is a fresh demo (product decision Oct 10):
@@ -57,7 +66,12 @@ export class InMemoryStore implements DemoStore {
   sendQuietRequest(seat: string) {
     const last = this.state.staffPings[this.state.staffPings.length - 1];
     if (last && last.kind === 'quiet_request' && this.now() - last.at < 3000) return;
-    this.set({ staffPings: [...this.state.staffPings, { kind: 'quiet_request', seat: seat.slice(0, 40), at: this.now() }] });
+    const tab = this.state.linkedTab?.tab ?? venue.tabNumber;
+    // Shows on the bar phone as a quiet request (B10). No reason, no notes, no sound.
+    this.set({
+      staffPings: [...this.state.staffPings, { kind: 'quiet_request', seat: seat.slice(0, 40), at: this.now() }],
+      bar: { ...this.state.bar, quiet: { tab, seat: seat.slice(0, 40), at: this.now(), seen: false, sideDoor: false, oneRider: false, booked: false } },
+    });
   }
   cancelStaffRequest() { this.set({ staffPings: [] }); }
 
@@ -120,14 +134,13 @@ export class InMemoryStore implements DemoStore {
     const h = this.state.handoff ?? this.defaultHandoff();
     const dest = this.state.dest ?? this.state.savedHome ?? venue.guest.home;
     const by = confirm?.by ?? 'guest';
-    const ride: Ride = { ...this.makeRide(h, dest, this.state.quoteCents, this.now() + UNDO_MS, consentText), pending: true, confirmedAt: this.now(), confirmedBy: by };
-    const confirmations = confirm
-      ? [...this.state.confirmations, {
-        rideId: ride.id, at: this.now(), quoteCents: confirm.shownQuoteCents ?? ride.quoteCents,
-        capCents: capFor(confirm.shownQuoteCents ?? ride.quoteCents), entryPoint: ride.entryPoint, by, method: confirm.method, tab: ride.tab,
-      }]
-      : this.state.confirmations;
-    this.set({ ride, confirmations, fault: null, prevQuoteCents: null, overCapAnswer: null, paid: false });
+    const ride: Ride = {
+      ...this.makeRide(h, dest, this.state.quoteCents, this.now() + UNDO_MS, consentText), pending: true, confirmedAt: this.now(), confirmedBy: by,
+      ...(confirm ? { confirmInput: { ...confirm, at: this.now() } } : {}),
+      ...(this.state.forceNoDriver ? { noDriver: true } : {}),
+    };
+    // The billing record is logged when the undo window ends (tick); the slide itself is only noted here.
+    this.set({ ride, slides: [...this.state.slides, { rideId: ride.id, at: this.now() }], forceNoDriver: false, fault: null, prevQuoteCents: null, overCapAnswer: null, paid: false });
     return { ride, duplicate: false };
   }
 
@@ -141,8 +154,16 @@ export class InMemoryStore implements DemoStore {
     const r = this.state.ride;
     if (!r || !r.pending || this.now() < r.bookedAt) return;
     const committed: Ride = { ...r, pending: false };
+    const ci = r.confirmInput;
+    const confirmations = ci
+      ? [...this.state.confirmations, {
+        rideId: r.id, at: ci.at, quoteCents: ci.shownQuoteCents ?? r.quoteCents, capCents: capFor(ci.shownQuoteCents ?? r.quoteCents),
+        entryPoint: r.entryPoint, by: ci.by ?? 'guest', method: ci.method, tab: r.tab,
+      }]
+      : this.state.confirmations;
     this.set({
       ride: committed,
+      confirmations,
       bookings: [...this.state.bookings, { rideId: r.id, at: r.bookedAt }],
       consents: [...this.state.consents, {
         rideId: r.id, renderedText: r.consentText, textVersion: 'confirm-fare-on-tab-v1', quoteCents: r.quoteCents,
@@ -155,12 +176,32 @@ export class InMemoryStore implements DemoStore {
 
   cancelRide() { this.set({ ride: null, fault: null, forceOffline: false }); }
 
-  stageOf(ride: Ride): Stage {
-    if (ride.terminal) return ride.terminal;
-    if (ride.pending && this.now() < ride.bookedAt) return 'pending';
-    if (ride.hold) return ride.hold;
-    return stageAt(ride.bookedAt, this.now());
+  stageOf(ride: Ride): Stage { return rideStage(ride, this.now()); }
+
+  keepLooking(): 'looking' | 'stale' | 'none' {
+    const r = this.state.ride;
+    const slide = r ? [...this.state.slides].reverse().find((x) => x.rideId === r.id) : undefined;
+    const quotedAt = slide?.at ?? r?.confirmedAt ?? this.now();
+    if (this.state.forceStaleQuote || this.now() - quotedAt > QUOTE_VALID_MS) {
+      // Never rebook silently on an old price: new quote, new slide.
+      const next = this.state.priceMovesOnRefresh || this.state.forceStaleQuote ? venue.e2NewQuoteCents : this.state.quoteCents;
+      this.set({ ride: null, fault: null, prevQuoteCents: this.state.quoteCents, quoteCents: next, forceStaleQuote: false, priceMovesOnRefresh: false, forceNoDriver: false });
+      return 'stale';
+    }
+    if (!r) { this.set({ fault: null }); return 'none'; }
+    // Search again from now; in the demo a driver accepts this time unless no driver is still forced.
+    this.set({ ride: { ...r, terminal: undefined, hold: undefined, noDriver: undefined, bookedAt: this.now() }, fault: null });
+    return 'looking';
   }
+  setForceNoDriver(on: boolean) {
+    const r = this.state.ride;
+    const patch: Partial<DemoState> = { forceNoDriver: on };
+    // A request still searching gives up right away when forced.
+    if (on && r && !r.pending && this.stageOf(r) === 'requested') { patch.ride = { ...r, terminal: 'no_cars' }; patch.forceNoDriver = false; }
+    else if (on && r && r.pending) { patch.ride = { ...r, noDriver: true }; patch.forceNoDriver = false; }
+    this.set(patch);
+  }
+  setForceStaleQuote(on: boolean) { this.set({ forceStaleQuote: on, priceMovesOnRefresh: on || this.state.priceMovesOnRefresh }); }
 
   advanceRide() {
     const r = this.state.ride;
@@ -207,10 +248,179 @@ export class InMemoryStore implements DemoStore {
   }
   clearFault() { this.set({ fault: null, forceOffline: false }); }
 
+
+  /* ---------------- Bartender (M2) ---------------- */
+
+  private setBar(patch: Partial<BarState>, extra: Partial<DemoState> = {}) {
+    this.set({ ...extra, bar: { ...this.state.bar, ...patch } });
+  }
+  private guestTab(): string { return this.state.linkedTab?.tab ?? venue.tabNumber; }
+
+  setRole(r: Role) { this.set({ role: r }); }
+  barWelcome() { this.setBar({ welcomed: true }); }
+
+  barRides(): BarRide[] {
+    const out: BarRide[] = [...this.state.bar.rides];
+    const r = this.state.ride;
+    if (r) out.unshift({ ...r, carInfo: GUEST_CAR });
+    return out;
+  }
+  barActiveRide(tab: string): BarRide | null {
+    return this.barRides().find((r) => r.tab === tab && !TERMINAL_OR_DONE.includes(this.stageOf(r))) ?? null;
+  }
+
+  barStartDraft(tab: string, ep: EntryPoint) {
+    const t = this.state.bar.tabs.find((x) => x.tab === tab);
+    if (!t) return;
+    const reply = this.state.bar.replies.find((x) => x.tab === tab);
+    const q = this.state.bar.quiet;
+    const draft: BarDraft = {
+      tab, ep, mode: 'link', dest: reply?.dest ?? null, quoteCents: reply?.quoteCents ?? null, prevQuoteCents: null,
+      // auto-checked only when the guest said yes on their own phone
+      sawPrice: !!reply, sawBy: reply ? 'guest' : null,
+      ...(q && q.tab === tab ? { sideDoor: q.sideDoor, oneRider: q.oneRider } : {}),
+    };
+    this.setBar({ draft });
+  }
+  barSetMode(mode: DropMode) {
+    const d = this.state.bar.draft;
+    if (!d || d.mode === mode) return;
+    if (d.sawBy === 'guest') { this.setBar({ draft: { ...d, mode } }); return; }
+    // switching paths drops a staff-entered drop-off and its tick
+    this.setBar({ draft: { ...d, mode, dest: null, quoteCents: null, prevQuoteCents: null, sawPrice: false, sawBy: null } });
+  }
+  barPickDest(a: Address) {
+    const d = this.state.bar.draft;
+    if (!d) return;
+    this.setBar({ draft: { ...d, mode: 'staff', dest: a, quoteCents: venue.quoteCents, prevQuoteCents: null, sawPrice: false, sawBy: null } });
+  }
+  barToggleSawPrice() {
+    const d = this.state.bar.draft;
+    if (!d || d.quoteCents == null) return; // nothing to have seen yet
+    this.setBar({ draft: { ...d, sawPrice: !d.sawPrice, sawBy: d.sawPrice ? null : 'staff' } });
+  }
+  barSimulateGuestReply(tab: string) {
+    const dest = tab === this.guestTab() ? (this.state.savedHome ?? venue.guest.home) : venue.addresses[3];
+    const replies = [...this.state.bar.replies.filter((r) => r.tab !== tab), { tab, dest, quoteCents: venue.quoteCents, at: this.now() }];
+    const d = this.state.bar.draft;
+    const draft = d && d.tab === tab
+      ? { ...d, mode: d.mode === 'staff' ? 'link' as const : d.mode, dest, quoteCents: venue.quoteCents, prevQuoteCents: null, sawPrice: true, sawBy: 'guest' as const }
+      : d;
+    this.setBar({ replies, draft });
+  }
+  barPriceChanged() {
+    const d = this.state.bar.draft;
+    if (!d || d.quoteCents == null) return;
+    this.setBar({ draft: { ...d, prevQuoteCents: d.quoteCents, quoteCents: venue.e2NewQuoteCents, sawPrice: false, sawBy: null } });
+  }
+  barCancelDraft() { this.setBar({ draft: null }); }
+
+  barBook(): BarBookResult {
+    const d = this.state.bar.draft;
+    if (!d) {
+      // a repeat tap after booking returns the ride just made, never a second one
+      return { ok: false, reason: 'no_draft' };
+    }
+    if (d.quoteCents == null || !d.dest) return { ok: false, reason: 'no_quote' };
+    if (!d.sawPrice || !d.sawBy) return { ok: false, reason: 'not_seen' };
+    const t = this.state.bar.tabs.find((x) => x.tab === d.tab);
+    if (!t || t.close !== 'open') return { ok: false, reason: 'tab_closed' };
+    const isGuestPhone = d.tab === this.guestTab() && !!this.state.linkedTab;
+    if (isGuestPhone ? this.hasActiveRide() : this.barActiveRide(d.tab)) {
+      const existing = isGuestPhone ? this.state.ride! : this.barActiveRide(d.tab)!;
+      return { ok: true, ride: existing, tab: d.tab, duplicate: true };
+    }
+    const now = this.now();
+    const ride: Ride = {
+      id: `r-${d.tab}-${now}`, tab: d.tab, seat: t.seat, guest: t.guest, entryPoint: d.ep, dest: d.dest,
+      riders: 1, quoteCents: d.quoteCents, capCents: capFor(d.quoteCents), bookedAt: now,
+      consentText: '', confirmedAt: now, confirmedBy: d.sawBy, scenario: 'higher',
+      ...(this.state.forceNoDriver ? { noDriver: true } : {}),
+    };
+    const conf = {
+      rideId: ride.id, at: now, quoteCents: d.quoteCents, capCents: capFor(d.quoteCents), entryPoint: d.ep, by: d.sawBy,
+      // guest said yes on their phone (slide); otherwise staff ticked "Guest saw the price"
+      method: d.sawBy === 'guest' ? 'slide' as const : 'staff_saw_price' as const, tab: d.tab,
+    };
+    const q = this.state.bar.quiet;
+    const barPatch: Partial<BarState> = {
+      draft: null,
+      replies: this.state.bar.replies.filter((r) => r.tab !== d.tab),
+      ...(q && q.tab === d.tab ? { quiet: { ...q, seen: true, booked: true } } : {}),
+    };
+    const common: Partial<DemoState> = {
+      forceNoDriver: false,
+      confirmations: [...this.state.confirmations, conf],
+      bookings: [...this.state.bookings, { rideId: ride.id, at: now }],
+    };
+    if (isGuestPhone) {
+      // Same phone (role switcher): the guest flow shows this ride.
+      this.setBar(barPatch, { ...common, ride, dest: d.dest, fault: null, prevQuoteCents: null, overCapAnswer: null, paid: false, quoteCents: d.quoteCents });
+    } else {
+      const carInfo = d.tab === '4471' ? { car: 'Black Honda Accord', plate: 'KTR-4471', plateSpoken: 'K T R 4 4 7 1', driver: 'Sasha', partner: venue.driver.partner } : GUEST_CAR;
+      this.setBar({ ...barPatch, rides: [...this.state.bar.rides, { ...ride, carInfo }] }, common);
+    }
+    return { ok: true, ride, tab: d.tab, duplicate: false };
+  }
+
+  barRebook(rideId: string, partner?: string): Ride | null {
+    const now = this.now();
+    const car = partner ? OTHER_CAR : REBOOK_CAR;
+    const rec = [...this.state.bar.seedRecords, ...this.state.confirmations].reverse().find((c) => c.rideId === rideId);
+    const copyRec = (id: string) => (rec ? [...this.state.confirmations, { ...rec, rideId: id }] : this.state.confirmations);
+    const r = this.state.ride;
+    if (r && r.id === rideId) {
+      if (this.stageOf(r) !== 'canceled_by_driver') return null;
+      const ride: Ride = { ...r, id: `r-${r.tab}-${now}`, bookedAt: now, terminal: undefined, hold: undefined, pending: false };
+      this.set({ ride, fault: null, confirmations: copyRec(ride.id), bookings: [...this.state.bookings, { rideId: ride.id, at: now }] });
+      return ride;
+    }
+    const old = this.state.bar.rides.find((x) => x.id === rideId);
+    if (!old || this.stageOf(old) !== 'canceled_by_driver') return null;
+    const ride: BarRide = { ...old, id: `r-${old.tab}-${now}`, bookedAt: now, terminal: undefined, carInfo: car };
+    this.setBar({ rides: [...this.state.bar.rides.filter((x) => x.id !== rideId), ride] },
+      { confirmations: copyRec(ride.id), bookings: [...this.state.bookings, { rideId: ride.id, at: now }] });
+    return ride;
+  }
+
+  barResendLink(tab: string) {
+    this.setBar({ tabs: this.state.bar.tabs.map((t) => (t.tab === tab ? { ...t, linkSentAt: this.now() } : t)) });
+  }
+  barNewGuest(): string {
+    const b = this.state.bar;
+    const used = b.tabs.length - venue.bar.tabs.length;
+    const g = venue.bar.newGuests[used % venue.bar.newGuests.length];
+    const tab = String(b.nextTab);
+    this.setBar({ tabs: [...b.tabs, { tab, seat: 'Bar', guest: g.guest, phoneLast4: g.phoneLast4, items: [], close: 'open' }], nextTab: b.nextTab + 1 });
+    return tab;
+  }
+  barCloseTab(tab: string, how: 'closed' | 'held') {
+    const extra: Partial<DemoState> = tab === this.guestTab() && how === 'closed' ? { tabClosed: true } : {};
+    this.setBar({ tabs: this.state.bar.tabs.map((t) => (t.tab === tab ? { ...t, close: how } : t)) }, extra);
+  }
+  barMarkQuietSeen() { const q = this.state.bar.quiet; if (q) this.setBar({ quiet: { ...q, seen: true } }); }
+  barSetQuietOption(k: 'sideDoor' | 'oneRider', v: boolean) {
+    const q = this.state.bar.quiet;
+    if (q) this.setBar({ quiet: { ...q, [k]: v } });
+  }
+  barSetSetting<K extends keyof BarSettings>(k: K, v: BarSettings[K]) {
+    this.setBar({ settings: { ...this.state.bar.settings, [k]: v } });
+  }
+  barFinishRide(rideId: string) {
+    const at = bookedAtFor('complete', this.now());
+    if (this.state.ride?.id === rideId) { this.set({ ride: { ...this.state.ride, bookedAt: at, hold: undefined, pending: false } }); return; }
+    this.setBar({ rides: this.state.bar.rides.map((r) => (r.id === rideId && !r.terminal ? { ...r, bookedAt: at } : r)) });
+  }
+  barSetRideScenario(rideId: string, sc: FareScenario) {
+    if (this.state.ride?.id === rideId) { this.setFareScenario(sc); return; }
+    this.setBar({ rides: this.state.bar.rides.map((r) => (r.id === rideId ? { ...r, scenario: sc } : r)) });
+  }
+
   /** Same as a reload: fresh seed, tab link from the current URL. */
   resetDemoData(urlLink?: UrlLink | null) {
     if (urlLink !== undefined) this.urlLink = urlLink;
-    this.state = this.fresh();
+    const role = this.state.role;
+    this.state = { ...this.fresh(), role };
     this.set({});
   }
 }

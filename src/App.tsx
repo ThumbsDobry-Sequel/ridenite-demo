@@ -18,6 +18,7 @@ import { E1, E4, E6 } from './screens/edges';
 import { E7, Inbox, M1, M2, P10, P11, P9 } from './screens/morning';
 import { DemoPanel, HandoffRoute, TableQrRoute } from './screens/demo';
 import { OwnerBar, OwnerIndex, OwnerLimits, OwnerSummary } from './screens/owner';
+import { BarApp, BAR_PATHS } from './screens/bar/BarApp';
 
 const ROUTES: Record<string, (r: Route) => ReactNode> = {
   '/': () => <Home />, '/g': () => <Home />, '/g/home': () => <Home />,
@@ -63,11 +64,24 @@ function SimBar({ onMenu, onLongPress }: { onMenu: () => void; onLongPress: () =
   );
 }
 
-function Menu({ onClose, onReset }: { onClose: () => void; onReset: () => void }) {
+function Menu({ onClose, onReset, bar }: { onClose: () => void; onReset: () => void; bar: boolean }) {
   const store = useStore();
   const s = useDemoState();
   const go = (to: string) => { onClose(); navigate(to); };
   const ride = s.ride;
+  if (bar) {
+    return (
+      <Sheet title="Menu" onClose={onClose} testId="menu-sheet" detent="large">
+        <Button variant="secondary" icon="glass" onClick={() => go('/b/tonight')}>Tonight</Button>
+        <Button variant="secondary" icon="car" onClick={() => go('/b/live')}>Live rides</Button>
+        <Button variant="secondary" icon="gear" onClick={() => go('/b/settings')}>Settings</Button>
+        <Button variant="secondary" icon="person" onClick={() => go('/g/home')} testId="menu-guest">Switch to guest view</Button>
+        <Button variant="bad" testId="menu-reset" onClick={onReset}>Reset demo data</Button>
+        <button type="button" className="textlink" onClick={onClose}>Close</button>
+        <p className="build-stamp" data-testid="build-stamp">Version {APP_VERSION} · built {BUILD_TIME_ET}</p>
+      </Sheet>
+    );
+  }
   return (
     <Sheet title="Menu" onClose={onClose} testId="menu-sheet" detent="large">
       {ride && <Button variant="secondary" icon="car" onClick={() => go(STAGE_ROUTE[store.stageOf(ride)])}>Ride status</Button>}
@@ -78,6 +92,7 @@ function Menu({ onClose, onReset }: { onClose: () => void; onReset: () => void }
       <Button variant="secondary" icon="hand" onClick={() => go('/g/p12')}>Ask staff quietly</Button>
       <Button variant="secondary" icon="gear" onClick={() => go('/g/demo')} testId="menu-demo">Demo controls</Button>
       <Button variant="secondary" icon="list" onClick={() => go('/o')} testId="menu-owner">Owner preview</Button>
+      <Button variant="secondary" icon="glass" onClick={() => go('/b')} testId="menu-bar">Switch to bartender view</Button>
       <Button variant="bad" testId="menu-reset" onClick={onReset}>Reset demo data</Button>
       <button type="button" className="textlink" onClick={onClose}>Close</button>
       <p className="build-stamp" data-testid="build-stamp">Version {APP_VERSION} · built {BUILD_TIME_ET}</p>
@@ -118,29 +133,41 @@ export function App() {
 
   useEffect(() => {
     if (route.query.get('undone') === '1') setToast('Undone. Nothing was booked or added to your tab.');
+    if (route.query.get('canceled') === '1') setToast('Cancelled. Nothing was booked.');
   }, [route]);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 5000); return () => clearTimeout(t); }, [toast]);
   useEffect(() => { window.scrollTo(0, 0); }, [route.path]);
 
-  const doReset = () => {
+  const isBar = route.path === '/b' || route.path.startsWith('/b/');
+  const doReset = (to?: string) => {
     store.resetDemoData(readUrlLink(location, venue.seat));
     setMenu(false); setConfirmReset(false);
     setToast('Demo data reset.');
-    navigate('/g/home');
+    navigate(to ?? (isBar ? '/b' : '/g/home'));
   };
+  useEffect(() => {
+    const on = (e: Event) => doReset((e as CustomEvent<{ to?: string }>).detail?.to);
+    window.addEventListener('ridenite:reset', on);
+    return () => window.removeEventListener('ridenite:reset', on);
+  });
+  // Role switcher: the same phone plays guest or bartender, chosen by the route.
+  useEffect(() => {
+    const role = isBar ? 'bartender' : 'guest';
+    if (store.getState().role !== role) store.setRole(role);
+  }, [isBar, store]);
 
-  const render = ROUTES[route.path];
+  const render = isBar ? (BAR_PATHS.includes(route.path) ? (r: Route) => <BarApp route={r} /> : undefined) : ROUTES[route.path];
   return (
-    <div className="app" data-theme={DAY.includes(route.path) ? 'day' : 'night'}>
+    <div className={`app${isBar ? ' app--bar' : ''}`} data-theme={DAY.includes(route.path) ? 'day' : 'night'} data-role={isBar ? 'bartender' : 'guest'}>
       <SimBar onMenu={() => setMenu(true)} onLongPress={() => setConfirmReset(true)} />
       <div className="sr-only" aria-live="polite" role="status">{toast}</div>
       {toast && <div className="toast" data-testid="toast">{toast}</div>}
       {render ? render(route) : <NotFound />}
-      {menu && <Menu onClose={() => setMenu(false)} onReset={doReset} />}
+      {menu && <Menu onClose={() => setMenu(false)} onReset={() => doReset()} bar={isBar} />}
       {confirmReset && (
         <Sheet title="Reset demo data?" onClose={() => setConfirmReset(false)} testId="reset-sheet">
           <p className="callout">Clears rides, receipts and settings on this phone and starts the demo fresh.</p>
-          <Button variant="bad" testId="reset-confirm" onClick={doReset}>Reset</Button>
+          <Button variant="bad" testId="reset-confirm" onClick={() => doReset()}>Reset</Button>
           <Button variant="secondary" onClick={() => setConfirmReset(false)}>Cancel</Button>
         </Sheet>
       )}

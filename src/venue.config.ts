@@ -3,8 +3,8 @@
  * name, address, phone, pickup spot, menu, tax, sample quote and fare scenarios,
  * driver, guest and seeded addresses. Swapping venues means editing only this file.
  *
- * SIMULATED DEMO. Maison Cheryl (2900 Wilson Blvd, Arlington, VA) is shown as an
- * illustrative example, not a live RideNite partner. Menu item names come from its
+ * SIMULATED DEMO. Maison Cheryl (2900 Wilson Blvd, Arlington, VA) is shown with the
+ * venue's permission (founder decision 2026-10-10); it is not a live RideNite partner. Menu item names come from its
  * published menu; every price, guest, driver, plate, phone number and address below
  * is fictional sample data (555-01xx numbers, example.test emails).
  * Values match sober-ride-deck/pos-demo (build-spec section 3b).
@@ -66,6 +66,7 @@ export const venue = {
   card: { last4: '4242', holdDeadline: 'Sun, Oct 11 at 11:00 AM' },
   night: {
     date: 'Fri Oct 9',
+    dateLong: 'Friday, Oct 9',
     morningClock: 'Sat 9:04 AM',
     tabOpened: '7:42 PM',
     booked: '11:11 PM',
@@ -108,6 +109,42 @@ export const venue = {
     { line: '2200 Columbia Pike', area: 'Arlington, VA 22204' },
     { line: 'Capital One Arena', area: '601 F St NW, Washington, DC', aliases: ['capital one arena', 'the arena'] },
   ] as Address[],
+  /** Bartender side (M2). Seeded open tabs per UI 7 B1, with Maison Cheryl numbers. Fictional guests. */
+  bar: {
+    status: 'Full Live',
+    earlierRidesTonight: 4, // sample: rides completed before the seeded ones
+    sideDoor: 'side door, Wilson Blvd',
+    managerOnDuty: 'Theo',
+    procedure: [
+      'Let the manager on duty know (Theo tonight).',
+      'Go over in person, low-key. Book the house car without asking why.',
+      'If the guest raises a concern, get the manager or security first and follow venue policy. The car is one option.',
+    ],
+    feeCents: 100,
+    // Item names are Maison Cheryl menu items; prices and guests are sample data.
+    tabs: [
+      { tab: '4468', seat: 'Table 7', guest: 'Maya R.', phoneLast4: '0127', items: [['The Pear Necessities', 1], ['Old Fashioned', 1], ['House Beer', 1], ['Madeleines', 1]] },
+      { tab: '4471', seat: 'Bar 3', guest: 'Dev K.', phoneLast4: '0144', items: [['The Pear Necessities', 2], ['House Beer', 1]] },
+      { tab: '4472', seat: 'Table 12', guest: 'Jordan T.', phoneLast4: '0152', items: [['Old Fashioned', 3], ['The Pear Necessities', 1], ['Madeleines', 1]] },
+      { tab: '4474', seat: 'Bar 5', guest: 'Ana G.', phoneLast4: '0163', items: [['The Pear Necessities', 2]] },
+      { tab: '4475', seat: 'Table 2', guest: 'Priya S. +2', phoneLast4: '0171', items: [['Old Fashioned', 4], ['The Pear Necessities', 2], ['Madeleines', 2]] },
+      { tab: '4476', seat: 'Bar 9', guest: 'Sam O.', phoneLast4: '0185', items: [['The Pear Necessities', 1], ['House Beer', 1]] },
+      { tab: '4473', seat: 'Table 4', guest: 'Rosa L.', phoneLast4: '0139', items: [['The Pear Necessities', 2], ['Old Fashioned', 2]] },
+    ] as { tab: string; seat: string; guest: string; phoneLast4: string; items: [string, number][] }[],
+    /** Sample guests for "+ New guest" (no typing in the demo; live product: first name + mobile). */
+    newGuests: [
+      { guest: 'Lee W.', phoneLast4: '0193' },
+      { guest: 'Nia B.', phoneLast4: '0196' },
+    ],
+    /** Seeded live rides: tab, stage at load, car. Stages advance on the demo timeline. */
+    seededRides: [
+      { tab: '4472', stage: 'arrived', car: 'White Toyota Prius', plate: 'T555031C', plateSpoken: 'T 5 5 5 0 3 1 C', driver: 'Ravi', partner: 'Northside Car Service', scenario: 'higher' },
+      { tab: '4474', stage: 'en_route', car: 'Black Honda Accord', plate: 'XKR-2207', plateSpoken: 'X K R 2 2 0 7', driver: 'Mei', partner: 'Northside Car Service', scenario: 'lower' },
+      { tab: '4476', stage: 'declined', car: 'Silver Ford Fusion', plate: 'VBN-4410', plateSpoken: 'V B N 4 4 1 0', driver: 'Omar', partner: 'Clarendon Livery', scenario: 'higher' },
+    ] as { tab: string; stage: 'arrived' | 'en_route' | 'declined'; car: string; plate: string; plateSpoken: string; driver: string; partner: string; scenario: 'higher' | 'lower' | 'equal' | 'over' }[],
+    rebookPartner: 'Arlington Black Car',
+    quietTab: '4473',
+  },
 } as const;
 
 export type Venue = typeof venue;

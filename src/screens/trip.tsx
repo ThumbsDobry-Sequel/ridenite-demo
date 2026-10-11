@@ -1,3 +1,4 @@
+import { RideStatus, requestedLine } from '../components/RideStatus';
 import { useEffect, useRef, useState } from 'react';
 import { TAP_GUARD_MS } from './confirm';
 import { venue } from '../venue.config';
@@ -112,15 +113,19 @@ export function P4() {
     return (
       <Screen id="P4-undo">
         <div className="topbar"><VenueChip /></div>
-        <h1 className="large-title">Booking your ride...</h1>
-        <p className="callout muted">{ride.dest.line}. {fmt(ride.quoteCents)} on your tab.</p>
+        <h1 className="large-title" data-testid="status-requesting">Requesting your ride...</h1>
+        {/* Vera rev 03 undo copy. Nothing is requested (or charged) during the countdown. */}
+        <p className="callout" data-testid="undo-quote">{fmt(ride.quoteCents)} quote to {ride.dest.line.replace(/\.$/, '')}.</p>
+        <p className="callout" data-testid="undo-line-1">Nothing is requested yet.</p>
         <Card className="center">
           <p className="countdown num" data-testid="undo-countdown" aria-live="polite" aria-atomic="true">{left}</p>
-          <p className="callout muted">seconds to undo. Nothing is booked yet.</p>
+          <p className="callout muted">seconds to undo</p>
+          {left <= 3
+            ? <p className="callout" data-testid="undo-soon" aria-live="polite">Requesting in a moment.</p>
+            : <p className="callout muted" data-testid="undo-line-2">We request your ride when the timer ends.</p>}
         </Card>
         {/* Riley p4-undo-v2: Undo sits right under the countdown card, away from the slider's end. */}
         <UndoButton armedAt={armedAt} onUndo={() => { store.undoRide(); navigate('/g/home?undone=1'); }} />
-        <p className="fict center">Your ride books when the timer ends.</p>
       </Screen>
     );
   }
@@ -129,10 +134,9 @@ export function P4() {
     <Screen id="P4">
       <Top ctx={venue.name} />
       <Spinner label="Finding a car" />
-      <h1 className="h2 center">Your car is requested</h1>
-      <p className="callout muted center" aria-live="polite">Checking local car services and ride apps for the best match.</p>
+      <h1 className="h2 center" data-testid="status-requested" aria-live="polite">Ride requested. Finding a driver.</h1>
+      <p className="callout center" data-testid="status-requested-fare">{requestedLine(q)}</p>
       <Belongings ride={ride} stage={stage} />
-      <Card><div className="row"><span className="callout">Quote {fmt(q)} on your tab.</span></div><p className="foot">May differ by up to {fmt(capFor(q))}.</p></Card>
       <div className="spacer" />
       <DemoNext />
       <TextLink onClick={() => { store.cancelRide(); navigate('/g/home'); }}>Cancel ride</TextLink>
@@ -151,10 +155,12 @@ function useWakeLock() {
 
 export function P5() {
   const { ride, stage } = useLiveRide('/g/p5');
+  const tabClosed = useDemoState().tabClosed;
   useWakeLock();
   return (
     <Screen id="P5" tight>
       <Top left={<Chip tone="info" icon="car">Driver on the way</Chip>} ctx={venue.name} />
+      <RideStatus stage={stage} quoteCents={ride?.quoteCents ?? venue.quoteCents} tabClosed={tabClosed} />
       <div className="eta-block"><span className="eta" data-testid="eta">{venue.etaMinutes} min</span><span className="callout muted">Pickup at {venue.pickupSpot}</span></div>
       <p className="callout">Before you get in, check the plate. Your driver will say your first name.</p>
       <Plate plate={d.plate} spoken={d.plateSpoken} />
@@ -173,10 +179,12 @@ export function P5() {
 
 export function P5w() {
   const { ride, stage } = useLiveRide('/g/p5w');
+  const tabClosed = useDemoState().tabClosed;
   useWakeLock();
   return (
     <Screen id="P5w" tight>
       <Top left={<Chip tone="info" icon="clock">2 min away</Chip>} ctx={venue.name} />
+      <RideStatus stage={stage} quoteCents={ride?.quoteCents ?? venue.quoteCents} tabClosed={tabClosed} />
       <h1 className="h2" role="status">Driver is 2 minutes away.</h1>
       <p className="body">You can wait inside. We'll text you when it's at the door.</p>
       <Belongings ride={ride} stage={stage ?? 'near'} />
@@ -195,9 +203,11 @@ export function P5w() {
 export function E3() {
   const store = useStore();
   const { ride, stage } = useLiveRide('/g/e3');
+  const tabClosed = useDemoState().tabClosed;
   return (
     <Screen id="E3">
       <Top left={<Chip tone="warning" icon="clock">Car is outside</Chip>} />
+      <RideStatus stage={stage} quoteCents={ride?.quoteCents ?? venue.quoteCents} tabClosed={tabClosed} />
       <h1 className="large-title">Your car is here</h1>
       <Plate plate={d.plate} spoken={d.plateSpoken} />
       <p className="body">{venue.pickupShort} {d.carShort[0].toUpperCase() + d.carShort.slice(1)}.</p>
@@ -255,7 +265,7 @@ export function P7() {
   return (
     <Screen id="P7">
       <Top left={<span className="brand">RideNite</span>} ctx={venue.night.complete} />
-      <Chip tone="success" icon="check">Ride complete</Chip>
+      <Chip tone="success" icon="check">Dropped off</Chip>
       <h1 className="large-title">You've arrived.</h1>
       <p className="body muted">Your ride from {venue.name} is on your tab.</p>
       <div className="spacer" />

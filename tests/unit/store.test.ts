@@ -130,14 +130,92 @@ describe('InMemoryStore', () => {
     expect(s.linkedTab?.tab).toBe(venue.tabNumber);
   });
 
-  it('logs the confirm immediately with the shown quote and cap; record line only after the undo window', async () => {
+  it('logs the confirm when the undo window ends (time of the slide, shown quote and cap); line shows only on driver accept', async () => {
     const { confirmLine } = await import('../../src/lib/confirmRecord');
     const { store, advance } = mk();
+    const slidAt = store.now();
     store.createRide('c', { method: 'slide', by: 'guest', shownQuoteCents: 2100 });
-    expect(store.getState().confirmations[0]).toMatchObject({ quoteCents: 2100, capCents: 420, entryPoint: 'guest_request', method: 'slide' });
-    expect(confirmLine(store.getState())).toBeNull();
+    expect(store.getState().confirmations).toHaveLength(0); // not logged during undo
+    expect(store.getState().slides).toHaveLength(1);
+    expect(confirmLine(store.getState(), store.getState().ride, store.now())).toBeNull();
     advance(UNDO_MS); store.tick();
-    expect(confirmLine(store.getState())?.text).toMatch(/^Confirmed by guest, \d{1,2}:\d{2} [AP]M$/);
+    expect(store.getState().confirmations[0]).toMatchObject({ at: slidAt, quoteCents: 2100, capCents: 420, entryPoint: 'guest_request', method: 'slide' });
+    // requested, no driver yet: nothing on the tab
+    expect(confirmLine(store.getState(), store.getState().ride, store.now())).toBeNull();
+    advance(DEMO_TIMELINE.en_route);
+    expect(confirmLine(store.getState(), store.getState().ride, store.now())?.text).toMatch(/^Confirmed by guest, \d{1,2}:\d{2} [AP]M$/);
+  });
+
+  it('no driver can accept during the undo window', () => {
+    const { store, advance } = mk();
+    store.createRide('c', { method: 'slide' });
+    advance(UNDO_MS - 1);
+    expect(store.stageOf(store.getState().ride!)).toBe('pending');
+  });
+
+  it('charge only on accept: requested has no ride line; accepted does', async () => {
+    const { morningFor } = await import('../../src/lib/morning');
+    const { store, advance } = mk();
+    store.createRide('c', { method: 'slide' });
+    advance(UNDO_MS); store.tick();
+    expect(morningFor(store.getState(), store.now()).hasRide).toBe(false);
+    expect(morningFor(store.getState(), store.now()).rideCents).toBe(0);
+    advance(DEMO_TIMELINE.en_route);
+    expect(morningFor(store.getState(), store.now()).hasRide).toBe(true);
+    expect(morningFor(store.getState(), store.now()).rideCents).toBeGreaterThan(0);
+  });
+
+  it('no driver found: no charge line; receipt reads "Requested by guest, <slide time>. No driver found. Not charged."', async () => {
+    const { morningFor } = await import('../../src/lib/morning');
+    const { noDriverLine, confirmLine, fmtET } = await import('../../src/lib/confirmRecord');
+    const { NO_DRIVER_MS } = await import('../../src/lib/rideState');
+    const { store, advance } = mk();
+    store.setForceNoDriver(true);
+    const slidAt = store.now();
+    store.createRide('c', { method: 'slide' });
+    advance(UNDO_MS); store.tick();
+    advance(NO_DRIVER_MS);
+    const s = store.getState();
+    expect(store.stageOf(s.ride!)).toBe('no_cars');
+    const m = morningFor(s, store.now());
+    expect(m.hasRide).toBe(false);
+    expect(m.noDriver).toBe(true);
+    expect(m.totalCents).toBe(6419);
+    expect(confirmLine(s, s.ride, store.now())).toBeNull();
+    expect(noDriverLine(s, s.ride, store.now())).toBe(`Requested by guest, ${fmtET(slidAt)}. No driver found. Not charged.`);
+  });
+
+  it('keep looking within 5 minutes searches again; past 5 minutes needs a new price and a new slide', () => {
+    const { store, advance } = mk();
+    store.setForceNoDriver(true);
+    store.createRide('c', { method: 'slide' });
+    advance(UNDO_MS); store.tick();
+    advance(25_000);
+    expect(store.keepLooking()).toBe('looking');
+    expect(store.stageOf(store.getState().ride!)).toBe('requested');
+    advance(DEMO_TIMELINE.en_route);
+    expect(store.stageOf(store.getState().ride!)).toBe('en_route'); // a driver accepts this time
+    // stale: forced no driver again, then wait past 5 minutes
+    const { store: s2, advance: adv2 } = mk();
+    s2.setForceNoDriver(true);
+    s2.createRide('c', { method: 'slide' });
+    adv2(UNDO_MS); s2.tick();
+    adv2(5 * 60_000 + 1);
+    expect(s2.keepLooking()).toBe('stale');
+    expect(s2.getState().ride).toBeNull(); // never rebooked silently
+    expect(s2.getState().bookings).toHaveLength(1);
+  });
+
+  it('forced stale quote: Keep looking shows the new price ($23.50) and clears the ride', () => {
+    const { store, advance } = mk();
+    store.setForceNoDriver(true);
+    store.createRide('c', { method: 'slide' });
+    advance(UNDO_MS); store.tick();
+    advance(25_000);
+    store.setForceStaleQuote(true);
+    expect(store.keepLooking()).toBe('stale');
+    expect(store.getState().quoteCents).toBe(2350);
+    expect(store.getState().prevQuoteCents).toBe(2100);
   });
 
   it('undone confirm: no record line, no ride on the tab', async () => {
@@ -157,7 +235,7 @@ describe('InMemoryStore', () => {
     const { confirmLine } = await import('../../src/lib/confirmRecord');
     const { store, advance } = mk();
     store.createRide('s', { method: 'staff_saw_price', by: 'staff' });
-    advance(UNDO_MS); store.tick();
-    expect(confirmLine(store.getState())?.text).toMatch(/^Booked by staff, price shown to guest, /);
+    advance(UNDO_MS); store.tick(); advance(DEMO_TIMELINE.en_route);
+    expect(confirmLine(store.getState(), store.getState().ride, store.now())?.text).toMatch(/^Booked by staff, price shown to guest, /);
   });
 });

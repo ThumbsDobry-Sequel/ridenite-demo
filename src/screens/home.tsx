@@ -1,3 +1,4 @@
+import { bookedLine, isAccepted } from '../components/RideStatus';
 import { useState } from 'react';
 import { venue } from '../venue.config';
 import { navigate } from '../router';
@@ -18,7 +19,7 @@ export const STAGE_TONE: Record<Stage, Tone> = {
 
 const HEADLINE: Partial<Record<Stage, string>> = {
   pending: 'Booking your ride.',
-  requested: 'Your car is requested.',
+  requested: 'Ride requested.',
   en_route: 'Your car is on the way.',
   near: 'Your car is 2 min away.',
   arrived: 'Your car is here.',
@@ -63,6 +64,7 @@ export function Home() {
           <button type="button" className="card card--tap card--active" data-testid="ride-card" onClick={() => navigate(STAGE_ROUTE[stage])}>
             <span className="stack">
               <Chip tone={STAGE_TONE[stage]} icon="car">{STAGE_LABEL[stage]}</Chip>
+              {isAccepted(stage) && <span className="callout" data-testid="home-booked">{bookedLine(s.tabClosed)}</span>}
               <span className="callout">to {ride.dest.line}</span>
               {stage !== 'pending' && stage !== 'requested' && (
                 <>

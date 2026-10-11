@@ -16,8 +16,8 @@ const MOVE_SLOP = 8;
  * - Accessible: a real "Confirm ride" button that VoiceOver and Switch Control activate directly
  *   (visually hidden until focused), plus a 1 s long press on the thumb with visible progress.
  */
-export function SlideToConfirm({ label, a11yLabel, onComplete, testId = 'confirm', disabled }: {
-  label: string; a11yLabel: string; onComplete: (method: 'slide' | 'long_press' | 'a11y') => void; testId?: string; disabled?: boolean;
+export function SlideToConfirm({ label, a11yLabel, onComplete, testId = 'confirm', disabled, hint = true }: {
+  label: string; a11yLabel: string; onComplete: (method: 'slide' | 'long_press' | 'a11y') => void; testId?: string; disabled?: boolean; hint?: boolean;
 }) {
   const track = useRef<HTMLDivElement>(null);
   const thumb = useRef<HTMLDivElement>(null);
@@ -121,7 +121,7 @@ export function SlideToConfirm({ label, a11yLabel, onComplete, testId = 'confirm
       </div>
       <button type="button" className="sr-only sr-only-focusable slide__a11y" data-testid={`${testId}-a11y`}
         disabled={disabled || complete} onClick={() => finish('a11y')}>{a11yLabel}</button>
-      <p className="slide__hint foot">Slide to confirm, or press and hold. You can undo for 10 seconds.</p>
+      {hint && <p className="slide__hint foot">Slide to confirm, or press and hold. You can undo for 10 seconds.</p>}
     </div>
   );
 }

@@ -1,6 +1,7 @@
+import { QUOTE_VALID_MS } from '../lib/rideState';
 import { useState } from 'react';
 import { venue } from '../venue.config';
-import { navigate } from '../router';
+import { navigate, parseHash } from '../router';
 import { useDemoState, useStore } from '../store';
 import { capFor } from '../lib/fare';
 import { fmt } from '../lib/money';
@@ -9,26 +10,29 @@ import { Banner, Button, Card } from '../components/primitives';
 import { Icon } from '../components/Icon';
 import { SlideToConfirm } from '../components/SlideToConfirm';
 import type { ConfirmMethod } from '../store/types';
-import { BackButton, Screen, Top } from '../components/layout';
+import { Screen, Top } from '../components/layout';
 
 export const fareNote = (q: number) =>
   `${fmt(q)} on your tab at ${venue.name}. Final fare may differ by up to ${fmt(capFor(q))}. More than that and we'll ask you first. If it comes in lower, you get the difference back.`;
 
-export const QUOTE_TTL_MS = 120_000;
+/** Quote valid for 5 minutes (demo constant, SCOPE "Ride status and charge timing"). */
+export const QUOTE_TTL_MS = QUOTE_VALID_MS;
 /** Taps on Undo are ignored this long after the screen appears (a fast double action never undoes). */
 export const TAP_GUARD_MS = 600;
 
 /** P3 CONFIRM (Riley mockup p3-confirm): one card with destination, quote and cap line,
- *  sticky 88pt Confirm and 56pt Cancel. Re-quotes if open more than 2 minutes. */
+ *  slider and 56pt Cancel. Re-quotes if the quote is more than 5 minutes old. */
 export function P3() {
   const store = useStore();
   const s = useDemoState();
   const [openedAt, setOpenedAt] = useState(() => store.now());
   const [updated, setUpdated] = useState(false);
   const [slideKey, setSlideKey] = useState(0);
+  const stale = parseHash(location.hash).query.get('stale') === '1';
   const dest = s.dest ?? s.savedHome ?? venue.guest.home;
   const q = s.quoteCents;
   const cap = capFor(q);
+  const perk = s.bar.settings.priceMode === 'venue_perk';
   const isHome = !!s.savedHome && s.savedHome.line === dest.line;
 
   if (store.hasActiveRide() && s.ride) {
@@ -46,7 +50,8 @@ export function P3() {
 
   const confirm = (method: ConfirmMethod) => {
     // Stale quote: refresh first and never book silently on a changed price.
-    if (store.now() - openedAt > QUOTE_TTL_MS) {
+    if (store.getState().forceStaleQuote || store.now() - openedAt > QUOTE_TTL_MS) {
+      store.setForceStaleQuote(false);
       const changed = store.refreshQuote();
       setOpenedAt(store.now());
       if (changed) { setUpdated(true); setSlideKey((k) => k + 1); return; }
@@ -59,12 +64,12 @@ export function P3() {
 
   return (
     <Screen id="P3" tight>
-      <div className="navbar">
-        <span className="back-wrap"><BackButton to="/g/home" /></span>
+      {/* No Back here (founder decision): Cancel under the slider is the one way out, nothing booked. */}
+      <div className="navbar navbar--center">
         <span className="navbar__title">Confirm ride</span>
-        <span className="navbar__end"><button type="button" className="back-btn cancel-top" data-testid="cancel" onClick={() => navigate('/g/home')}>Cancel</button></span>
       </div>
       {updated && <Banner tone="info">The price was updated. Check the new quote, then confirm again.</Banner>}
+      {stale && !updated && <Banner tone="info"><span data-testid="stale-banner">No driver yet, and the price changed. Check the new quote, then slide again. Nothing was added to your tab.</span></Banner>}
       <Card testId="quote-card">
         <div className="row row--top">
           <div className="grow">
@@ -79,13 +84,18 @@ export function P3() {
         </div>
         <p className="price price--xl" data-testid="quote">{fmt(q)}</p>
         <p className="callout" data-testid="tab-line">On your {venue.name} tab.</p>
-        <p className="callout muted cap-note" data-testid="cap-line"><Icon name="clock" />Final fare may differ by up to {fmt(cap)}.</p>
-        <p className="foot">More than that and we'll ask you first. If it comes in lower, you get the difference back.</p>
-        <p className="foot muted" data-testid="pickup-line">Pickup: {venue.pickupShort}<span className="eta-note"> Car in about {venue.etaMinutes} min.</span></p>
+        <p className="callout cap-note" data-testid="cap-line"><Icon name="clock" />Final fare may differ by up to {fmt(cap)}.</p>
+        <p className="foot cap-more">More than that and we'll ask you first. If it comes in lower, you get the difference back.</p>
+        {perk && <p className="callout" data-testid="perk-line">Venue perk: first {fmt(venue.perkCents)} on us. You pay {fmt(Math.max(0, q - venue.perkCents))} on your tab.</p>}
       </Card>
-      <div className="sticky-actions">
-        <SlideToConfirm key={slideKey} label="Slide to confirm" a11yLabel={`Confirm ride, ${fmt(q)} on your tab`} onComplete={confirm} />
-        <Button variant="secondary" testId="cancel" className="cancel-bottom" onClick={() => navigate('/g/home')}>Cancel</Button>
+      <Card testId="pickup-card" className="pickup-card">
+        <div className="kvrow"><span className="kvrow__icon"><Icon name="pin" /></span><div><p className="kv__k">Pickup</p><p className="h3" data-testid="pickup-line">{venue.pickupShort.replace(/\.$/, '')}</p></div></div>
+        <div className="kvrow"><span className="kvrow__icon"><Icon name="car" /></span><div><p className="kv__k">Car</p><p className="h3">Partner car, about {venue.etaMinutes} min</p></div></div>
+      </Card>
+      <div className="sticky-actions sticky-actions--slide">
+        <SlideToConfirm key={slideKey} label="Slide to confirm" a11yLabel={`Confirm ride, ${fmt(q)} on your tab`} onComplete={confirm} hint={false} />
+        <Button variant="secondary" testId="cancel" className="cancel-bottom" onClick={() => navigate('/g/home?canceled=1')}>Cancel</Button>
+        <p className="slide__hint foot" data-testid="slide-hint">Slide to confirm. You can undo for 10 seconds.</p>
       </div>
     </Screen>
   );

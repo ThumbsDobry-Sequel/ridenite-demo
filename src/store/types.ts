@@ -1,4 +1,4 @@
-import type { Address } from '../venue.config';
+import type { Address, PriceMode } from '../venue.config';
 import type { EntryPoint, Handoff } from '../lib/handoff';
 import type { LiveStage, Stage, TerminalStage } from '../lib/rideState';
 import type { OverCapAnswer } from '../lib/fare';
@@ -28,6 +28,10 @@ export interface Ride {
   /** Frozen at this stage (fault panel) until the guest acts. */
   hold?: LiveStage;
   terminal?: TerminalStage;
+  /** Demo: no driver accepts this request. */
+  noDriver?: boolean;
+  /** Guest confirm details, held while pending; the record is logged when the undo window ends. */
+  confirmInput?: ConfirmInput & { at: number };
 }
 
 export type CreateResult =
@@ -66,6 +70,72 @@ export interface StaffPing { kind: 'guest_request' | 'quiet_request'; seat: stri
 
 export interface LinkedTab { tab: string; seat: string; guest: string; via: 'seed' | 'table_qr' | 'staff_link'; at: number }
 
+/* ---------- Bartender side (M2) ---------- */
+
+export type Role = 'guest' | 'bartender';
+export type DropMode = 'link' | 'qr' | 'staff';
+
+export interface BarTab {
+  tab: string;
+  seat: string;
+  guest: string;
+  phoneLast4: string;
+  items: [string, number][];
+  /** open, closed now (Mode A) or held for morning checkout (Mode B). */
+  close: 'open' | 'closed' | 'held';
+  /** Link to enter drop-off was texted (sample). */
+  linkSentAt?: number;
+}
+
+/** Guest's answer on their own phone: drop-off picked and price seen ("Yes, send my ride"). */
+export interface GuestReply { tab: string; dest: Address; quoteCents: number; at: number }
+
+/** Booking sheet in progress (B3). Nothing here is free text. */
+export interface BarDraft {
+  tab: string;
+  ep: EntryPoint;
+  mode: DropMode;
+  dest: Address | null;
+  quoteCents: number | null;
+  prevQuoteCents: number | null;
+  sawPrice: boolean;
+  sawBy: 'guest' | 'staff' | null;
+  sideDoor?: boolean;
+  oneRider?: boolean;
+}
+
+export interface CarInfo { car: string; plate: string; plateSpoken: string; driver: string; partner: string }
+
+export interface BarRide extends Ride { carInfo: CarInfo; completedAt?: number }
+
+export interface QuietRequest { tab: string; seat: string; at: number; seen: boolean; sideDoor: boolean; oneRider: boolean; booked: boolean }
+
+export interface BarSettings {
+  priceMode: PriceMode;
+  receipt: 'neutral' | 'detailed';
+  tabLineName: 'Courtesy car' | 'RideNite Ride';
+  closeNoticeMin: number;
+}
+
+export interface BarState {
+  welcomed: boolean;
+  tabs: BarTab[];
+  /** Rides on tabs other than this phone's guest tab (that one lives in DemoState.ride). */
+  rides: BarRide[];
+  replies: GuestReply[];
+  draft: BarDraft | null;
+  quiet: QuietRequest | null;
+  settings: BarSettings;
+  /** Sample count of rides finished earlier tonight, for the header. */
+  earlierRides: number;
+  seedRecords: Confirmation[];
+  nextTab: number;
+}
+
+export type BarBookResult =
+  | { ok: true; ride: Ride; tab: string; duplicate: boolean }
+  | { ok: false; reason: 'no_draft' | 'no_quote' | 'not_seen' | 'active' | 'tab_closed' };
+
 export interface DemoState {
   version: number;
   seededAt: number;
@@ -95,6 +165,14 @@ export interface DemoState {
   linkedTab: LinkedTab | null;
   /** Demo: the next quote refresh returns a higher price. */
   priceMovesOnRefresh: boolean;
+  /** Every completed slide on this phone (rideId, time), kept even if undone. Not a billing record. */
+  slides: { rideId: string; at: number }[];
+  /** Demo: the next or current request finds no driver. */
+  forceNoDriver: boolean;
+  /** Demo: treat the quote as older than 5 minutes. */
+  forceStaleQuote: boolean;
+  role: Role;
+  bar: BarState;
 }
 
 /**
@@ -128,6 +206,10 @@ export interface DemoStore {
   hasActiveRide(): boolean;
   dismissNudge(key: string): void;
   undoRide(): void;
+  /** No driver found: keep looking. Returns 'stale' when the quote is too old (new price, new slide needed). */
+  keepLooking(): 'looking' | 'stale' | 'none';
+  setForceNoDriver(on: boolean): void;
+  setForceStaleQuote(on: boolean): void;
   /** Commits a pending ride once its undo window has passed. Fine to call often. */
   tick(): void;
   acceptNewQuote(): void;
@@ -149,4 +231,33 @@ export interface DemoStore {
   applyFault(f: Fault): void;
   clearFault(): void;
   resetDemoData(urlLink?: { tab: string; seat: string } | null): void;
+
+  // bartender (M2)
+  setRole(r: Role): void;
+  barWelcome(): void;
+  /** Tap 1 (Guest asked / I offered): opens the booking sheet for a tab with that entry point. */
+  barStartDraft(tab: string, ep: EntryPoint): void;
+  barSetMode(mode: DropMode): void;
+  /** Staff entered path: pick a seeded drop-off (no typing). Quote appears; box stays unticked. */
+  barPickDest(a: Address): void;
+  barToggleSawPrice(): void;
+  /** Demo: the guest picks a drop-off and taps "Yes, send my ride" on their phone. */
+  barSimulateGuestReply(tab: string): void;
+  /** Demo E2: price changes before booking; Book disables again until the price is re-seen. */
+  barPriceChanged(): void;
+  barCancelDraft(): void;
+  barBook(): BarBookResult;
+  barRebook(rideId: string, partner?: string): Ride | null;
+  barResendLink(tab: string): void;
+  barNewGuest(): string;
+  barCloseTab(tab: string, how: 'closed' | 'held'): void;
+  barMarkQuietSeen(): void;
+  barSetQuietOption(k: 'sideDoor' | 'oneRider', v: boolean): void;
+  barSetSetting<K extends keyof BarSettings>(k: K, v: BarSettings[K]): void;
+  barSetRideScenario(rideId: string, s: FareScenario): void;
+  /** Demo: jump a ride to drop-off so the final fare lines post. */
+  barFinishRide(rideId: string): void;
+  /** All rides the bar sees, the guest phone's ride included. */
+  barRides(): BarRide[];
+  barActiveRide(tab: string): BarRide | null;
 }

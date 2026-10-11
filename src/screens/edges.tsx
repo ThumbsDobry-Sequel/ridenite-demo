@@ -1,23 +1,31 @@
-import { useState } from 'react';
 import { venue } from '../venue.config';
 import { navigate } from '../router';
-import { useStore } from '../store';
+import { useDemoState, useStore } from '../store';
+import { useNow } from '../hooks';
+import { fmt } from '../lib/money';
 import { Banner, Button } from '../components/primitives';
 import { Screen, Top } from '../components/layout';
 
+/** No driver found (SCOPE "Ride status and charge timing"): nothing charged; ask staff, or keep looking. */
 export function E1() {
   const store = useStore();
-  const [trying, setTrying] = useState(false);
+  const s = useDemoState();
+  useNow(1000);
+  const keep = () => {
+    const r = store.keepLooking();
+    if (r === 'stale') navigate('/g/p3?stale=1');
+    else if (r === 'looking') navigate('/g/p4');
+    else navigate('/g/home');
+  };
   return (
     <Screen id="E1">
       <Top ctx={venue.name} />
-      <Banner tone="warning" alert>No cars nearby right now. Nothing was added to your tab.</Banner>
-      <h1 className="h2">What next?</h1>
-      {trying
-        ? <p className="body" role="status">Still looking. We'll text you as soon as a car accepts (simulated).</p>
-        : <Button icon="clock" testId="keep-trying" onClick={() => setTrying(true)}>Keep trying for 5 min</Button>}
-      <Button variant="secondary" icon="glass" onClick={() => { store.clearFault(); store.requestStaff(venue.seat); navigate('/g/p3w'); }}>Ask the bartender</Button>
+      <h1 className="h2" role="status" data-testid="no-driver-title">No driver found yet.</h1>
+      <p className="body" data-testid="no-driver-note">Nothing was added to your tab.</p>
+      {s.ride && <p className="foot">Your quote was {fmt(s.ride.quoteCents)}. If it is more than 5 minutes old, you'll see the new price before we look again.</p>}
       <div className="spacer" />
+      <Button icon="glass" testId="ask-staff-car" onClick={() => { store.cancelRide(); store.requestStaff(venue.seat); navigate('/g/p3w'); }}>Ask staff for a car</Button>
+      <Button variant="secondary" icon="clock" testId="keep-looking" onClick={keep}>Keep looking</Button>
       <p className="foot">Staff can see this too.</p>
     </Screen>
   );

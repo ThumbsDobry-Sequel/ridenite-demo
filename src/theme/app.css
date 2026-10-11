@@ -1,5 +1,4 @@
 /* Base + shared primitives. Values come from tokens.css only. */
-@import '@fontsource/libre-baskerville/700.css';
 
 *, *::before, *::after { box-sizing: border-box; }
 html { font-family: var(--font-ui); -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -282,18 +281,28 @@ select.input:disabled { opacity: 1; color: var(--text-2); }
 .card .seg { margin: var(--s2) 0; }
 
 .row--top .grow { flex: 1; min-width: 0; }
-.cancel-top { display: none; }
-/* Short phones (SE): Confirm screen fits above the sticky button with nothing half hidden.
-   Cancel moves up to the nav bar (replacing Back) and the price card tightens. */
+/* Confirm (P3, founder decision 9:30): no Back; 56px Cancel under the slider; on SE the Pickup card
+   scrolls behind the pinned slider. Price and cap line stay full-strength text; only the slider glows. */
+.navbar--center { justify-content: center; }
+.navbar--center .navbar__title { grid-column: 1 / -1; text-align: center; }
+[data-screen=P3] .cap-note { color: var(--text); }
+[data-screen=P3] .cancel-bottom { min-height: var(--tap-guest); }
+.sticky-actions--slide .slide__hint { text-align: center; }
+.pickup-card { display: flex; flex-direction: column; gap: var(--s3); }
+.kvrow { display: flex; align-items: flex-start; gap: var(--s3); }
+.kvrow + .kvrow { border-top: var(--hairline) solid var(--separator); padding-top: var(--s3); }
+.kvrow__icon { flex: none; display: inline-flex; align-items: center; justify-content: center; width: var(--tile); height: var(--tile); border-radius: var(--r-control); background: var(--surface-2); }
+.kvrow__icon .icon { width: var(--tile-icon); height: var(--tile-icon); }
 @media (max-height: 700px) {
-  [data-screen=P3] .cancel-top { display: inline-flex; }
-  [data-screen=P3] .back-wrap { visibility: hidden; width: 0; overflow: hidden; }
-  [data-screen=P3] .cancel-bottom, [data-screen=P3] .undo-note, [data-screen=P3] .eta-note { display: none; }
   [data-screen=P3] .price--xl { font-size: var(--t-price); margin: 0; }
   [data-screen=P3] .card .seg { margin: var(--s1) 0; }
   [data-screen=P3] .card { padding-top: var(--s3); padding-bottom: var(--s3); }
-  [data-screen=P3] .sticky-actions { padding-top: var(--s2); }
+  [data-screen=P3] .sticky-actions { padding-top: var(--s2); gap: var(--s2); }
   [data-screen=P3] .page { gap: var(--s2); }
+  [data-screen=P3] .sticky-actions--slide .slide__hint { display: block; }
+  /* Riley p3-slide-rest-se-cancel: the top card ends at the cap line on SE */
+  [data-screen=P3] .cap-more { display: none; }
+  [data-screen=P3] .navbar { min-height: calc(var(--s7) + var(--s2)); }
 }
 .navbar__end { display: flex; justify-content: flex-end; }
 .navbar .cancel-top { padding: 0 0 0 var(--s4); }
@@ -321,7 +330,8 @@ select.input:disabled { opacity: 1; color: var(--text-2); }
   box-shadow: 0 0 calc(var(--s6) * var(--fill)) calc(var(--s2) * var(--fill)) var(--porch-glow-soft);
   border-color: color-mix(in srgb, var(--primary) 45%, transparent);
 }
-.slide__fill { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--slide-inset) + var(--thumb-x) + var(--slide-thumb)); background: linear-gradient(90deg, var(--porch-glow-soft), var(--porch-glow)); opacity: min(1, calc(var(--fill) * 3)); }
+/* Lit fill: at rest and while sliding it stops at the thumb's right edge, with a short soft fade (never past the thumb). */
+.slide__fill { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--slide-inset) + var(--thumb-x) + var(--slide-thumb)); background: linear-gradient(90deg, var(--porch-glow-soft), var(--porch-glow) calc(100% - var(--slide-fade)), transparent); pointer-events: none; }
 .slide.is-holding .slide__fill { width: calc(var(--slide-inset) + var(--slide-thumb) + var(--fill) * (100% - 2 * var(--slide-inset) - var(--slide-thumb))); }
 .slide__tick { position: absolute; top: var(--s3); bottom: var(--s3); width: var(--hairline); background: var(--separator); pointer-events: none; }
 .slide__label { opacity: var(--label-op); position: relative; font-size: var(--t-button); font-weight: var(--w-bold); color: var(--text); padding-left: calc(var(--slide-thumb) + var(--s3)); padding-right: var(--s4); text-align: center; pointer-events: none; }
@@ -338,9 +348,12 @@ select.input:disabled { opacity: 1; color: var(--text-2); }
 .slide__ring { position: absolute; inset: calc(var(--s1) * -1); width: calc(100% + var(--s2)); height: calc(100% + var(--s2)); transform: rotate(-90deg); }
 .slide__ring circle { fill: none; stroke: var(--text); stroke-width: 3; }
 .slide.is-done { background: var(--primary); }
-.slide.is-done .slide__fill { width: 100%; }
+.slide.is-done .slide__fill { width: 100%; background: var(--porch-glow); }
 .slide.is-done .slide__label, .slide.is-holding .slide__label { opacity: 1; }
 .slide.is-done .slide__label { color: var(--on-primary); }
 .sr-only-focusable:focus { position: static; width: auto; height: auto; clip: auto; white-space: normal; min-height: var(--tap-guest); }
 @media (prefers-reduced-motion: reduce) { .slide { box-shadow: none; } }
 @media (max-height: 700px) { .slide__hint { display: none; } }
+.night-tagline { margin: 0; font-size: var(--t-caption); color: var(--text-2); text-align: right; }
+.ride-status { display: flex; flex-direction: column; gap: var(--s1); }
+.ride-status__head { margin: 0; font-size: var(--t-title-2); font-weight: var(--w-bold); }

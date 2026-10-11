@@ -21,6 +21,8 @@ export default defineConfig({
   projects: [
     { name: 'iphone-390x844', use: phone(390, 844) },
     { name: 'iphone-se-375x667', use: phone(375, 667) },
-    { name: 'iphone-430x932', use: phone(430, 932), grep: /@sizes/ },
+    { name: 'iphone-430x932', use: phone(430, 932), grep: /@sizes|@bar/ },
+    // Bar dashboard at tablet size (UI spec 7: left nav, card grid, 520 px drawer). Bartender tests only.
+    { name: 'ipad-1024x768', use: { browserName: 'webkit' as const, viewport: { width: 1024, height: 768 }, deviceScaleFactor: 2, isMobile: false, hasTouch: true }, grep: /@bar/ },
   ],
 });
