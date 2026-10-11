@@ -77,3 +77,26 @@ for (const [label, fake] of [['real clock', null], ['8:00 AM ET', '2026-10-11T12
     await ctx.close();
   });
 }
+
+/** Nico (Oct 11, 5:48): no drift. Load, advance the fake clock 26 minutes, check, reload, check: same exact strings. */
+test('pitch demo: story times do not drift after waiting 26 minutes or reloading', async ({ browser, viewport, baseURL }) => {
+  const ctx = await browser.newContext({ viewport, baseURL });
+  const page = await ctx.newPage();
+  await page.clock.install({ time: new Date('2026-10-11T12:00:00Z') });
+  const check = async () => {
+    await page.locator('[data-screen=P9]').waitFor();
+    const body = page.locator('body');
+    await expect(body).toContainText('Sat 11:46 PM');
+    await expect(body).toContainText('7:26 PM');
+    await expect(page.getByTestId('confirm-record')).toHaveText('Confirmed by guest, 11:26 PM');
+    await expect(page.getByTestId('ride-route')).toHaveText('Clarendon area to Westover area, picked up 11:32 PM');
+    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday night. Tab closed. Ride home added: $24.60.');
+    await expect(body).not.toContainText('11:52');
+    await expect(body).not.toContainText('12:12 AM');
+  };
+  await page.goto('/pitch/demo/#/g/p9'); await check();
+  await page.clock.fastForward('26:00'); await check();
+  await page.reload(); await check();
+  await page.clock.fastForward('20:00'); await page.reload(); await check();
+  await ctx.close();
+});
