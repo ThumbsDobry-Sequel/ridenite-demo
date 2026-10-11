@@ -1,3 +1,4 @@
+import { NO_CALENDAR_DATES } from '../build-info';
 import { T } from '../venue.config';
 import { nightName } from './night';
 import { chargeAt } from './hold';
@@ -22,7 +23,7 @@ export function guestCheckClosed(s: DemoState, now: number = Date.now()): boolea
 
 /**
  * Receipt line, shown right before the ride line and only when the guest was picked up.
- * Before the check closes: "Saturday night. Ride home is on your tab."
+ * Before the check closes: "Saturday night. Ride home is on your tab." (main app; the pitch export always shows the closed line)
  * After it closes: "Saturday night. Tab closed. Ride home added: $27.40." (the amount always follows, from the
  * ride's final fare; never a free-sounding word or a courtesy label, which reads as a free ride next to a charge: Quinn, Oct 11). The bare marketing tagline is never used in the app.
  */
@@ -30,5 +31,6 @@ export function guestCheckClosed(s: DemoState, now: number = Date.now()): boolea
 export function nightTagline(pickedUp: boolean, checkClosed: boolean, rideCents: number, night: number = Date.now()): string | null {
   if (!pickedUp) return null;
   const amt = `$${(rideCents / 100).toFixed(2)}`;
-  return checkClosed ? `${nightName(night)}. ${T.Bill} closed. Ride home added: ${amt}.` : `${nightName(night)}. Ride home is on your ${T.bill}.`;
+  // Pitch export: always the deck line (Nico, Oct 11). Main app keeps Harper's rule: never 'Tab closed.' before the POS closes the check.
+  return checkClosed || NO_CALENDAR_DATES ? `${nightName(night)}. ${T.Bill} closed. Ride home added: ${amt}.` : `${nightName(night)}. Ride home is on your ${T.bill}.`;
 }

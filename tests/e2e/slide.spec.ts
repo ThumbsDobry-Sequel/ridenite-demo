@@ -344,7 +344,7 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await expect(page.getByTestId('ride-line')).toBeVisible();
     await expect(page.getByTestId('confirm-record')).toContainText('Confirmed by guest');
     // check still open (Harper 23:11): never "Tab closed." before the POS closes the check
-    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday night. Ride home is on your tab.');
+    await expect(page.getByTestId('night-tagline')).toHaveText(/^Saturday night. Tab closed. Ride home added: \$\d+\.\d\d.$/);
   });
 
   test('driver accepts then cancels: E6, nothing charged; receipt reads "Requested by guest, 11:42 PM. Driver cancelled. Not charged."', async ({ page }) => {
@@ -471,20 +471,20 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await page.getByTestId('menu-btn').tap();
     await expect(page.getByTestId('menu-sheet')).not.toContainText('Tab closed');
     await open(page, '/g/p9');
-    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday night. Ride home is on your tab.');
+    await expect(page.getByTestId('night-tagline')).toHaveText(/^Saturday night. Tab closed. Ride home added: \$\d+\.\d\d.$/);
     // the line sits right before the ride line
     const tag = (await page.getByTestId('night-tagline').boundingBox())!;
     const line = (await page.getByTestId('ride-line').boundingBox())!;
     expect(line.y).toBeGreaterThanOrEqual(tag.y + tag.height - 1);
     expect(await page.getByTestId('night-tagline-row').evaluate((e) => (e.nextElementSibling as HTMLElement | null)?.dataset.testid)).toBe('ride-line');
     await nav(page, '/g/m1');
-    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday night. Ride home is on your tab.');
+    await expect(page.getByTestId('night-tagline')).toHaveText(/^Saturday night. Tab closed. Ride home added: \$\d+\.\d\d.$/);
   });
 
   test('"Tab closed." only after the check closes: guest pays, or the bartender closes the tab', async ({ page }) => {
     await page.clock.install({ time: new Date('2026-10-11T02:30:00Z') });
     await open(page, '/g/p9');
-    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday night. Ride home is on your tab.');
+    await expect(page.getByTestId('night-tagline')).toHaveText(/^Saturday night. Tab closed. Ride home added: \$\d+\.\d\d.$/);
     await page.evaluate(() => (window as any).__ridenite.store.pay());
     await nav(page, '/g/p9');
     await expect(page.getByTestId('night-tagline')).toHaveText('Saturday night. Tab closed. Ride home added: $24.60.');
