@@ -81,14 +81,16 @@ export function sampleAnchor(now: number): number {
   return etWallToUtc(n.y, n.m, n.d, 23, 0);
 }
 
+/** Sample owner ride IDs, fixed for every build (the traffic ride, index 5, is RN-NHMCXN on screens, statement and pitch demo). */
+const SAMPLE_OWNER_IDS = ['RN-TT424J', 'RN-SSP9GC', 'RN-W94HDP', 'RN-VY2WEA', 'RN-PAWBB4', 'RN-NHMCXN'];
 export function sampleOwnerRides(now: number): SampleOwnerRide[] {
   // [days ago, ride cents]. Ride 4823 (index 5): final fare $28.30 over the $25.20 approved cap, guest declined; charged $25.20.
   const seeds: [number, number][] = [[120, 2100], [95, 2460], [40, 1890], [1, 2460], [2, 2740], [1, 2520]];
   return seeds.map(([ago, cents], i) => {
     const pickupMs = sampleAnchor(now) - ago * DAY;
     const end = returnWindowEnds(pickupMs);
-    // fixed seed (not the venue slug) so every build (Sample Venue too) shows the same sample IDs (RN-NHMCXN)
-    return { rideId: rideRef(`sample-owner-${i}-maison-cheryl`), rideNo: String(4818 + i), pickupMs, feeChargedCents: venue.perRideFeeCents, rideCents: cents, returnWindowEnds: ymdIso(end), status: returnWindowStatus(end, now), tone: STATUS_TONE, label: SAMPLE_LABEL };
+    // fixed IDs (not hashed from the venue slug) so every build, the Sample Venue export too, shows the same sample IDs
+    return { rideId: SAMPLE_OWNER_IDS[i] ?? rideRef(`sample-owner-${i}`), rideNo: String(4818 + i), pickupMs, feeChargedCents: venue.perRideFeeCents, rideCents: cents, returnWindowEnds: ymdIso(end), status: returnWindowStatus(end, now), tone: STATUS_TONE, label: SAMPLE_LABEL };
   });
 }
 
