@@ -7,6 +7,7 @@ test('storage is empty after reload (memory-only demo)', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => { localStorage.setItem('ridenite.demo', '{"stale":true}'); sessionStorage.setItem('ridenite.x', '1'); });
   await page.getByTestId('ride-home').tap();
+  await page.waitForTimeout(700); // deliberate tap after the 0.6 s guard
   await page.getByTestId('confirm').tap();
   await page.reload();
   await expect(page.getByTestId('sim-banner')).toBeVisible();
@@ -17,6 +18,7 @@ test('storage is empty after reload (memory-only demo)', async ({ page }) => {
 test('reload mid-ride resets to a fresh demo, nothing booked', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('ride-home').tap();
+  await page.waitForTimeout(700); // deliberate tap after the 0.6 s guard
   await page.getByTestId('confirm').tap();
   await store(page, 's.getState().ride.bookedAt = Date.now() - 1; s.tick()');
   expect((await state(page)).bookings).toHaveLength(1);
@@ -38,6 +40,7 @@ test('cold table QR link on a first visit (empty storage) links the tab; refresh
   await expect(page.getByTestId('ride-home')).toBeVisible();
   expect((await state(page)).linkedTab).toMatchObject({ tab: '5120' });
   await page.getByTestId('ride-home').tap();
+  await page.waitForTimeout(700); // deliberate tap after the 0.6 s guard
   await page.getByTestId('confirm').tap();
   await expect(page.getByTestId('undo')).toBeVisible();
   expect((await state(page)).ride.tab).toBe('5120');
@@ -85,6 +88,7 @@ test('first-time guest: Where to, suggestions from first keystroke, Confirm, boo
   await expect(page.getByTestId('suggest-0')).toContainText('655 N Harrison St');
   await page.getByTestId('suggest-0').tap();
   await expect(page.getByTestId('confirm-dest')).toContainText('655 N Harrison St');
+  await page.clock.runFor(800); // deliberate tap after the 0.6 s guard
   await page.getByTestId('confirm').tap();
   await page.clock.runFor(10_500);
   expect((await state(page)).bookings).toHaveLength(1);
@@ -107,6 +111,7 @@ test('belongings: card on the way, Got it dismisses, nudge at 2 min, car-here re
   await page.clock.install();
   await page.goto('/');
   await page.getByTestId('ride-home').tap();
+  await page.clock.runFor(800); // deliberate tap after the 0.6 s guard
   await page.getByTestId('confirm').tap();
   await page.clock.runFor(10_500);
   const card = page.getByTestId('belongings-card');
@@ -166,6 +171,12 @@ test('E1 to E7 reachable from the fault panel; each starts fresh', async ({ page
   await page.getByTestId('fault-E7').tap();
   await expect(page.getByTestId('e7-added')).toHaveText('+$4.20');
   await expect(page.getByTestId('e7-over')).toHaveText('$2.20');
+  // needs-OK line is neutral, not amber/warning
+  const bg = await page.getByTestId('needs-ok').evaluate((e) => getComputedStyle(e).backgroundColor);
+  const warn = await page.evaluate(() => { const d = document.createElement('div'); d.style.background = 'var(--warning)'; document.body.append(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; });
+  const prim = await page.evaluate(() => { const d = document.createElement('div'); d.style.background = 'var(--primary)'; document.body.append(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; });
+  expect([warn, prim]).not.toContain(bg);
+  await expect(page.getByTestId('needs-ok').locator('svg')).toHaveCount(1);
 });
 
 test('P9 totals for every fare scenario, instant tip recompute, tip excludes ride', async ({ page }) => {
@@ -190,7 +201,7 @@ test('P9 totals for every fare scenario, instant tip recompute, tip excludes rid
   await page.getByTestId('scen-over').tap();
   await nav(page, '/g/e7');
   await page.getByTestId('e7-yes').tap();
-  await expect(total).toHaveText('$91.59'); // spec table says $90.55 (stale 8.875% tax row); see unit test note
+  await expect(total).toHaveText('$91.59'); // confirmed by the product lead; POS 3b row corrected
   await nav(page, '/g/e7');
   await page.getByTestId('e7-no').tap();
   await expect(total).toHaveText('$89.39');

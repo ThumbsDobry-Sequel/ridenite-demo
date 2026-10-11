@@ -80,28 +80,34 @@ export function Home() {
         <>
           <h1 className="large-title">Ride home,<br />on your tab.</h1>
           <p className="callout muted">One tap, then confirm the price.</p>
-          <Button size="hero" icon="car" testId="ride-home" onClick={rideHome}
-            sub={home ? `To ${home.line}` : 'Pick where you are going'}>
-            Ride home
-          </Button>
           <p className="section-title">More</p>
           <MoreRow icon="pin" title="Somewhere else" sub="Type an address" testId="somewhere-else" onClick={() => navigate('/g/p2')} />
           {ride && stage && <MoreRow icon="car" title="Last ride" sub={`${STAGE_LABEL[stage]}, to ${ride.dest.line}`} testId="last-ride-card" onClick={() => navigate(STAGE_ROUTE[stage])} />}
           <MoreRow icon="receipt" title="Last night's receipt" sub={`${venue.night.date} · ${fmt(m.totalCents)}`} testId="receipt-card" onClick={() => navigate('/g/inbox')} />
           <p className="fict">Fictional sample data</p>
+          <p className="fict">No real cars or charges.</p>
+          <div className="sticky-actions sticky-actions--hero" data-testid="hero-dock">
+            <Button size="hero" icon="car" testId="ride-home" onClick={rideHome}
+              sub={home ? `To ${home.line}` : 'Pick where you are going'}>
+              Ride home
+            </Button>
+          </div>
         </>
       ) : (
         <>
           <h1 className="large-title">Ride home,<br />on your tab.</h1>
           <p className="callout muted">Scan the QR code on your table to link your tab.</p>
-          <Button size="hero" icon="hand" testId="ask-staff-home" onClick={() => { store.requestStaff(venue.seat); navigate('/g/p3w'); }}
-            sub="They'll add it to your tab">
-            Ask staff for a car
-          </Button>
           <MoreRow icon="grid" title="Scan table QR" sub="Links this phone to your tab" testId="scan-qr" onClick={() => setScan(true)} />
           <div className="card card--quiet" data-testid="not-linked"><p className="foot">Booked from a table QR? Open it in Safari to see your ride.</p></div>
           <MoreRow icon="receipt" title="Last night's receipt" sub={`${venue.night.date} · ${fmt(m.totalCents)}`} testId="receipt-card" onClick={() => navigate('/g/inbox')} />
           <p className="fict">Fictional sample data</p>
+          <p className="fict">No real cars or charges.</p>
+          <div className="sticky-actions sticky-actions--hero" data-testid="hero-dock">
+            <Button size="hero" icon="hand" testId="ask-staff-home" onClick={() => { store.requestStaff(venue.seat); navigate('/g/p3w'); }}
+              sub="They'll add it to your tab">
+              Ask staff for a car
+            </Button>
+          </div>
         </>
       )}
       {scan && (
@@ -112,7 +118,6 @@ export function Home() {
           <button type="button" className="textlink" onClick={() => setScan(false)}>Close</button>
         </Sheet>
       )}
-      <p className="fict">No real cars or charges.</p>
     </Screen>
   );
 }

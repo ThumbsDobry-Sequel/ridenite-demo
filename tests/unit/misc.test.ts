@@ -56,6 +56,7 @@ describe('copy lint', () => {
     expect(lintText('9\u201310 PM')).toHaveLength(1);
     expect(lintText('Certified drivers')).toHaveLength(1);
     expect(lintText('Get home safe tonight').length).toBeGreaterThan(0);
+    expect(lintText('You made it home safe.').length).toBeGreaterThan(0);
     expect(lintText('We guarantee a car')).toHaveLength(1);
     expect(lintText('No liability for the bar')).toHaveLength(1);
   });

@@ -113,7 +113,7 @@ export function P9() {
             <tr data-testid="adj-line"><th scope="row">{adjName} (final fare {fmt(r.finalCents)}, quoted {fmt(r.quoteCents)})<span className="note">{r.postedAdjCents > 0 ? `Within the ${fmt(r.capCents)} you saw before booking.` : 'The fare came in lower, so you get the difference back.'}</span></th><td className="amt">{fmtSigned(r.postedAdjCents)}</td></tr>
           )}
           {r.heldCents > 0 && (
-            <tr data-testid="held-line"><th scope="row"><b>Needs your OK</b><span className="note">{fmt(r.heldCents)} over the {fmt(r.capCents)} cap. {venue.overCapReason}. Not charged unless you OK it.</span>
+            <tr data-testid="held-line" className="needs-ok-row"><th scope="row"><span className="needs-ok__l"><Icon name="help" /><b>Needs your OK</b></span><span className="note">{fmt(r.heldCents)} over the {fmt(r.capCents)} cap. {venue.overCapReason}. Not charged unless you OK it.</span>
               <button type="button" className="textlink textlink--inline" onClick={() => navigate('/g/e7')}>Review</button></th><td className="amt">{fmt(0)}</td></tr>
           )}
           {r.declinedCents > 0 && <tr><th scope="row">Not charged<span className="note">You said no to the extra {fmt(r.declinedCents)}</span></th><td className="amt">{fmt(0)}</td></tr>}
@@ -152,7 +152,7 @@ export function E7() {
       <Card>
         <div className="row callout"><span>Quote you OK'd</span><span className="num">{fmt(r.quoteCents)}</span></div>
         <div className="row callout"><span>Added, as shown before booking (up to {fmt(r.capCents)})</span><span className="num" data-testid="e7-added">{fmtSigned(Math.min(r.diffCents, r.capCents))}</span></div>
-        <div className="row body"><b>Needs your OK</b><b className="num" data-testid="e7-over">{fmt(over)}</b></div>
+        <div className="row body needs-ok" data-testid="needs-ok"><span className="needs-ok__l"><Icon name="help" /><b>Needs your OK</b></span><b className="num" data-testid="e7-over">{fmt(over)}</b></div>
       </Card>
       <p className="body">{venue.overCapReason}, so the trip came in higher than quoted. The extra {fmt(over)} is not charged unless you say yes.</p>
       <div className="spacer" />

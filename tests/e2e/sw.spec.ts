@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 test.use({ serviceWorkers: 'allow' });
+// WebKit SW reloads occasionally hang under 4 parallel workers (passes alone every time); one retry.
+test.describe.configure({ retries: 1 });
 
 test('service worker: network-first, versioned cache, new version picked up on next reload', async ({ page, browserName }, info) => {
   test.skip(info.project.name !== 'iphone-390x844', 'run once');

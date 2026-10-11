@@ -5,7 +5,7 @@ import { useDemoState, useStore } from '../store';
 import { capFor } from '../lib/fare';
 import { fmt } from '../lib/money';
 import { STAGE_ROUTE } from '../lib/rideState';
-import { Banner, Button, Card, TextLink } from '../components/primitives';
+import { Banner, Button, Card } from '../components/primitives';
 import { Icon } from '../components/Icon';
 import { BackButton, Screen, Top } from '../components/layout';
 
@@ -13,6 +13,8 @@ export const fareNote = (q: number) =>
   `${fmt(q)} on your tab at ${venue.name}. Final fare may differ by up to ${fmt(capFor(q))}. More than that and we'll ask you first. If it comes in lower, you get the difference back.`;
 
 export const QUOTE_TTL_MS = 120_000;
+/** Taps on Confirm and Undo are ignored this long after the screen appears. */
+export const TAP_GUARD_MS = 600;
 
 /** P3 CONFIRM (Riley mockup p3-confirm): one card with destination, quote and cap line,
  *  sticky 88pt Confirm and 56pt Cancel. Re-quotes if open more than 2 minutes. */
@@ -21,6 +23,8 @@ export function P3() {
   const s = useDemoState();
   const [openedAt, setOpenedAt] = useState(() => store.now());
   const [updated, setUpdated] = useState(false);
+  // Ignore taps for 0.6 s after this screen appears, so a fast double tap on Ride home never books.
+  const [armedAt] = useState(() => store.now() + TAP_GUARD_MS);
   const dest = s.dest ?? s.savedHome ?? venue.guest.home;
   const q = s.quoteCents;
   const cap = capFor(q);
@@ -40,6 +44,7 @@ export function P3() {
   }
 
   const confirm = () => {
+    if (store.now() < armedAt) return;
     // Stale quote: refresh first and never book silently on a changed price.
     if (store.now() - openedAt > QUOTE_TTL_MS) {
       const changed = store.refreshQuote();
@@ -55,33 +60,33 @@ export function P3() {
   return (
     <Screen id="P3" tight>
       <div className="navbar">
-        <BackButton to="/g/home" />
+        <span className="back-wrap"><BackButton to="/g/home" /></span>
         <span className="navbar__title">Confirm ride</span>
-        <span className="navbar__end" />
+        <span className="navbar__end"><button type="button" className="back-btn cancel-top" data-testid="cancel" onClick={() => navigate('/g/home')}>Cancel</button></span>
       </div>
       {updated && <Banner tone="info">The price was updated. Check the new quote, then confirm again.</Banner>}
       <Card testId="quote-card">
-        <p className="kv__k">Going to</p>
-        <p className="h3" data-testid="confirm-dest">{isHome ? 'Home, ' : ''}{dest.line}</p>
+        <div className="row row--top">
+          <div className="grow">
+            <p className="kv__k">Going to</p>
+            <p className="h3" data-testid="confirm-dest">{isHome ? 'Home, ' : ''}{dest.line}</p>
+          </div>
+          <button type="button" className="textlink textlink--inline change-link" data-testid="change-dest" onClick={() => navigate('/g/p2')}>Change</button>
+        </div>
+        <div className="seg seg--2" role="group" aria-label="Who's riding?" data-testid="riders">
+          <button type="button" aria-pressed={s.riders === 1} onClick={() => store.setRiders(1)}>Just me</button>
+          <button type="button" aria-pressed={s.riders === 2} onClick={() => store.setRiders(2)}>Me + 1 to 3</button>
+        </div>
         <p className="price price--xl" data-testid="quote">{fmt(q)}</p>
         <p className="callout" data-testid="tab-line">On your {venue.name} tab.</p>
-        <p className="callout muted" data-testid="cap-line">Final fare may differ by up to {fmt(cap)}.</p>
+        <p className="callout muted cap-note" data-testid="cap-line"><Icon name="clock" />Final fare may differ by up to {fmt(cap)}.</p>
         <p className="foot">More than that and we'll ask you first. If it comes in lower, you get the difference back.</p>
-      </Card>
-      <Card>
-        <div className="kv"><span className="tile"><Icon name="pin" /></span><div><p className="kv__k">Pickup</p><p className="kv__v">{venue.pickupShort}</p></div></div>
-        <div className="kv"><span className="tile"><Icon name="car" /></span><div><p className="kv__k">Car</p><p className="kv__v">Partner car, about {venue.etaMinutes} min</p></div></div>
-        <div className="kv"><span className="tile"><Icon name="person" /></span><div className="grow"><p className="kv__k">Who's riding?</p>
-          <div className="seg seg--2" role="group" aria-label="Who's riding?">
-            <button type="button" aria-pressed={s.riders === 1} onClick={() => store.setRiders(1)}>Just me</button>
-            <button type="button" aria-pressed={s.riders === 2} onClick={() => store.setRiders(2)}>Me + 1 to 3</button>
-          </div></div></div>
-        <TextLink onClick={() => navigate('/g/p2')}>Change destination</TextLink>
+        <p className="foot muted" data-testid="pickup-line">Pickup: {venue.pickupShort}<span className="eta-note"> Car in about {venue.etaMinutes} min.</span></p>
       </Card>
       <div className="sticky-actions">
         <Button size="xl" testId="confirm" onClick={confirm}>Confirm ride</Button>
-        <Button variant="secondary" testId="cancel" onClick={() => navigate('/g/home')}>Cancel</Button>
-        <p className="fict">You can undo for 10 seconds. Fictional sample fare.</p>
+        <Button variant="secondary" testId="cancel" className="cancel-bottom" onClick={() => navigate('/g/home')}>Cancel</Button>
+        <p className="fict undo-note">You can undo for 10 seconds. Fictional sample fare.</p>
       </div>
     </Screen>
   );

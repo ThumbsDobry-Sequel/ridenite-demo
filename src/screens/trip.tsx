@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { TAP_GUARD_MS } from './confirm';
 import { venue } from '../venue.config';
 import { navigate } from '../router';
 import { useDemoState, useStore } from '../store';
@@ -82,7 +83,7 @@ export function P4() {
   const { ride, stage } = useLiveRide('/g/p4');
   const now = useNow(250);
   // Ignore taps on Undo right after Confirm, so a double tap on Confirm never undoes.
-  const [armedAt] = useState(() => store.now() + 600);
+  const [armedAt] = useState(() => store.now() + TAP_GUARD_MS);
   if (ride && stage === 'pending') {
     const left = Math.max(0, Math.ceil((ride.bookedAt - now) / 1000));
     return (
@@ -132,7 +133,7 @@ export function P5() {
   return (
     <Screen id="P5" tight>
       <Top left={<Chip tone="info" icon="car">Driver on the way</Chip>} ctx={venue.name} />
-      <div className="row"><span className="eta">{venue.etaMinutes} min</span><span className="callout muted">pickup at {venue.pickupSpot}</span></div>
+      <div className="eta-block"><span className="eta" data-testid="eta">{venue.etaMinutes} min</span><span className="callout muted">Pickup at {venue.pickupSpot}</span></div>
       <p className="callout">Before you get in, check the plate. Your driver will say your first name.</p>
       <Plate plate={d.plate} spoken={d.plateSpoken} />
       <div className="btn-row">

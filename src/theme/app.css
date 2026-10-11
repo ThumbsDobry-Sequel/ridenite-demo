@@ -272,3 +272,41 @@ select.input:disabled { opacity: 1; color: var(--text-2); }
 
 .build-stamp { margin: 0; text-align: center; font-size: var(--t-caption); color: var(--text-2); }
 .card--quiet { background: transparent; border: var(--hairline) solid var(--separator); }
+
+/* Home: Ride home pinned in the bottom third, just above the safe area (Riley p1-home-v2) */
+.sticky-actions--hero { margin-top: auto; }
+.sticky-actions--hero .btn--hero { min-height: max(var(--hero-min), var(--hero-pref)); }
+.chip, .eta { white-space: nowrap; }
+.eta-block { display: flex; flex-direction: column; gap: var(--s1); }
+.row--top { align-items: flex-start; }
+.card .seg { margin: var(--s2) 0; }
+
+.row--top .grow { flex: 1; min-width: 0; }
+.cancel-top { display: none; }
+/* Short phones (SE): Confirm screen fits above the sticky button with nothing half hidden.
+   Cancel moves up to the nav bar (replacing Back) and the price card tightens. */
+@media (max-height: 700px) {
+  [data-screen=P3] .cancel-top { display: inline-flex; }
+  [data-screen=P3] .back-wrap { visibility: hidden; width: 0; overflow: hidden; }
+  [data-screen=P3] .cancel-bottom, [data-screen=P3] .undo-note, [data-screen=P3] .eta-note { display: none; }
+  [data-screen=P3] .price--xl { font-size: var(--t-price); margin: 0; }
+  [data-screen=P3] .card .seg { margin: var(--s1) 0; }
+  [data-screen=P3] .card { padding-top: var(--s3); padding-bottom: var(--s3); }
+  [data-screen=P3] .sticky-actions { padding-top: var(--s2); }
+  [data-screen=P3] .page { gap: var(--s2); }
+}
+.navbar__end { display: flex; justify-content: flex-end; }
+.navbar .cancel-top { padding: 0 0 0 var(--s4); }
+.change-link { flex: none; }
+.row--top .grow { gap: 0; }
+
+/* Over-cap and cap lines: neutral surface plus icon; amber stays on the primary action only */
+.needs-ok { background: var(--surface-2); color: var(--text); border-radius: var(--r-control); padding: var(--s3); align-items: center; }
+.needs-ok__l { display: inline-flex; align-items: center; gap: var(--s2); }
+.needs-ok__l .icon, .cap-note .icon { width: var(--tile-icon); height: var(--tile-icon); flex: none; color: var(--text-2); }
+.needs-ok-row th, .needs-ok-row td { background: var(--surface-2); }
+.cap-note { display: flex; align-items: flex-start; gap: var(--s2); }
+.cap-note .icon { margin-top: var(--s1); }
+/* Ride home flexes to 16px gutters */
+.sticky-actions--hero { padding-left: max(var(--s4), env(safe-area-inset-left)); padding-right: max(var(--s4), env(safe-area-inset-right)); }
+.sticky-actions--hero .btn--hero { width: 100%; }

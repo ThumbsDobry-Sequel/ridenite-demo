@@ -70,11 +70,7 @@ describe('P9 totals for the configured venue (POS build-spec 3b)', () => {
     expect(t.totalBeforeTipCents).toBe(7959);
     expect(t.totalCents).toBe(8939);
   });
-  it('Over the cap, guest says yes: $91.59 (spec table says $90.55, see note)', () => {
-    // POS build-spec 3b row "guest says yes" lists $80.75 / $90.55. Those two numbers are a
-    // leftover from the pre-Maison 8.875% tax version ($49 + $4.35 + $27.40 = $80.75).
-    // With the current 11% tax: $49.00 + $5.39 + $27.40 = $81.79, + $9.80 tip = $91.59.
-    // The POS demo app's own calc() also renders $91.59. Flagged to the product lead.
+  it('Over the cap, guest says yes: $91.59 (POS 3b row corrected Oct 10 from stale 8.875% values)', () => {
     const t = totals(2100, 2740, 'yes');
     expect(t.rideCents).toBe(2740);
     expect(t.totalBeforeTipCents).toBe(8179);

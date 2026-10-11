@@ -16,9 +16,22 @@ test.describe('home @sizes', () => {
       }));
     const max = areas.reduce((a, b) => (b.area > a.area ? b : a));
     expect(max.id).toBe('ride-home');
-    // thumb reach: the button's center sits in the lower 75% of the screen
+    // pinned in the bottom third, just above the safe area (Riley p1-home-v2)
     const vp = page.viewportSize()!;
-    expect(box.y + box.height / 2).toBeGreaterThan(vp.height * 0.25);
+    expect(box.y + box.height).toBeGreaterThan(vp.height * (2 / 3));
+    expect(box.y + box.height).toBeLessThanOrEqual(vp.height);
+    expect(box.height).toBeGreaterThanOrEqual(132);
+    // width flexes to 16px gutters
+    expect(Math.round(box.x)).toBe(16);
+    expect(Math.round(vp.width - (box.x + box.width))).toBe(16);
+    // guest Menu button is 56px
+    const menu = (await page.getByTestId('menu-btn').boundingBox())!;
+    expect(menu.height).toBeGreaterThanOrEqual(56);
+    // stays pinned when the page scrolls
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const after = (await btn.boundingBox())!;
+    expect(after.y + after.height).toBeGreaterThan(vp.height * (2 / 3));
+    expect(after.y + after.height).toBeLessThanOrEqual(vp.height);
   });
 
   test('no other control is amber (primary) on home', async ({ page }) => {
@@ -35,6 +48,7 @@ test.describe('home @sizes', () => {
     await page.goto('/');
     const t = tapper(page);
     await t.tap('ride-home');
+    await page.clock.runFor(800); // a deliberate second tap, not a double tap
     await t.tap('confirm');
     await expect(page.getByTestId('undo')).toBeVisible();
     await page.clock.runFor(10_500);
@@ -46,6 +60,7 @@ test.describe('home @sizes', () => {
   test('Confirm double tap books once', async ({ page }) => {
     await page.clock.install();
     await open(page, '/g/p3');
+    await page.clock.runFor(800);
     await page.getByTestId('confirm').dblclick();
     await page.clock.runFor(11_000);
     await expect(page.locator('[data-screen=P4]')).toBeVisible(); // second tap did not hit Undo
@@ -58,6 +73,7 @@ test.describe('home @sizes', () => {
     await page.clock.install();
     await page.goto('/');
     await page.getByTestId('ride-home').tap();
+    await page.clock.runFor(800);
     await page.getByTestId('confirm').tap();
     const undo = page.getByTestId('undo');
     await expect(undo).toBeVisible();
@@ -81,6 +97,7 @@ test.describe('home @sizes', () => {
   test('backgrounding past the deadline books exactly once (visibilitychange)', async ({ page }) => {
     await page.clock.install();
     await open(page, '/g/p3');
+    await page.clock.runFor(800);
     await page.getByTestId('confirm').tap();
     await page.clock.fastForward(30_000);
     await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
@@ -92,6 +109,7 @@ test.describe('home @sizes', () => {
     await page.clock.install();
     await page.goto('/');
     await page.getByTestId('ride-home').tap();
+    await page.clock.runFor(800);
     await page.getByTestId('confirm').tap();
     await page.getByTestId('menu-btn').tap();
     await page.getByRole('button', { name: 'Home', exact: true }).tap();
@@ -114,13 +132,44 @@ test.describe('home @sizes', () => {
     await expect(page.getByTestId('quote')).toHaveText('$21.00');
     await expect(page.getByTestId('cap-line')).toContainText('$4.20');
     const actions = await page.locator('.sticky-actions').boundingBox();
-    for (const id of ['confirm-dest', 'quote', 'cap-line', 'tab-line', 'confirm', 'cancel']) {
+    for (const id of ['confirm-dest', 'riders', 'quote', 'cap-line', 'tab-line', 'confirm']) {
       expect((await inViewport(page, id)).inside, `${id} in viewport`).toBe(true);
     }
+    const cancel = page.locator('[data-testid=cancel]:visible');
+    await expect(cancel).toHaveCount(1);
+    await expect(cancel).toBeInViewport({ ratio: 1 });
+    expect((await cancel.boundingBox())!.height).toBeGreaterThanOrEqual(56);
+    // Who's riding sits in the top card, above the price
+    const riders = (await page.getByTestId('riders').boundingBox())!;
+    expect(riders.y + riders.height).toBeLessThanOrEqual((await page.getByTestId('quote').boundingBox())!.y);
     const cap = (await page.getByTestId('cap-line').boundingBox())!;
     expect(cap.y + cap.height).toBeLessThanOrEqual(actions!.y + 1);
     expect((await page.getByTestId('confirm').boundingBox())!.height).toBeGreaterThanOrEqual(88);
-    expect((await page.getByTestId('cancel').boundingBox())!.height).toBeGreaterThanOrEqual(56);
+  });
+
+  test('Confirm: nothing sits half hidden behind the sticky buttons at rest @sizes', async ({ page }) => {
+    await open(page, '/g/p3');
+    const straddling = await page.evaluate(() => {
+      const foot = document.querySelector('[data-screen=P3] .sticky-actions')!.getBoundingClientRect();
+      const els = Array.from(document.querySelectorAll('main p, main h1, main h2, main h3, main button, main a, main .seg, main .card, main .banner'))
+        .filter((e) => !e.closest('.sticky-actions') && (e as HTMLElement).offsetParent !== null);
+      return els.filter((e) => { const r = e.getBoundingClientRect(); return r.height > 0 && r.top < foot.top - 0.5 && r.bottom > foot.top + 0.5; })
+        .map((e) => `${e.tagName}.${e.className} "${(e.textContent ?? '').trim().slice(0, 30)}"`);
+    });
+    expect(straddling).toEqual([]);
+  });
+
+  test('a fast double tap from home (100 ms apart) does not book', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.getByTestId('ride-home').tap();
+    await page.clock.runFor(100);
+    await page.locator('[data-testid=confirm]').tap();
+    await page.clock.runFor(15_000);
+    const s = await state(page);
+    expect(s.ride).toBeNull();
+    expect(s.bookings).toHaveLength(0);
+    await expect(page.locator('[data-screen=P3]')).toBeVisible();
   });
 
   test('quote older than 2 minutes refreshes before booking and needs Confirm again', async ({ page }) => {
