@@ -1,11 +1,11 @@
 import { venue, type Address } from '../venue.config';
 import { capFor, type OverCapAnswer } from '../lib/fare';
 import type { Handoff } from '../lib/handoff';
-import { bookedAtFor, nextStage, QUOTE_VALID_MS, rideStage, UNDO_MS, type LiveStage, type Stage } from '../lib/rideState';
+import { bookedAtFor, isAcceptedStage, isChargedStage, nextStage, QUOTE_VALID_MS, rideStage, UNDO_MS, type LiveStage, type Stage } from '../lib/rideState';
 import { seedState } from './seed';
 import type { UrlLink } from '../lib/urlLink';
 import type {
-  BarBookResult, BarDraft, BarRide, BarSettings, BarState, CarInfo, ConfirmInput, CreateResult, DemoState, DemoStore, DropMode,
+  BarBookResult, BarDraft, BarRide, BarSettings, BarTab, BarState, CarInfo, ConfirmInput, CreateResult, DemoState, DemoStore, DropMode,
   FareScenario, Fault, LinkedTab, Ride, Role,
 } from './types';
 import type { EntryPoint } from '../lib/handoff';
@@ -395,8 +395,20 @@ export class InMemoryStore implements DemoStore {
     return tab;
   }
   barCloseTab(tab: string, how: 'closed' | 'held') {
-    const extra: Partial<DemoState> = tab === this.guestTab() && how === 'closed' ? { tabClosed: true } : {};
-    this.setBar({ tabs: this.state.bar.tabs.map((t) => (t.tab === tab ? { ...t, close: how } : t)) }, extra);
+    // SCOPE 22:22: closing with a ride not yet picked up is allowed. The POS shows "Ride pending pickup";
+    // the ride line posts and the close completes at pickup, or the tab closes clean on cancel (within the 24 h hold).
+    const r = how === 'closed' ? this.barActiveRide(tab) : null;
+    const pending = !!r && !isChargedStage(this.stageOf(r));
+    const close: BarTab['close'] = pending ? 'pending' : how;
+    const extra: Partial<DemoState> = tab === this.guestTab() && how === 'closed' && !pending ? { tabClosed: true } : {};
+    this.setBar({ tabs: this.state.bar.tabs.map((t) => (t.tab === tab ? { ...t, close, closeAt: this.now() } : t)) }, extra);
+  }
+  /** Demo: the driver accepted, then cancelled before pickup. Nothing posts to the tab. */
+  driverCancel(rideId?: string) {
+    const ok = (r: Ride) => (!rideId || r.id === rideId) && isAcceptedStage(this.stageOf(r)) && !isChargedStage(this.stageOf(r));
+    const g = this.state.ride;
+    if (g && ok(g)) { this.set({ ride: { ...g, terminal: 'canceled_by_driver', hold: undefined } }); return; }
+    if (rideId) this.setBar({ rides: this.state.bar.rides.map((r) => (r.id === rideId && ok(r) ? { ...r, terminal: 'canceled_by_driver' } : r)) });
   }
   barMarkQuietSeen() { const q = this.state.bar.quiet; if (q) this.setBar({ quiet: { ...q, seen: true } }); }
   barSetQuietOption(k: 'sideDoor' | 'oneRider', v: boolean) {

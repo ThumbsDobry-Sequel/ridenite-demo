@@ -39,6 +39,8 @@ export function tabTotals(opts: {
   items: readonly MenuItem[];
   taxRate: number;
   tabLineName: string;
+  /** Exact ride line text, e.g. the bar POS line "RideNite car home, Clarendon area, 11:52 PM". */
+  rideLineName?: string;
   ride?: { quoteCents: number; finalCents: number | null; overCapAnswer?: OverCapAnswer } | null;
 }): TabTotals {
   const lines: TabLine[] = [];
@@ -56,7 +58,7 @@ export function tabTotals(opts: {
   let recon: Reconciliation | null = null;
   if (opts.ride) {
     const q = opts.ride.quoteCents;
-    lines.push({ kind: 'ride_quote', name: `${opts.tabLineName}, quoted fare`, cents: q });
+    lines.push({ kind: 'ride_quote', name: opts.rideLineName ?? `${opts.tabLineName}, quoted fare`, cents: q });
     rideCents = q;
     if (opts.ride.finalCents != null) {
       recon = reconcile(q, opts.ride.finalCents, opts.ride.overCapAnswer ?? null);
@@ -69,4 +71,32 @@ export function tabTotals(opts: {
     }
   }
   return { lines, subtotalCents, taxCents, rideCents, heldCents, totalBeforeTipCents: subtotalCents + taxCents + rideCents, tipBaseCents: subtotalCents, recon };
+}
+
+/** Neighborhood for a drop-off: first part of the area that is not a street number ("Clarendon"). */
+export function neighborhood(area: string): string {
+  const parts = area.split(',').map((x) => x.trim()).filter(Boolean);
+  return parts.find((x) => !/^\d/.test(x)) ?? parts[0] ?? '';
+}
+
+/**
+ * Bar POS tab line (SCOPE 22:22): "RideNite car home, [area], [time]", time = pickup (when it posts), ET.
+ * The guest's "Confirmed by guest" record stays on the RideNite receipt and record, never on this line.
+ */
+export function barRideLineName(dest: { area: string }, pickupMs: number, fmtTime: (ms: number) => string): string {
+  return `RideNite car home, ${neighborhood(dest.area)} area, ${fmtTime(pickupMs)}`;
+}
+
+export type TabCloseState = 'open' | 'held' | 'closed' | 'pending';
+const NOT_CHARGED_END = ['canceled_by_driver', 'no_cars', 'canceled_by_guest'];
+/**
+ * Effective POS close state. A close tapped while a ride was pending pickup stays "pending" until pickup
+ * (ride line posts, close completes) or a cancel / no driver (closes clean), all inside the 24 h POS hold.
+ */
+export function tabCloseState(t: { close: TabCloseState; closeAt?: number }, rideStage: string | null, now: number, holdMs = 24 * 60 * 60 * 1000): TabCloseState {
+  if (t.close !== 'pending') return t.close;
+  if (rideStage === 'picked_up' || rideStage === 'complete') return 'closed';
+  if (!rideStage || NOT_CHARGED_END.includes(rideStage)) return 'closed';
+  if (t.closeAt != null && now - t.closeAt >= holdMs) return 'closed';
+  return 'pending';
 }

@@ -5,15 +5,16 @@ import { fmt } from '../lib/money';
 /**
  * Status copy (SCOPE "Ride status and charge timing", Harper memo): undo screen "Requesting your ride...",
  * then "Ride requested. Finding a driver." until a driver accepts (the simulated driver accepts at en_route),
- * then "Ride booked. Fare on your tab." No tagline on live screens.
+ * then "Ride booked. Fare goes on your tab at pickup." (SCOPE 22:22: the fare posts at pickup). No tagline on live screens.
  */
 export const isAccepted = (stage: Stage | null) => isAcceptedStage(stage) && stage !== 'complete' && stage !== 'picked_up';
 
-export function bookedLine(tabClosed: boolean): string {
-  return tabClosed ? 'Ride booked. Fare added to your tab.' : 'Ride booked. Fare on your tab.';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function bookedLine(_tabClosed?: boolean): string {
+  return 'Ride booked. Fare goes on your tab at pickup.';
 }
 export const requestedLine = (quoteCents: number) =>
-  `${fmt(quoteCents)} goes on your tab when a driver accepts. Final fare may differ by up to ${fmt(capFor(quoteCents))}.`;
+  `${fmt(quoteCents)} goes on your tab when you're picked up. Final fare may differ by up to ${fmt(capFor(quoteCents))}.`;
 
 export function RideStatus({ stage, quoteCents, tabClosed }: { stage: Stage | null; quoteCents: number; tabClosed: boolean }) {
   if (stage === 'requested') {
@@ -27,7 +28,9 @@ export function RideStatus({ stage, quoteCents, tabClosed }: { stage: Stage | nu
   if (!isAccepted(stage)) return null;
   return (
     <div className="ride-status" role="status" data-testid="ride-status">
-      <p className="ride-status__head" data-testid="status-booked">{bookedLine(tabClosed)}</p>
+      {/* Vera rev 04: "Ride booked." heading, "Fare goes on your tab at pickup." second line */}
+      <p className="ride-status__head" data-testid="status-booked">Ride booked.</p>
+      <p className="callout" data-testid="status-booked-fare">Fare goes on your tab at pickup.</p>
     </div>
   );
 }

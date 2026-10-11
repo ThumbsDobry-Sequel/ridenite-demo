@@ -18,6 +18,8 @@ export const BANNED = /safe ride|get home safe|home safe|leave the light on|ever
 export const SAFE = /\bsafe\b|unsafe/i;
 /** Standalone 'lit' reads as alcohol related (founder, Oct 10). Whole word only: little, split, literally pass. */
 export const LIT = /\blit\b/i;
+/** Harper legal items (money-promises memo): whole word or phrase. */
+export const LEGAL = /\bguarantee\b|\bguaranteed\b|\binsured\b|\bprotection plan\b|\bzero risk\b/i;
 export const APPROVED = [
   'If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment.',
   'Guest says they feel unsafe?',
@@ -38,6 +40,8 @@ export function lintText(text, file = '<text>') {
     if (s) problems.push({ file, line: i + 1, match: s[0] });
     const l = line.match(LIT);
     if (l) problems.push({ file, line: i + 1, match: l[0] });
+    const g = line.match(LEGAL);
+    if (g) problems.push({ file, line: i + 1, match: g[0] });
     if (/where you were/i.test(line)) problems.push({ file, line: i + 1, match: 'where you were' });
   });
   return problems;

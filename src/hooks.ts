@@ -27,7 +27,7 @@ export function useLiveRide(path: string, follow = true): { ride: Ride | null; s
     if (!follow || !ride || !stage) return;
     if (state.forceOffline) return;
     const target = STAGE_ROUTE[stage];
-    if (TRIP_ROUTES.includes(path) && target !== path && (TRIP_ROUTES.includes(target) || stage === 'no_cars')) navigate(target, { replace: true });
+    if (TRIP_ROUTES.includes(path) && target !== path && (TRIP_ROUTES.includes(target) || stage === 'no_cars' || stage === 'canceled_by_driver')) navigate(target, { replace: true });
   }, [follow, ride, stage, path, state.forceOffline]);
   return { ride, stage };
 }

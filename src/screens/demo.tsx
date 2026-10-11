@@ -59,6 +59,11 @@ export function DemoPanel() {
         }}>
           {s.forceNoDriver ? 'No driver found: on for the next request' : 'Force "No driver found"'}
         </Button>
+        <Button variant="secondary" testId="force-driver-cancel" onClick={() => {
+          store.driverCancel();
+          const r = store.getState().ride;
+          if (r && store.stageOf(r) === 'canceled_by_driver') navigate('/g/e6');
+        }}>Driver accepts, then cancels (current ride)</Button>
         <Button variant="secondary" testId="force-stale" onClick={() => store.setForceStaleQuote(!s.forceStaleQuote)}>
           {s.forceStaleQuote ? 'Stale quote: on (new price, new slide)' : 'Force "stale quote" (older than 5 min)'}
         </Button>

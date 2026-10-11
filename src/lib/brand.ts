@@ -1,13 +1,10 @@
-import { venue } from '../venue.config';
+import { nightLabel } from './night';
 
 /**
- * Lead tagline (founder, Oct 10; placement per SCOPE "Ride status and charge timing", 9:42 update).
- * Appears ONLY on the morning receipt / night summary, as a small line under the total, and only
- * when a ride was actually booked (a driver accepted). Never on landing, menu, booked or trip screens.
+ * Receipt line (SCOPE 22:29): "[Night date]. Tab closed. Ride home on your tab.",
+ * shown right before the ride line, and only when the guest was picked up. The bare marketing tagline
+ * is never used in the app.
  */
-export const BRAND_LINE = 'Tab closed. Ride booked.';
-
-/** "Friday, Oct 9. Tab closed. Ride booked." or just "Friday, Oct 9." on a night with no ride booked. */
-export function nightTagline(rideBooked: boolean): string {
-  return rideBooked ? `${venue.night.dateLong}. ${BRAND_LINE}` : `${venue.night.dateLong}.`;
+export function nightTagline(pickedUp: boolean, now: number = Date.now()): string | null {
+  return pickedUp ? `${nightLabel(now)}. Tab closed. Ride home on your tab.` : null;
 }

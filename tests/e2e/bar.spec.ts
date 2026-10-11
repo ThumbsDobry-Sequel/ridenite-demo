@@ -289,7 +289,7 @@ test.describe('M2 handoff and live rides (Piper C)', () => {
     await expect(page.getByTestId('b4n-chip').filter({ hasText: 'Bar 3' })).toHaveCount(0);
   });
 
-  test('C3a legal status copy: "Ride requested" until the driver accepts, then "Ride booked. Fare on tab" @bar', async ({ page }) => {
+  test('C3a legal status copy: "Ride requested" until the driver accepts, then "Ride booked. Fare goes on tab ... at pickup" @bar', async ({ page }) => {
     await page.clock.install();
     await tonight(page);
     await page.getByTestId('ask-4471').tap();
@@ -299,10 +299,10 @@ test.describe('M2 handoff and live rides (Piper C)', () => {
     await expect(page.getByText(/Ride booked/)).toHaveCount(0);
     await page.clock.runFor(8_500);
     await expect(page.getByTestId('booked-title')).toContainText('Ride booked');
-    await expect(page.getByTestId('booked-headline')).toHaveText('Ride booked. Fare on tab #4471.');
+    await expect(page.getByTestId('booked-headline')).toHaveText('Ride booked. Fare goes on tab #4471 at pickup.');
     await expect(page.getByText('Tab closed. Ride booked.')).toHaveCount(0);
     await nav(page, '/b/tab?tab=4471');
-    await expect(page.getByTestId('b6-ride-headline')).toHaveText('Ride booked. Fare on tab #4471.');
+    await expect(page.getByTestId('b6-ride-headline')).toHaveText('Ride booked. Fare goes on tab #4471 at pickup.');
   });
 
   test('C3b completed rides leave the board 10 minutes after completion @bar', async ({ page }) => {
@@ -341,6 +341,8 @@ test.describe('M2 handoff and live rides (Piper C)', () => {
     await tonight(page);
     await expect(page.getByTestId('quiet-banner')).toHaveAttribute('role', 'status');
     await page.getByTestId('quiet-open').tap();
+    // measure after the sheet's slide-in animation settles
+    await page.locator('[data-screen=b10]').evaluate((e) => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => null))).then(() => e.getBoundingClientRect().top));
     const proc = (await page.getByTestId('b10-procedure').boundingBox())!;
     const book = (await page.getByTestId('b10-book').boundingBox())!;
     expect(proc.y + proc.height).toBeLessThanOrEqual(book.y);
@@ -369,7 +371,7 @@ async function bookMaya(page: Page, accept = true) {
   await page.getByTestId('b3-sim-reply').tap();
   await page.getByTestId('b3-book').tap();
   await expect(page.locator('[data-screen=booked]')).toBeVisible();
-  if (accept) await page.clock.runFor(8_500); // driver accepts; lines post to the tab now
+  if (accept) await page.clock.runFor(60_500); // picked up; lines post to the tab now
 }
 
 test.describe('M2 tab detail B6 (Piper D)', () => {
@@ -380,9 +382,15 @@ test.describe('M2 tab detail B6 (Piper D)', () => {
     await expect(page.getByTestId('b6-not-yet')).toBeVisible();
     await expect(page.getByTestId('b6-ride_quote')).toHaveCount(0);
     await expect(page.getByTestId('b6-record')).toHaveCount(0);
-    await page.clock.runFor(8_500);
+    await page.clock.runFor(8_500); // accepted: still pending pickup
+    await expect(page.getByTestId('b6-not-yet')).toHaveText('Ride pending pickup. The fare goes on this tab at pickup.');
+    await expect(page.getByTestId('b6-ride_quote')).toHaveCount(0);
+    await page.clock.runFor(52_000); // picked up
     const q = page.getByTestId('b6-ride_quote');
-    await expect(q).toContainText('Courtesy car, quoted fare');
+    // bar POS line (SCOPE 22:22): "RideNite car home, [area], [time]"; the guest record is not on the line
+    await expect(q.locator('th')).toContainText(/^RideNite car home, Westover area, \d{1,2}:\d{2} [AP]M/);
+    await expect(q).not.toContainText('Confirmed by guest');
+    await expect(page.getByTestId('b6-record')).toContainText('Confirmed by guest');
     await expect(q).toContainText('$21.00');
     await expect(page.getByTestId('b6-ride_adjustment')).toHaveCount(0);
     await expect(page.getByTestId('b6-tip-base')).toContainText('$49.00');
@@ -425,8 +433,9 @@ test.describe('M2 tab detail B6 (Piper D)', () => {
     await page.getByTestId('b3-dest-3100-clarendon-blvd').tap();
     await page.getByTestId('b3-saw').tap();
     await page.getByTestId('b3-book').tap();
-    await page.clock.runFor(8_500);
+    await page.clock.runFor(60_500);
     await nav(page, '/b/tab?tab=4475');
+    await expect(page.getByTestId('b6-ride_quote').locator('th')).toContainText(/^RideNite car home, Clarendon area, \d{1,2}:\d{2} [AP]M/);
     const rec = page.getByTestId('b6-record');
     await expect(rec).toContainText(/Booked by staff, price shown to guest, \d{1,2}:\d{2} [AP]M/);
     await expect(rec).toContainText('Quote $21.00, may differ by up to $4.20');
@@ -449,8 +458,10 @@ test.describe('M2 tab detail B6 (Piper D)', () => {
     await expect(page.getByTestId('b6-ride_quote')).toHaveCount(0);
     await expect(page.getByTestId('b6-record')).toHaveCount(0);
     await page.clock.runFor(10_500);
-    await expect(page.getByTestId('b6-record')).toHaveCount(0); // logged, but shown only once a driver accepts
+    await expect(page.getByTestId('b6-record')).toHaveCount(0); // logged, but shown only at pickup
     await page.clock.runFor(8_000);
+    await expect(page.getByTestId('b6-record')).toHaveCount(0); // accepted, not picked up
+    await page.clock.runFor(52_000);
     await expect(page.getByTestId('b6-record')).toContainText('Confirmed by guest');
     // undone path
     await fresh(page, '/g/p3');
@@ -461,6 +472,44 @@ test.describe('M2 tab detail B6 (Piper D)', () => {
     await nav(page, '/b/tab?tab=4468');
     await expect(page.getByTestId('b6-ride_quote')).toHaveCount(0);
     await expect(page.getByTestId('b6-record')).toHaveCount(0);
+  });
+});
+
+test.describe('Tab close with a ride pending pickup (SCOPE 22:22)', () => {
+  test('close while the car is on the way: "Ride pending pickup", then the ride line posts and the close completes at pickup @bar', async ({ page }) => {
+    await page.clock.install();
+    await tonight(page);
+    await page.getByTestId('ask-4471').tap();
+    await page.getByTestId('b3-book').tap();
+    await expect(page.locator('[data-screen=booked]')).toBeVisible();
+    await page.clock.runFor(8_500);
+    await nav(page, '/b/tab?tab=4471');
+    await page.getByTestId('b6-close').tap();
+    await expect(page.getByTestId('b6-pending')).toContainText('Ride pending pickup');
+    await expect(page.getByTestId('b6-closed')).toHaveCount(0);
+    await expect(page.getByTestId('b6-ride_quote')).toHaveCount(0);
+    await nav(page, '/b/tonight');
+    await expect(page.getByTestId('pending-4471')).toHaveText('Ride pending pickup');
+    await nav(page, '/b/tab?tab=4471');
+    await page.clock.runFor(52_000);
+    await expect(page.getByTestId('b6-closed')).toHaveText('Tab closed.');
+    await expect(page.getByTestId('b6-pending')).toHaveCount(0);
+    await expect(page.getByTestId('b6-ride_quote')).toContainText('RideNite car home, Clarendon area');
+  });
+
+  test('close, then the driver cancels before pickup: the tab closes clean with no ride line @bar', async ({ page }) => {
+    await page.clock.install();
+    await tonight(page);
+    await page.getByTestId('ask-4471').tap();
+    await page.getByTestId('b3-book').tap();
+    await page.clock.runFor(8_500);
+    await nav(page, '/b/tab?tab=4471');
+    await page.getByTestId('b6-close').tap();
+    await expect(page.getByTestId('b6-pending')).toBeVisible();
+    await page.getByTestId('b6-driver-cancel').tap();
+    await expect(page.getByTestId('b6-closed')).toHaveText('Tab closed.');
+    await expect(page.getByTestId('b6-ride_quote')).toHaveCount(0);
+    await expect(page.getByTestId('b6-total')).toContainText('$39.96');
   });
 });
 
@@ -475,7 +524,7 @@ test.describe('M2 settings and reset (Piper E)', () => {
     await nav(page, '/g/m1');
     await expect(page.getByTestId('m1-subject')).toHaveText('Your receipt from Maison Cheryl: tab and RideNite Ride ride');
     await nav(page, '/g/p3');
-    await expect(page.getByTestId('perk-line')).toContainText('first $10.00 on us');
+    await expect(page.getByTestId('perk-line')).toContainText('Maison Cheryl covers the first $10.00');
     await nav(page, '/b/settings');
     await page.getByTestId('set-receipt-neutral').tap();
     await page.getByTestId('set-price-fare_on_tab').tap();

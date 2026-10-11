@@ -141,7 +141,7 @@ export function B3({ route }: { route: Route }) {
           <p className="bquote__price num" data-testid="b3-quote">{fmt(q)}</p>
           <p className="callout">Quote, goes on tab #{t.tab}.</p>
           <p className="callout" data-testid="b3-cap">Final fare may differ by up to {fmt(capFor(q))}.</p>
-          {perk && <p className="callout" data-testid="b3-perk">Venue perk: first {fmt(venue.perkCents)} on us. Guest pays {fmt(Math.max(0, q - venue.perkCents))}.</p>}
+          {perk && <p className="callout" data-testid="b3-perk">Venue perk: {venue.name} covers the first {fmt(venue.perkCents)}. Guest pays {fmt(Math.max(0, q - venue.perkCents))}.</p>}
         </section>
       )}
       <button type="button" role="checkbox" aria-checked={d.sawPrice} aria-disabled={q == null} className="bcheck" data-testid="b3-saw"
@@ -171,8 +171,12 @@ export function Booked({ route }: { route: Route }) {
   const s = useDemoState();
   useNow(500);
   const ride = store.barRides().find((r) => r.id === route.query.get('ride'));
+  // A fast second tap on Book must not land on a control of this screen (double-tap guard, 600 ms).
+  const [armed, setArmed] = useState(false);
   useEffect(() => {
     if (!ride) navigate('/b/tonight', { replace: true });
+    const t = setTimeout(() => setArmed(true), 600);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   if (!ride) return <main className="bsheet" data-screen="booked" id="main" />;
@@ -185,13 +189,13 @@ export function Booked({ route }: { route: Route }) {
   const link = handoffUrl(h, base());
   const first = ride.guest.split(' ')[0];
   return (
-    <main className="bsheet" data-screen="booked" id="main">
+    <main className="bsheet" data-screen="booked" id="main" style={armed ? undefined : { pointerEvents: 'none' }}>
       <SheetHead title={stage === 'requested' ? 'Ride requested' : 'Ride booked'} onBack={() => navigate('/b/tonight')} backLabel="Tonight" testId="booked-title" />
       {headline && <p className="body" role="status" data-testid="booked-headline"><b>{headline}</b></p>}
       <StatusLine tone={st.tone} icon={st.icon} testId="booked-status">{st.label}</StatusLine>
       <section className="bcard">
         <h2 className="bcard__title">{ride.seat} · {ride.guest}</h2>
-        <p className="callout">{s.bar.settings.tabLineName}, quoted fare {fmt(ride.quoteCents)} on tab #{ride.tab}.</p>
+        <p className="callout">Quoted fare {fmt(ride.quoteCents)}. Posts to tab #{ride.tab} at pickup.</p>
         <p className="foot">Entry point: {EP_LABEL[ride.entryPoint]}</p>
         {rec && <p className="foot" data-testid="booked-record">{rec.text}</p>}
       </section>

@@ -210,7 +210,7 @@ test('E2 accepted: $23.50 quote, $4.70 cap, morning total $88.79', async ({ page
   await slide(page, 'e2-yes');
   await page.clock.runFor(10_500);
   expect((await state(page)).ride).toMatchObject({ quoteCents: 2350, capCents: 470 });
-  await page.clock.runFor(8_000); // driver accepts; fare posts to the tab
+  await page.clock.runFor(60_000); // picked up; fare posts to the tab
   await nav(page, '/g/p9');
   await expect(page.getByTestId('total')).toHaveText('$88.79');
 });

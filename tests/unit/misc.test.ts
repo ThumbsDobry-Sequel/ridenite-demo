@@ -62,7 +62,10 @@ describe('copy lint', () => {
     expect(lintText('We get Every Guest Home').length).toBeGreaterThan(0);
     expect(lintText('lit.').length).toBeGreaterThan(0);
     expect(lintText('A little split, literally, splitting').length).toBe(0);
-    expect(lintText('We guarantee a car')).toHaveLength(1);
+    expect(lintText('We guarantee a car').length).toBeGreaterThan(0);
+    // Harper legal items (money-promises memo), whole word or phrase
+    for (const t of ['Rides are Guaranteed', 'Every ride is insured', 'Add a Protection Plan', 'Zero risk for the bar', 'A guarantee.']) expect(lintText(t).length, t).toBeGreaterThan(0);
+    for (const t of ['uninsuredish', 'zero risky']) expect(lintText(t).filter((p) => /insured|zero risk/i.test(p.match)).length, t).toBe(0);
     expect(lintText('No liability for the bar')).toHaveLength(1);
   });
   it('allows the two approved unsafe strings only', () => {

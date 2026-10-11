@@ -84,3 +84,12 @@ export function rideStage(r: StageInput, now: number): Stage {
 /** A driver has accepted: the fare line and the record line post to the tab from here on. */
 export const ACCEPTED: Stage[] = ['en_route', 'near', 'arrived', 'picked_up', 'complete'];
 export const isAcceptedStage = (st: Stage | null | undefined): boolean => !!st && ACCEPTED.includes(st);
+
+/**
+ * Charge timing (SCOPE "Chargeback research changes", 22:22): the fare line and the guest record post
+ * to the tab at PICKUP, not at driver accept. A driver who accepts and then cancels never posts anything.
+ */
+export const CHARGED: Stage[] = ['picked_up', 'complete'];
+export const isChargedStage = (st: Stage | null | undefined): boolean => !!st && CHARGED.includes(st);
+/** Simulated pickup time for a ride on the demo timeline. */
+export const pickupAt = (r: { bookedAt: number }): number => r.bookedAt + DEMO_TIMELINE.picked_up;

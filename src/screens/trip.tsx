@@ -1,3 +1,5 @@
+import { nightTimes } from '../lib/morning';
+import { fmtET } from '../lib/confirmRecord';
 import { RideStatus, requestedLine } from '../components/RideStatus';
 import { useEffect, useRef, useState } from 'react';
 import { TAP_GUARD_MS } from './confirm';
@@ -238,13 +240,14 @@ export function P6() {
   const s = useDemoState();
   const { ride } = useLiveRide('/g/p6');
   const dest = ride?.dest.line ?? venue.guest.home.line;
+  const NT = nightTimes(s);
   return (
     <Screen id="P6" tight>
-      <Top left={<Chip tone="info" icon="home">Picked up</Chip>} ctx={venue.night.pickedUp} />
+      <Top left={<Chip tone="info" icon="home">Picked up</Chip>} ctx={fmtET(NT.pickedUp)} />
       <MapCard label={`Illustrative map: about 11 minutes to ${dest}`} />
       <div className="row"><span className="eta">11 min</span><span className="callout muted">arrive about 11:43 PM</span></div>
       <ul className="steps" aria-label="Trip progress">
-        <li><span className="dot dot--done" />Picked up {venue.night.pickedUp}</li>
+        <li><span className="dot dot--done" />Picked up {fmtET(NT.pickedUp)}</li>
         <li><span className="dot dot--now" />On the way</li>
         <li><span className="dot" />Arrive near {dest}</li>
       </ul>
@@ -261,10 +264,12 @@ export function P6() {
 }
 
 export function P7() {
+  const s = useDemoState();
   useLiveRide('/g/p7');
+  const NT = nightTimes(s);
   return (
     <Screen id="P7">
-      <Top left={<span className="brand">RideNite</span>} ctx={venue.night.complete} />
+      <Top left={<span className="brand">RideNite</span>} ctx={fmtET(NT.complete)} />
       <Chip tone="success" icon="check">Dropped off</Chip>
       <h1 className="large-title">You've arrived.</h1>
       <p className="body muted">Your ride from {venue.name} is on your tab.</p>
@@ -353,7 +358,7 @@ export function E5() {
     <Screen id="E5">
       <Top left={<Chip tone="warning" icon="wifi-off">No signal</Chip>} />
       <h1 className="h2">Your ride is still booked</h1>
-      <p className="body muted">Last update {venue.night.booked}. This page refreshes when you're back online.</p>
+      <p className="body muted">Last update {fmtET(nightTimes(s).booked)}. This page refreshes when you're back online.</p>
       <Plate plate={d.plate} spoken={d.plateSpoken} />
       <p className="body">{d.car}, {d.name}</p>
       <div className="spacer" />

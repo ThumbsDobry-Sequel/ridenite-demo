@@ -63,10 +63,8 @@ export const venue = {
 
   seat: 'Table 7',
   tabNumber: '4468',
-  card: { last4: '4242', holdDeadline: 'Sun, Oct 11 at 11:00 AM' },
+  card: { last4: '4242' }, // hold deadline is computed from the tab open time (src/lib/hold.ts)
   night: {
-    date: 'Fri Oct 9',
-    dateLong: 'Friday, Oct 9',
     morningClock: 'Sat 9:04 AM',
     tabOpened: '7:42 PM',
     booked: '11:11 PM',

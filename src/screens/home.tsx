@@ -1,3 +1,4 @@
+import { nightShort } from '../lib/night';
 import { bookedLine, isAccepted } from '../components/RideStatus';
 import { useState } from 'react';
 import { venue } from '../venue.config';
@@ -85,7 +86,7 @@ export function Home() {
           <p className="section-title">More</p>
           <MoreRow icon="pin" title="Somewhere else" sub="Type an address" testId="somewhere-else" onClick={() => navigate('/g/p2')} />
           {ride && stage && <MoreRow icon="car" title="Last ride" sub={`${STAGE_LABEL[stage]}, to ${ride.dest.line}`} testId="last-ride-card" onClick={() => navigate(STAGE_ROUTE[stage])} />}
-          <MoreRow icon="receipt" title="Last night's receipt" sub={`${venue.night.date} · ${fmt(m.totalCents)}`} testId="receipt-card" onClick={() => navigate('/g/inbox')} />
+          <MoreRow icon="receipt" title="Last night's receipt" sub={`${nightShort(Date.now())} · ${fmt(m.totalCents)}`} testId="receipt-card" onClick={() => navigate('/g/inbox')} />
           <p className="fict">Fictional sample data</p>
           <p className="fict">No real cars or charges.</p>
           <div className="sticky-actions sticky-actions--hero" data-testid="hero-dock">
@@ -101,7 +102,7 @@ export function Home() {
           <p className="callout muted">Scan the QR code on your table to link your tab.</p>
           <MoreRow icon="grid" title="Scan table QR" sub="Links this phone to your tab" testId="scan-qr" onClick={() => setScan(true)} />
           <div className="card card--quiet" data-testid="not-linked"><p className="foot">Booked from a table QR? Open it in Safari to see your ride.</p></div>
-          <MoreRow icon="receipt" title="Last night's receipt" sub={`${venue.night.date} · ${fmt(m.totalCents)}`} testId="receipt-card" onClick={() => navigate('/g/inbox')} />
+          <MoreRow icon="receipt" title="Last night's receipt" sub={`${nightShort(Date.now())} · ${fmt(m.totalCents)}`} testId="receipt-card" onClick={() => navigate('/g/inbox')} />
           <p className="fict">Fictional sample data</p>
           <p className="fict">No real cars or charges.</p>
           <div className="sticky-actions sticky-actions--hero" data-testid="hero-dock">

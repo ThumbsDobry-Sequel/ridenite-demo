@@ -1,18 +1,35 @@
+import { nightShort, nightWeekday } from '../lib/night';
+import { holdText } from '../lib/hold';
 import type { DemoState } from '../store/types';
 import { useState } from 'react';
 import { venue } from '../venue.config';
 import { navigate } from '../router';
 import { useDemoState, useStore } from '../store';
-import { morningFor } from '../lib/morning';
+import { morningFor, nightTimes } from '../lib/morning';
 import { nightTagline } from '../lib/brand';
-import { noDriverLine, confirmLine } from '../lib/confirmRecord';
+import { noDriverLine, confirmLine, fmtET } from '../lib/confirmRecord';
 import { useNow } from '../hooks';
 import { fmt, fmtSigned } from '../lib/money';
 import { Banner, Button, Card, Chip, Fict, ListRow } from '../components/primitives';
 import { Icon } from '../components/Icon';
 import { BackButton, Screen, Top, VenueChip } from '../components/layout';
 
-const N = venue.night;
+const ETT = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit' });
+const ETD = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+/** Night times formatted in ET, derived from the clock (never hardcoded). */
+function useN(s: DemoState) {
+  const t = nightTimes(s);
+  return { tabOpened: fmtET(t.tabOpened), booked: fmtET(t.booked), pickedUp: fmtET(t.pickedUp), complete: fmtET(t.complete) };
+}
+const nowClock = () => ETT.format(new Date()).replace(',', '');
+const nowStamp = () => ETD.format(new Date()).replace(/, (\d{1,2}:)/, ', $1');
+
+/** Money-promises memo (Harper's safer copy), exact; venue name from config. Drink questions still go to the bar. */
+export const rideQuestionCopy = () =>
+  `Ride charge look wrong? Tap here. We'll check it with ${venue.name} today. If it's wrong, ${venue.name} refunds it to your card, and we'll text you when that's done. Your bank may take a few business days to show it.`;
+function RideQuestion() {
+  return <button type="button" className="textlink ride-question" data-testid="ride-question" onClick={() => navigate('/g/p10')}>{rideQuestionCopy()}</button>;
+}
 
 /** Morning receipt wording follows the venue setting (B8): Neutral (recommended) or Detailed. */
 export function receiptSubject(s: DemoState): string {
@@ -40,17 +57,18 @@ export function Inbox() {
 /** M2 / M2d SMS thread with the neutral morning text (default). */
 export function M2() {
   const s = useDemoState();
+  const N = useN(s);
   return (
     <Screen id="M2">
       <Top back="/g/inbox" ctx={`RideNite ${venue.smsFrom}`} />
       <h1 className="h2">Messages</h1>
       <div className="thread">
-        <p className="stamp">Fri {N.booked}</p>
+        <p className="stamp">{nightWeekday(Date.now())} {N.booked}</p>
         <p className="bubble">RideNite: Your car is requested. {venue.driver.first}, {venue.driver.carShort}, plate {venue.driver.plate}, about {venue.etaMinutes} min. It goes on your tab at {venue.name} ({fmt(venue.quoteCents)}). Before you get in, check the plate.</p>
         <p className="bubble">RideNite: Your car is about 2 min away. You can wait inside. We'll text you when it's at the door.</p>
         <p className="stamp">{N.complete}</p>
         <p className="bubble">RideNite: You've arrived. Your ride from {venue.name} is on your tab.</p>
-        <p className="stamp">Sat 9:00 AM</p>
+        <p className="stamp">{nowClock()}</p>
         <p className="bubble">RideNite: {receiptSubject(s)} is ready: <a href="#/g/p9" data-testid="sms-link">rdnt.example/m/abc123</a> Reply STOP to opt out, HELP for help.</p>
       </div>
       <Fict>SAMPLE: no real charge. Messages are simulated.</Fict>
@@ -62,6 +80,8 @@ export function M2() {
 export function M1() {
   const s = useDemoState();
   const m = morningFor(s);
+  const N = useN(s);
+  const tag = nightTagline(m.hasRide);
   return (
     <Screen id="M1">
       <Top back="/g/inbox" ctx="Email" />
@@ -70,7 +90,7 @@ export function M1() {
           <div><b>RideNite for {venue.name}</b></div>
           <div>To: {venue.guest.email}</div>
           <div>Subject: <b data-testid="m1-subject">{receiptSubject(s)}</b></div>
-          <div className="muted">Sat, Oct 10, 9:00 AM</div>
+          <div className="muted">{nowStamp()}</div>
         </div>
       </Card>
       <h1 className="h3">Good morning, {venue.guest.first}.</h1>
@@ -79,14 +99,15 @@ export function M1() {
         <tbody>
           <tr><th scope="row">Drinks and food</th><td className="amt">{fmt(m.tipBaseCents)}</td></tr>
           <tr><th scope="row">{venue.taxLabel}</th><td className="amt">{fmt(m.taxCents)}</td></tr>
+          {tag && <tr data-testid="night-tagline-row"><td colSpan={2} className="night-tagline" data-testid="night-tagline">{tag}</td></tr>}
           <tr><th scope="row">{s.bar.settings.tabLineName}, {N.pickedUp} to {N.complete}<span className="note">{venue.driver.partner}, {venue.driver.plate}</span></th><td className="amt">{fmt(m.rideCents)}</td></tr>
           <tr><th scope="row">Staff tip ({s.tipPct}%)</th><td className="amt">{fmt(m.tipCents)}</td></tr>
           <tr className="total"><th scope="row">Total</th><td className="amt">{fmt(m.totalCents)}</td></tr>
         </tbody>
       </table>
-      <p className="night-tagline" data-testid="night-tagline">{nightTagline(m.hasRide)}</p>
       <Button onClick={() => navigate('/g/p9')}>Review and pay</Button>
-      <p className="foot">Your card ending {venue.card.last4} is on hold. If you do nothing, it's charged {venue.card.holdDeadline}. Question about a charge? Open Review and tap "Something's wrong."</p>
+      <RideQuestion />
+      <p className="foot" data-testid="hold-line">Your card ending {venue.card.last4} is on hold. If you do nothing, it's {holdText(s.tabOpenedAt, s.seededAt)}. Question about a charge? Open Review and tap "Something's wrong."</p>
       <p className="fict">{venue.addressLine}. {venue.disclaimer} SAMPLE: no real charge.</p>
     </Screen>
   );
@@ -102,10 +123,12 @@ export function P9() {
   const nd = noDriverLine(s);
   const r = m.recon ?? { postedAdjCents: 0, heldCents: 0, declinedCents: 0, finalCents: 0, quoteCents: 0, capCents: 0, diffCents: 0, outcome: 'none' as const };
   const adjName = r.postedAdjCents < 0 ? 'Ride fare credit' : 'Ride fare adjustment';
+  const N = useN(s);
+  const tag = nightTagline(m.hasRide);
   return (
     <Screen id="P9" tight>
-      <Top left={<VenueChip />} ctx={N.morningClock} />
-      <h1 className="h2">Last night, {N.date}</h1>
+      <Top left={<VenueChip />} ctx={nowClock()} />
+      <h1 className="h2">Last night, {nightShort(Date.now())}</h1>
       <span className="status-pill" data-testid="ready-total">{s.paid ? 'Paid' : 'Ready to review'}: <span className="num">{fmt(m.totalCents)}</span></span>
       <Card>
         <h2 className="h3">Your night</h2>
@@ -126,6 +149,7 @@ export function P9() {
           {venue.menu.filter((i) => i.kind === 'food').map((i) => <tr key={i.name}><th scope="row">{i.name}</th><td className="amt">{fmt(i.cents)}</td></tr>)}
           <tr><th scope="row">{venue.taxLabel}<span className="note">{venue.taxNote}</span></th><td className="amt" data-testid="tax">{fmt(m.taxCents)}</td></tr>
           <tr className="sec"><th colSpan={2} scope="colgroup">Ride</th></tr>
+          {tag && <tr data-testid="night-tagline-row"><td colSpan={2} className="night-tagline" data-testid="night-tagline">{tag}</td></tr>}
           {m.hasRide ? (
             <tr data-testid="ride-line"><th scope="row">{s.bar.settings.tabLineName}, quoted fare<span className="note">{venue.driver.partner}</span>
               {cl && <><span className="note confirm-record" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</span><span className="note" data-testid="confirm-record-amounts">{cl.amounts}</span></>}</th><td className="amt">{fmt(m.quoteCents)}</td></tr>
@@ -134,7 +158,7 @@ export function P9() {
               {nd && <span className="note" data-testid="no-driver-record">{nd}</span>}</th><td className="amt">{fmt(0)}</td></tr>
           )}
           {r.postedAdjCents !== 0 && (
-            <tr data-testid="adj-line"><th scope="row">{adjName} (final fare {fmt(r.finalCents)}, quoted {fmt(r.quoteCents)})<span className="note">{r.postedAdjCents > 0 ? `Within the ${fmt(r.capCents)} you saw before booking.` : 'The fare came in lower, so you get the difference back.'}</span></th><td className="amt">{fmtSigned(r.postedAdjCents)}</td></tr>
+            <tr data-testid="adj-line"><th scope="row">{adjName} (final fare {fmt(r.finalCents)}, quoted {fmt(r.quoteCents)})<span className="note">{r.postedAdjCents > 0 ? `Within the ${fmt(r.capCents)} you saw before booking.` : 'The fare came in lower than the quote, so this credit lowers your total.'}</span></th><td className="amt">{fmtSigned(r.postedAdjCents)}</td></tr>
           )}
           {r.heldCents > 0 && (
             <tr data-testid="held-line" className="needs-ok-row"><th scope="row"><span className="needs-ok__l"><Icon name="help" /><b>Needs your OK</b></span><span className="note">{fmt(r.heldCents)} over the {fmt(r.capCents)} cap. {venue.overCapReason}. Not charged unless you OK it.</span>
@@ -154,10 +178,11 @@ export function P9() {
           <tr className="total"><th scope="row">Total</th><td className="amt" data-testid="total" aria-live="polite">{fmt(m.totalCents)}</td></tr>
         </tbody>
       </table>
-      <p className="night-tagline" data-testid="night-tagline">{nightTagline(m.hasRide)}</p>
       {!s.paid && <Button testId="pay" onClick={() => { store.pay(); navigate('/g/p11'); }}>Approve and pay {fmt(m.totalCents)}</Button>}
       <Button variant="secondary" onClick={() => navigate('/g/p10')}>Something's wrong</Button>
-      <p className="foot">Card ending {venue.card.last4} is on hold. If you do nothing, it's charged {venue.card.holdDeadline}.</p>
+      <RideQuestion />
+      <p className="foot">Questions about drinks or food go to {venue.name}.</p>
+      <p className="foot" data-testid="hold-line">Card ending {venue.card.last4} is on hold. If you do nothing, it's {holdText(s.tabOpenedAt, s.seededAt)}.</p>
       <Fict>Fictional sample bill. SAMPLE: no real charge.</Fict>
     </Screen>
   );
@@ -172,7 +197,7 @@ export function E7() {
   const over = r.diffCents - Math.min(r.diffCents, r.capCents);
   return (
     <Screen id="E7">
-      <Top left={<VenueChip />} ctx={N.morningClock} />
+      <Top left={<VenueChip />} ctx={nowClock()} />
       <h1 className="h2">Your ride came to {fmt(r.finalCents)}.</h1>
       <Card>
         <div className="row callout"><span>Quote you OK'd</span><span className="num">{fmt(r.quoteCents)}</span></div>
@@ -211,7 +236,7 @@ export function P10() {
       {!reason && <p className="foot">Pick what's wrong to send it.</p>}
       <div className="spacer" />
       <Button testId="send-dispute" onClick={() => { if (!reason) return; store.sendDispute(reason); navigate('/g/p11'); }}>Send to {venue.name}</Button>
-      <p className="foot">Items you question aren't charged until the bar replies.</p>
+      <p className="foot">Questions about drinks or food go to {venue.name}.</p>
     </Screen>
   );
 }
@@ -228,7 +253,7 @@ export function P11() {
       <Chip tone="success" icon="check">{s.dispute ? 'Sent' : 'Paid'}</Chip>
       <h1 className="h2">All set</h1>
       {s.dispute
-        ? <p className="body">Sent to {venue.name}: "{s.dispute}". Items you question aren't charged until the bar replies.</p>
+        ? <p className="body">Sent to {venue.name}: "{s.dispute}".</p>
         : <p className="body">{fmt(m.totalCents)} paid with card ending {venue.card.last4}.</p>}
       <p className="body muted">Receipt sent to {venue.guest.email}</p>
       {note && <Banner tone="info" icon="check">{note}</Banner>}

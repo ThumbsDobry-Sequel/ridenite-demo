@@ -193,6 +193,37 @@ describe('Bartender store (M2)', () => {
     store.barCloseTab('4471', 'held');
     expect(store.getState().bar.tabs.find((t) => t.tab === '4471')!.close).toBe('held');
   });
+  it('close with a ride pending pickup: pending, then closed at pickup with the ride line; cancel closes clean', async () => {
+    const { tabCloseState } = await import('../../src/lib/tab');
+    const { DEMO_TIMELINE } = await import('../../src/lib/rideState');
+    const { store, advance } = mk();
+    store.barStartDraft('4471', 'guest_request');
+    const r = store.barBook();
+    expect(r.ok).toBe(true);
+    store.barCloseTab('4471', 'closed');
+    const tab = () => store.getState().bar.tabs.find((t) => t.tab === '4471')!;
+    const ride = () => store.barRides().find((x) => x.tab === '4471')!;
+    expect(tab().close).toBe('pending');
+    expect(tabCloseState(tab(), store.stageOf(ride()), store.now())).toBe('pending');
+    expect(barConfirmLine(store.getState(), ride(), store.now())).toBeNull(); // nothing posts before pickup
+    advance(DEMO_TIMELINE.picked_up);
+    expect(tabCloseState(tab(), store.stageOf(ride()), store.now())).toBe('closed');
+    expect(barConfirmLine(store.getState(), ride(), store.now())).not.toBeNull();
+    // second tab: accepted, closed, then the driver cancels -> closes clean
+    store.barStartDraft('4475', 'staff_offer');
+    store.barPickDest(venue.addresses[4]); store.barToggleSawPrice();
+    expect(store.barBook().ok).toBe(true);
+    advance(DEMO_TIMELINE.en_route);
+    store.barCloseTab('4475', 'closed');
+    const t2 = () => store.getState().bar.tabs.find((t) => t.tab === '4475')!;
+    expect(t2().close).toBe('pending');
+    const r2 = store.barRides().find((x) => x.tab === '4475')!;
+    store.driverCancel(r2.id);
+    const r2b = store.barRides().find((x) => x.tab === '4475')!;
+    expect(store.stageOf(r2b)).toBe('canceled_by_driver');
+    expect(tabCloseState(t2(), store.stageOf(r2b), store.now())).toBe('closed');
+    expect(barConfirmLine(store.getState(), r2b, store.now())).toBeNull();
+  });
   it('guest quiet request lands on the bar; reset returns to seed', () => {
     const { store } = mk();
     store.sendQuietRequest('Table 7');

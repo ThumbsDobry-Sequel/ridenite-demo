@@ -5,8 +5,9 @@ import { useNow } from '../../hooks';
 import { venue } from '../../venue.config';
 import { fmt, fmtSigned } from '../../lib/money';
 import { barConfirmLine, fmtET } from '../../lib/confirmRecord';
-import { tabItems, tabTotals } from '../../lib/tab';
-import { isAcceptedStage } from '../../lib/rideState';
+import { barRideLineName, tabCloseState, tabItems, tabTotals } from '../../lib/tab';
+import { fmtDeadline, HOLD_WINDOW_MS } from '../../lib/hold';
+import { isAcceptedStage, isChargedStage, pickupAt } from '../../lib/rideState';
 import { Icon } from '../../components/Icon';
 import { Chip, Sheet } from '../../components/primitives';
 import type { BarSettings, FareScenario } from '../../store/types';
@@ -36,11 +37,14 @@ export function B6({ route }: { route: Route }) {
   const stage = ride ? store.stageOf(ride) : null;
   const done = stage === 'complete';
   const isGuestRide = ride && s.ride?.id === ride.id;
-  // Charge timing: the fare line and record line post to the tab only once a driver accepts.
+  // Charge timing (SCOPE 22:22): the fare line posts to the tab at pickup, not at driver accept.
   const accepted = isAcceptedStage(stage);
+  const charged = isChargedStage(stage);
+  const close = tabCloseState(t, stage, store.now());
   const tot = tabTotals({
     items: tabItems(t.items), taxRate: venue.taxRate, tabLineName: s.bar.settings.tabLineName,
-    ride: ride && accepted ? { quoteCents: ride.quoteCents, finalCents: done ? venue.finalFareCents[ride.scenario] : null, overCapAnswer: isGuestRide ? s.overCapAnswer : null } : null,
+    rideLineName: ride ? barRideLineName(ride.dest, pickupAt(ride), fmtET) : undefined,
+    ride: ride && charged ? { quoteCents: ride.quoteCents, finalCents: done ? venue.finalFareCents[ride.scenario] : null, overCapAnswer: isGuestRide ? s.overCapAnswer : null } : null,
   });
   const rec = ride ? barConfirmLine(s, ride) : null;
   const st = ride && stage ? barStatus(stage, ride) : null;
@@ -54,9 +58,8 @@ export function B6({ route }: { route: Route }) {
               <th scope="row">
                 {l.kind === 'item' && l.qty! > 1 ? `${l.name} x${l.qty}` : l.name}
                 {l.kind === 'ride_quote' && ride && (
-                  <span className="foot btab__note">{EP_LABEL[ride.entryPoint]} · posted {fmtET(ride.bookedAt)}</span>
+                  <span className="foot btab__note">{EP_LABEL[ride.entryPoint]} · quoted fare</span>
                 )}
-                {l.kind === 'ride_quote' && rec && <span className="foot btab__note" data-testid="b6-record">{rec.text}. {rec.amounts}</span>}
               </th>
               <td className="num">{l.kind === 'ride_adjustment' || l.kind === 'ride_credit' ? fmtSigned(l.cents) : l.kind === 'ride_held' ? `(${fmt(l.cents)})` : fmt(l.cents)}</td>
             </tr>
@@ -65,10 +68,16 @@ export function B6({ route }: { route: Route }) {
         </tbody>
       </table>
       <p className="foot" data-testid="b6-tip-base">Tip prompt base: {fmt(tot.tipBaseCents)} (drinks and food, not the ride).</p>
-      {ride && !accepted && stage !== 'no_cars' && <p className="foot" data-testid="b6-not-yet">The fare goes on this tab when a driver accepts.</p>}
+      {ride && !charged && stage !== 'no_cars' && <p className="foot" data-testid="b6-not-yet">Ride pending pickup. The fare goes on this tab at pickup.</p>}
       {ride && stage === 'no_cars' && <p className="foot" data-testid="b6-no-driver">No driver found. Nothing was added to this tab.</p>}
-      {ride && accepted && !done && <p className="foot">Any fare adjustment or credit posts as its own line after drop-off.</p>}
-      {ride && accepted && <p className="foot" data-testid="b6-fee">Bar only: RideNite fee for this ride {fmt(venue.bar.feeCents)}, billed monthly. <span className="sample-tag">Sample</span></p>}
+      {ride && charged && !done && <p className="foot">Any fare adjustment or credit posts as its own line after drop-off.</p>}
+      {rec && (
+        <div className="bnote bnote--record" data-testid="b6-record-card">
+          <p className="foot"><b>RideNite record</b> (on the guest's RideNite receipt, not on the POS line)</p>
+          <p className="foot" data-testid="b6-record">{rec.text}. {rec.amounts}</p>
+        </div>
+      )}
+      {ride && charged && <p className="foot" data-testid="b6-fee">Bar only: RideNite fee for this ride {fmt(venue.bar.feeCents)}, billed monthly. <span className="sample-tag">Sample</span></p>}
       {ride && st && (
         <section className="bcard" data-testid="b6-ride">
           <h2 className="bsection">Ride</h2>
@@ -85,16 +94,20 @@ export function B6({ route }: { route: Route }) {
               ))}
             </div>
             {!done && <button type="button" className="textlink bbtn-44" data-testid="b6-finish" onClick={() => store.barFinishRide(ride.id)}>Demo: skip to drop-off</button>}
+            {accepted && !charged && <button type="button" className="textlink bbtn-44" data-testid="b6-driver-cancel" onClick={() => store.driverCancel(ride.id)}>Demo: driver cancels before pickup</button>}
           </div>
         </section>
       )}
-      {t.close === 'open' ? (
+      {close === 'pending' && (
+        <p className="bnote" role="status" data-testid="b6-pending"><Icon name="clock" />Ride pending pickup. The tab finishes closing when the guest is picked up, or closes with no ride line if the ride is cancelled. Hold ends {fmtDeadline((t.closeAt ?? store.now()) + HOLD_WINDOW_MS)}.</p>
+      )}
+      {close === 'open' ? (
         <div className="bstack">
           <button type="button" className="btn btn--secondary bbtn-56" data-testid="b6-close" onClick={() => store.barCloseTab(t.tab, 'closed')}>Close tab now</button>
           <button type="button" className="btn btn--secondary bbtn-56" data-testid="b6-hold" onClick={() => store.barCloseTab(t.tab, 'held')}>Hold for morning checkout</button>
         </div>
-      ) : (
-        <p className="bnote" role="status" data-testid="b6-closed"><Icon name="check" />{t.close === 'closed' ? 'Tab closed.' : 'Held for morning checkout. The guest gets the receipt in the morning.'}</p>
+      ) : close === 'pending' ? null : (
+        <p className="bnote" role="status" data-testid="b6-closed"><Icon name="check" />{close === 'closed' ? 'Tab closed.' : 'Held for morning checkout. The guest gets the receipt in the morning.'}</p>
       )}
     </main>
   );

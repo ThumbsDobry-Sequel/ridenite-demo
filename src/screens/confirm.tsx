@@ -13,7 +13,10 @@ import type { ConfirmMethod } from '../store/types';
 import { Screen, Top } from '../components/layout';
 
 export const fareNote = (q: number) =>
-  `${fmt(q)} on your tab at ${venue.name}. Final fare may differ by up to ${fmt(capFor(q))}. More than that and we'll ask you first. If it comes in lower, you get the difference back.`;
+  `${fmt(q)} on your tab at ${venue.name}. Final fare may differ by up to ${fmt(capFor(q))}. ${maxLine(q)}`;
+
+/** Money-promises memo (Harper): the most the guest pays, from the live quote and cap. Never hardcoded. */
+export const maxLine = (q: number) => `You pay the final fare, never more than ${fmt(q + capFor(q))} unless you approve a change.`;
 
 /** Quote valid for 5 minutes (demo constant, SCOPE "Ride status and charge timing"). */
 export const QUOTE_TTL_MS = QUOTE_VALID_MS;
@@ -83,10 +86,10 @@ export function P3() {
           <button type="button" aria-pressed={s.riders === 2} onClick={() => store.setRiders(2)}>Me + 1 to 3</button>
         </div>
         <p className="price price--xl" data-testid="quote">{fmt(q)}</p>
-        <p className="callout" data-testid="tab-line">On your {venue.name} tab.</p>
-        <p className="callout cap-note" data-testid="cap-line"><Icon name="clock" />Final fare may differ by up to {fmt(cap)}.</p>
-        <p className="foot cap-more">More than that and we'll ask you first. If it comes in lower, you get the difference back.</p>
-        {perk && <p className="callout" data-testid="perk-line">Venue perk: first {fmt(venue.perkCents)} on us. You pay {fmt(Math.max(0, q - venue.perkCents))} on your tab.</p>}
+        {/* Design rev 04 / 04.1 (locked): one full-strength paragraph, then the over-cap line. */}
+        <p className="callout quote-para"><span data-testid="tab-line">{fmt(q)} goes on your tab when you're picked up.</span>{' '}<span data-testid="cap-line">Final fare may differ by up to {fmt(cap)}.</span></p>
+        <p className="foot cap-more" data-testid="max-line">More than that and we'll ask you first. {maxLine(q)}</p>
+        {perk && <p className="callout" data-testid="perk-line">Venue perk: {venue.name} covers the first {fmt(venue.perkCents)}. You pay {fmt(Math.max(0, q - venue.perkCents))} on your tab.</p>}
       </Card>
       <Card testId="pickup-card" className="pickup-card">
         <div className="kvrow"><span className="kvrow__icon"><Icon name="pin" /></span><div><p className="kv__k">Pickup</p><p className="h3" data-testid="pickup-line">{venue.pickupShort.replace(/\.$/, '')}</p></div></div>

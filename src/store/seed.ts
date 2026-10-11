@@ -1,3 +1,4 @@
+import { seededTabOpen } from '../lib/night';
 import { venue } from '../venue.config';
 import type { BarRide, BarState, DemoState } from './types';
 import { capFor } from '../lib/fare';
@@ -40,11 +41,15 @@ export const STORE_VERSION = 1;
 /** Storage keys/prefixes the app owns. Cleared on every load (memory-only demo). */
 export const OWNED_KEY_PREFIX = 'ridenite';
 
+/** Seeded tab open time: 7:42 PM ET on the night date (src/lib/night.ts). Hold deadline = next 11:00 AM after it. */
+export const seedTabOpenedAt = (now: number): number => seededTabOpen(now);
+
 export function seedState(now: number): DemoState {
   const bar = seedBar(now);
   return {
     version: STORE_VERSION,
     seededAt: now,
+    tabOpenedAt: seedTabOpenedAt(now),
     handoff: null,
     dest: null,
     riders: 1,

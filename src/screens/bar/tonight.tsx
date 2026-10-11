@@ -1,3 +1,4 @@
+import { tabCloseState } from '../../lib/tab';
 import { navigate } from '../../router';
 import { useDemoState, useStore } from '../../store';
 import { useNow } from '../../hooks';
@@ -55,8 +56,11 @@ function TabCard({ t, rank }: { t: BarTab; rank: number }) {
     </div>
   );
   let body;
-  if (t.close !== 'open') {
-    body = <StatusLine tone="neutral" icon="check">{t.close === 'closed' ? 'Tab closed' : 'Held for morning checkout'}</StatusLine>;
+  const close = tabCloseState(t, stage ?? null, Date.now());
+  if (close === 'pending') {
+    body = <StatusLine tone="info" icon="clock" testId={`pending-${t.tab}`}>Ride pending pickup</StatusLine>;
+  } else if (close !== 'open') {
+    body = <StatusLine tone="neutral" icon="check">{close === 'closed' ? 'Tab closed' : 'Held for morning checkout'}</StatusLine>;
   } else if (ride && stage === 'canceled_by_driver') {
     body = (
       <>
@@ -111,7 +115,7 @@ export function B1() {
   const q = s.bar.quiet && !s.bar.quiet.seen && !s.bar.quiet.booked ? s.bar.quiet : null;
   const rides = store.barRides();
   const rankOf = (t: BarTab) => {
-    if (t.close !== 'open') return 4;
+    if (t.close !== 'open' && t.close !== 'pending') return 4;
     const r = [...rides].reverse().find((x) => x.tab === t.tab);
     const st = r ? store.stageOf(r) : null;
     if (st === 'canceled_by_driver' || (q && q.tab === t.tab)) return 0;

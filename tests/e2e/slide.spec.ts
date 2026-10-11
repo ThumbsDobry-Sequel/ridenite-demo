@@ -45,9 +45,11 @@ test.describe('hold-and-slide confirm @sizes', () => {
     for (const id of ['quote', 'cap-line', 'tab-line']) {
       await expect(page.getByTestId(id)).toBeInViewport({ ratio: 1 });
       const hit = await page.getByTestId(id).evaluate((el) => {
-        const r = el.getBoundingClientRect();
-        const h = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-        return !!h && el.contains(h);
+        // inline spans wrap: probe the middle of every line box
+        return Array.from(el.getClientRects()).every((r) => {
+          const h = document.elementFromPoint(r.left + Math.min(r.width / 2, 20), r.top + r.height / 2);
+          return !!h && (el.contains(h) || h.contains(el));
+        });
       });
       expect(hit, `${id} not covered`).toBe(true);
     }
@@ -115,7 +117,7 @@ test('Reduce Motion: early release snaps back instantly, no glow', async ({ brow
   await ctx.close();
 });
 
-test('confirm record: logged when the undo ends, shown with the fare line only once a driver accepts (H31, D7)', async ({ page }) => {
+test('confirm record: logged when the undo ends, shown with the fare line only at pickup (H31, D7)', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-10T03:42:00Z') }); // 11:42 PM ET
   await open(page, '/g/p3');
   await slide(page);
@@ -133,7 +135,10 @@ test('confirm record: logged when the undo ends, shown with the fare line only o
   expect(s1.confirmations[0]).toMatchObject({ quoteCents: 2100, capCents: 420, by: 'guest', at: s0.slides[0].at });
   await expect(page.getByTestId('confirm-record')).toHaveCount(0);
   await expect(page.getByTestId('ride-line')).toHaveCount(0);
-  await page.clock.runFor(8_000); // driver accepts
+  await page.clock.runFor(8_000); // driver accepts: still nothing on the tab
+  await expect(page.getByTestId('ride-line')).toHaveCount(0);
+  await expect(page.getByTestId('confirm-record')).toHaveCount(0);
+  await page.clock.runFor(52_000); // picked up: record and fare line together
   await expect(page.getByTestId('ride-line')).toBeVisible();
   await expect(page.getByTestId('confirm-record')).toHaveText('Confirmed by guest, 11:42 PM');
   await expect(page.getByTestId('confirm-record-amounts')).toContainText('$21.00');
@@ -162,7 +167,7 @@ test('record keeps the quote snapshot from the slide even if the quote is refres
   await page.clock.install();
   await open(page, '/g/p3');
   await slide(page);
-  await page.clock.runFor(18_500);
+  await page.clock.runFor(70_500);
   await page.evaluate(() => { const s = (window as any).__ridenite.store; s.setPriceMovesOnRefresh(true); s.refreshQuote(); });
   expect((await state(page)).quoteCents).toBe(2350);
   await page.evaluate(() => { location.hash = '/g/p9'; });
@@ -185,7 +190,7 @@ test('staff booking wording: "Booked by staff, price shown to guest, h:mm PM"', 
   await page.clock.install({ time: new Date('2026-10-10T03:42:00Z') });
   await open(page, '/g/home');
   await page.evaluate(() => { const s = (window as any).__ridenite.store; s.createRide('staff', { method: 'staff_saw_price', by: 'staff' }); });
-  await page.clock.runFor(18_500);
+  await page.clock.runFor(70_500);
   await page.evaluate(() => { location.hash = '/g/p9'; });
   await expect(page.getByTestId('confirm-record')).toHaveText('Booked by staff, price shown to guest, 11:42 PM');
   await expect(page.getByTestId('confirm-record')).not.toContainText('Confirmed by guest');
@@ -220,9 +225,10 @@ test('Undo sits right under the countdown card', async ({ page }) => {
   expect(undo.y - (card.y + card.height)).toBeLessThan(40);
 });
 
-test('dispute record falls back to the sample night, labeled sample data', async ({ page }) => {
+test('dispute record falls back to the sample night, labeled sample data (times relative to now)', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-10-10T03:42:00Z') }); // 11:42 PM ET; sample booking 34 min earlier
   await open(page, '/g/p9');
-  await expect(page.getByTestId('confirm-record')).toHaveText('Confirmed by guest, 11:11 PM (sample data)');
+  await expect(page.getByTestId('confirm-record')).toHaveText('Confirmed by guest, 11:08 PM (sample data)');
 });
 
 test.describe('Confirm Cancel (founder decision 9:30, Piper H4/H5)', () => {
@@ -283,7 +289,7 @@ test.describe('Confirm Cancel (founder decision 9:30, Piper H4/H5)', () => {
 });
 
 test.describe('Status and charge timing (SCOPE "Ride status and charge timing")', () => {
-  test('undo "Requesting your ride...", no accept during undo, then "Ride requested. Finding a driver.", then "Ride booked. Fare on your tab."', async ({ page }) => {
+  test('undo "Requesting your ride...", no accept during undo, then "Ride requested. Finding a driver.", then "Ride booked. Fare goes on your tab at pickup."', async ({ page }) => {
     await page.clock.install();
     await open(page, '/g/p3');
     await slide(page);
@@ -293,20 +299,21 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await expect(page.getByText(/Ride booked/)).toHaveCount(0);
     await page.clock.runFor(1_000);
     await expect(page.getByTestId('status-requested')).toHaveText('Ride requested. Finding a driver.');
-    await expect(page.getByTestId('status-requested-fare')).toHaveText('$21.00 goes on your tab when a driver accepts. Final fare may differ by up to $4.20.');
+    await expect(page.getByTestId('status-requested-fare')).toHaveText("$21.00 goes on your tab when you're picked up. Final fare may differ by up to $4.20.");
     const head = (await page.getByTestId('status-requested').boundingBox())!;
     const fare = (await page.getByTestId('status-requested-fare').boundingBox())!;
     expect(fare.y).toBeGreaterThanOrEqual(head.y + head.height - 1);
     await expect(page.getByText(/Ride booked/)).toHaveCount(0);
     await page.clock.runFor(8_000);
     await expect(page.locator('[data-screen=P5]')).toBeVisible();
-    await expect(page.getByTestId('status-booked')).toHaveText('Ride booked. Fare on your tab.');
+    await expect(page.getByTestId('status-booked')).toHaveText('Ride booked.');
+    await expect(page.getByTestId('status-booked-fare')).toHaveText('Fare goes on your tab at pickup.');
     const st = (await page.getByTestId('status-booked').boundingBox())!;
     const eta = (await page.getByTestId('eta').boundingBox())!;
     expect(eta.y).toBeGreaterThan(st.y); // then the ETA card
     await expect(page.getByText('Tab closed', { exact: false })).toHaveCount(0);
     await page.evaluate(() => { location.hash = '/g/home'; });
-    await expect(page.getByTestId('home-booked')).toHaveText('Ride booked. Fare on your tab.');
+    await expect(page.getByTestId('home-booked')).toHaveText('Ride booked. Fare goes on your tab at pickup.');
   });
 
   test('requested line uses the live quote and cap ($23.50, $4.70)', async ({ page }) => {
@@ -318,19 +325,82 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await page.clock.runFor(1_000);
     await slide(page);
     await page.clock.runFor(10_500);
-    await expect(page.getByTestId('status-requested-fare')).toHaveText('$23.50 goes on your tab when a driver accepts. Final fare may differ by up to $4.70.');
+    await expect(page.getByTestId('status-requested-fare')).toHaveText("$23.50 goes on your tab when you're picked up. Final fare may differ by up to $4.70.");
   });
 
-  test('charge only on accept: receipt has no ride line while finding a driver', async ({ page }) => {
-    await page.clock.install();
+  test('charge at pickup: no ride line while finding a driver or with the car on the way; tagline only after pickup', async ({ page }) => {
+    await page.clock.install({ time: new Date('2026-10-11T02:30:00Z') }) // Sat Oct 10, 10:30 PM ET;
     await open(page, '/g/p3');
     await slide(page);
     await page.clock.runFor(10_500);
     await page.evaluate(() => { location.hash = '/g/p9'; });
     await expect(page.getByTestId('ride-line')).toHaveCount(0);
     await expect(page.getByTestId('total')).toHaveText('$64.19');
-    await page.clock.runFor(8_000);
+    await page.clock.runFor(8_000); // accepted
+    await expect(page.getByTestId('ride-line')).toHaveCount(0);
+    await expect(page.getByTestId('total')).toHaveText('$64.19');
+    await expect(page.getByTestId('night-tagline')).toHaveCount(0);
+    await page.clock.runFor(52_000); // 60 s after the request was placed (undo end): picked up
     await expect(page.getByTestId('ride-line')).toBeVisible();
+    await expect(page.getByTestId('confirm-record')).toContainText('Confirmed by guest');
+    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home on your tab.');
+  });
+
+  test('driver accepts then cancels: E6, nothing charged; receipt reads "Requested by guest, 11:42 PM. Driver cancelled. Not charged."', async ({ page }) => {
+    await page.clock.install({ time: new Date('2026-10-10T03:42:00Z') });
+    await open(page, '/g/p3');
+    await slide(page);
+    await page.clock.runFor(18_500);
+    await expect(page.getByTestId('status-booked')).toBeVisible();
+    await nav(page, '/g/demo');
+    await page.getByTestId('force-driver-cancel').tap();
+    await expect(page.locator('[data-screen=E6]')).toBeVisible();
+    await expect(page.locator('main')).toContainText('Your driver cancelled. Nothing was added to your tab.');
+    await nav(page, '/g/p9');
+    await expect(page.getByTestId('ride-line')).toHaveCount(0);
+    await expect(page.getByTestId('confirm-record')).toHaveCount(0);
+    await expect(page.getByTestId('no-driver-record')).toHaveText('Requested by guest, 11:42 PM. Driver cancelled. Not charged.');
+    await expect(page.getByTestId('total')).toHaveText('$64.19');
+    await expect(page.getByTestId('night-tagline')).toHaveCount(0);
+  });
+
+  test('hold copy uses the computed date, never today or tomorrow', async ({ page }) => {
+    await page.clock.install({ time: new Date('2026-10-10T03:42:00Z') }); // Fri 11:42 PM ET, night of Fri Oct 9, tab opened 7:42 PM
+    await open(page, '/g/p9');
+    await expect(page.getByTestId('hold-line')).toContainText("it's charged Sat, Oct 10 at 11:00 AM.");
+    await expect(page.getByTestId('hold-line')).not.toContainText(/today|tomorrow/i);
+    await nav(page, '/g/m1');
+    await expect(page.locator('main')).toContainText("it's charged Sat, Oct 10 at 11:00 AM.");
+  });
+
+  test('morning: Harper ride-question copy exactly; no "aren\'t charged until the bar replies"; drink questions to the bar', async ({ page }) => {
+    const copy = "Ride charge look wrong? Tap here. We'll check it with Maison Cheryl today. If it's wrong, Maison Cheryl refunds it to your card, and we'll text you when that's done. Your bank may take a few business days to show it.";
+    await open(page, '/g/p9');
+    await expect(page.getByTestId('ride-question')).toHaveText(copy);
+    await expect(page.locator('main')).toContainText('Questions about drinks or food go to Maison Cheryl.');
+    await expect(page.locator('main')).not.toContainText("aren't charged");
+    await page.getByTestId('ride-question').tap();
+    await expect(page.locator('[data-screen=P10]')).toBeVisible();
+    await expect(page.locator('main')).not.toContainText("aren't charged");
+    await expect(page.locator('main')).toContainText('Questions about drinks or food go to Maison Cheryl.');
+    await page.getByText('An amount is wrong').tap();
+    await page.getByTestId('send-dispute').tap();
+    await expect(page.locator('[data-screen=P11]')).toBeVisible();
+    await expect(page.locator('main')).not.toContainText("aren't charged");
+    await expect(page.locator('main')).not.toContainText(/refund|pays you back|difference back/i);
+    await nav(page, '/g/m1');
+    await expect(page.getByTestId('ride-question')).toHaveText(copy);
+  });
+
+  test('confirm: "You pay the final fare, never more than $X unless you approve a change." from the live quote and cap', async ({ page }) => {
+    await page.clock.install();
+    await open(page, '/g/p3');
+    await expect(page.getByTestId('max-line')).toHaveText("More than that and we'll ask you first. You pay the final fare, never more than $25.20 unless you approve a change.");
+    await expect(page.locator('main')).not.toContainText(/refund|difference back/i);
+    await page.evaluate(() => { const s = (window as any).__ridenite.store; s.setForceStaleQuote(true); });
+    await slide(page); // stale: refreshes to $23.50
+    await expect(page.getByTestId('quote')).toHaveText('$23.50');
+    await expect(page.getByTestId('max-line')).toHaveText("More than that and we'll ask you first. You pay the final fare, never more than $28.20 unless you approve a change.");
   });
 
   test('no driver: "No driver found yet.", nothing charged; receipt reads "Requested by guest, 11:42 PM. No driver found. Not charged."', async ({ page }) => {
@@ -349,7 +419,7 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await expect(page.getByTestId('confirm-record')).toHaveCount(0);
     await expect(page.getByTestId('no-driver-record')).toHaveText('Requested by guest, 11:42 PM. No driver found. Not charged.');
     await expect(page.getByTestId('total')).toHaveText('$64.19');
-    await expect(page.getByTestId('night-tagline')).toHaveText('Friday, Oct 9.');
+    await expect(page.getByTestId('night-tagline')).toHaveCount(0);
   });
 
   test('Keep looking within 5 minutes searches again and a driver accepts', async ({ page }) => {
@@ -362,7 +432,8 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await page.getByTestId('keep-looking').tap();
     await expect(page.getByTestId('status-requested')).toBeVisible();
     await page.clock.runFor(8_500);
-    await expect(page.getByTestId('status-booked')).toHaveText('Ride booked. Fare on your tab.');
+    await expect(page.getByTestId('status-booked')).toHaveText('Ride booked.');
+    await expect(page.getByTestId('status-booked-fare')).toHaveText('Fare goes on your tab at pickup.');
   });
 
   test('stale quote: Keep looking shows the new price and requires a new slide; never rebooks silently', async ({ page }) => {
@@ -391,6 +462,7 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
   });
 
   test('tagline only on the morning receipt under the total, and only when a ride was booked', async ({ page }) => {
+    await page.clock.install({ time: new Date('2026-10-11T05:15:00Z') }); // Sun Oct 11, 1:15 AM ET: still the night of Sat Oct 10
     await open(page, '/g/home');
     await expect(page.getByText('Tab closed', { exact: false })).toHaveCount(0);
     await page.evaluate(() => (window as any).__ridenite.store.unlinkTab());
@@ -398,12 +470,14 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await page.getByTestId('menu-btn').tap();
     await expect(page.getByTestId('menu-sheet')).not.toContainText('Tab closed');
     await open(page, '/g/p9');
-    await expect(page.getByTestId('night-tagline')).toHaveText('Friday, Oct 9. Tab closed. Ride booked.');
-    const total = (await page.getByTestId('total').boundingBox())!;
+    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home on your tab.');
+    // the line sits right before the ride line
     const tag = (await page.getByTestId('night-tagline').boundingBox())!;
-    expect(tag.y).toBeGreaterThan(total.y);
+    const line = (await page.getByTestId('ride-line').boundingBox())!;
+    expect(line.y).toBeGreaterThanOrEqual(tag.y + tag.height - 1);
+    expect(await page.getByTestId('night-tagline-row').evaluate((e) => (e.nextElementSibling as HTMLElement | null)?.dataset.testid)).toBe('ride-line');
     await nav(page, '/g/m1');
-    await expect(page.getByTestId('night-tagline')).toHaveText('Friday, Oct 9. Tab closed. Ride booked.');
+    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home on your tab.');
   });
 });
 

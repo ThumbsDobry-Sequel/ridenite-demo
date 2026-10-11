@@ -82,7 +82,9 @@ export interface BarTab {
   phoneLast4: string;
   items: [string, number][];
   /** open, closed now (Mode A) or held for morning checkout (Mode B). */
-  close: 'open' | 'closed' | 'held';
+  close: 'open' | 'closed' | 'held' | 'pending';
+  /** When the bartender tapped Close (pending: waits for pickup or cancel, inside the 24 h POS hold). */
+  closeAt?: number;
   /** Link to enter drop-off was texted (sample). */
   linkSentAt?: number;
 }
@@ -139,6 +141,8 @@ export type BarBookResult =
 export interface DemoState {
   version: number;
   seededAt: number;
+  /** When the guest's tab opened (sample). The card hold deadline is computed from it. */
+  tabOpenedAt: number;
   handoff: Handoff | null;
   dest: Address | null;
   riders: 1 | 2;
@@ -251,6 +255,7 @@ export interface DemoStore {
   barResendLink(tab: string): void;
   barNewGuest(): string;
   barCloseTab(tab: string, how: 'closed' | 'held'): void;
+  driverCancel(rideId?: string): void;
   barMarkQuietSeen(): void;
   barSetQuietOption(k: 'sideDoor' | 'oneRider', v: boolean): void;
   barSetSetting<K extends keyof BarSettings>(k: K, v: BarSettings[K]): void;

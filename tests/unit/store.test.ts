@@ -130,7 +130,7 @@ describe('InMemoryStore', () => {
     expect(s.linkedTab?.tab).toBe(venue.tabNumber);
   });
 
-  it('logs the confirm when the undo window ends (time of the slide, shown quote and cap); line shows only on driver accept', async () => {
+  it('logs the confirm when the undo window ends (time of the slide, shown quote and cap); line shows only at pickup', async () => {
     const { confirmLine } = await import('../../src/lib/confirmRecord');
     const { store, advance } = mk();
     const slidAt = store.now();
@@ -142,7 +142,9 @@ describe('InMemoryStore', () => {
     expect(store.getState().confirmations[0]).toMatchObject({ at: slidAt, quoteCents: 2100, capCents: 420, entryPoint: 'guest_request', method: 'slide' });
     // requested, no driver yet: nothing on the tab
     expect(confirmLine(store.getState(), store.getState().ride, store.now())).toBeNull();
-    advance(DEMO_TIMELINE.en_route);
+    advance(DEMO_TIMELINE.en_route); // driver accepted: still nothing on the tab
+    expect(confirmLine(store.getState(), store.getState().ride, store.now())).toBeNull();
+    advance(DEMO_TIMELINE.picked_up - DEMO_TIMELINE.en_route); // picked up: record and fare line together
     expect(confirmLine(store.getState(), store.getState().ride, store.now())?.text).toMatch(/^Confirmed by guest, \d{1,2}:\d{2} [AP]M$/);
   });
 
@@ -153,14 +155,17 @@ describe('InMemoryStore', () => {
     expect(store.stageOf(store.getState().ride!)).toBe('pending');
   });
 
-  it('charge only on accept: requested has no ride line; accepted does', async () => {
+  it('charge at pickup: requested and accepted have no ride line; picked up does', async () => {
     const { morningFor } = await import('../../src/lib/morning');
     const { store, advance } = mk();
     store.createRide('c', { method: 'slide' });
     advance(UNDO_MS); store.tick();
     expect(morningFor(store.getState(), store.now()).hasRide).toBe(false);
     expect(morningFor(store.getState(), store.now()).rideCents).toBe(0);
-    advance(DEMO_TIMELINE.en_route);
+    advance(DEMO_TIMELINE.arrived); // accepted and the car is here, not picked up yet
+    expect(morningFor(store.getState(), store.now()).hasRide).toBe(false);
+    expect(morningFor(store.getState(), store.now()).rideCents).toBe(0);
+    advance(DEMO_TIMELINE.picked_up - DEMO_TIMELINE.arrived);
     expect(morningFor(store.getState(), store.now()).hasRide).toBe(true);
     expect(morningFor(store.getState(), store.now()).rideCents).toBeGreaterThan(0);
   });
@@ -235,7 +240,45 @@ describe('InMemoryStore', () => {
     const { confirmLine } = await import('../../src/lib/confirmRecord');
     const { store, advance } = mk();
     store.createRide('s', { method: 'staff_saw_price', by: 'staff' });
-    advance(UNDO_MS); store.tick(); advance(DEMO_TIMELINE.en_route);
+    advance(UNDO_MS); store.tick(); advance(DEMO_TIMELINE.picked_up);
     expect(confirmLine(store.getState(), store.getState().ride, store.now())?.text).toMatch(/^Booked by staff, price shown to guest, /);
+  });
+
+  it('driver accepts then cancels: nothing posts; "Requested by guest, <slide time>. Driver cancelled. Not charged."', async () => {
+    const { morningFor } = await import('../../src/lib/morning');
+    const { noDriverLine, confirmLine, fmtET } = await import('../../src/lib/confirmRecord');
+    const { store, advance } = mk();
+    const slidAt = store.now();
+    store.createRide('c', { method: 'slide' });
+    advance(UNDO_MS); store.tick();
+    store.driverCancel(); // not accepted yet: ignored
+    expect(store.stageOf(store.getState().ride!)).toBe('requested');
+    advance(DEMO_TIMELINE.near);
+    store.driverCancel();
+    const s = store.getState();
+    expect(store.stageOf(s.ride!)).toBe('canceled_by_driver');
+    const m = morningFor(s, store.now());
+    expect(m.hasRide).toBe(false);
+    expect(m.rideCents).toBe(0);
+    expect(m.totalCents).toBe(6419);
+    expect(confirmLine(s, s.ride, store.now())).toBeNull();
+    expect(noDriverLine(s, s.ride, store.now())).toBe(`Requested by guest, ${fmtET(slidAt)}. Driver cancelled. Not charged.`);
+  });
+
+  it('driver cancel after pickup does nothing (already charged)', () => {
+    const { store, advance } = mk();
+    store.createRide('c', { method: 'slide' });
+    advance(UNDO_MS); store.tick(); advance(DEMO_TIMELINE.picked_up);
+    store.driverCancel();
+    expect(store.stageOf(store.getState().ride!)).toBe('picked_up');
+  });
+
+  it('seeded tab opened within 24 h of the hold deadline, deadline ahead of the clock', async () => {
+    const { holdDeadline, HOLD_WINDOW_MS } = await import('../../src/lib/hold');
+    const { store } = mk();
+    const s = store.getState();
+    const d = holdDeadline(s.tabOpenedAt);
+    expect(d).toBeGreaterThan(store.now());
+    expect(d - s.tabOpenedAt).toBeLessThanOrEqual(HOLD_WINDOW_MS);
   });
 });

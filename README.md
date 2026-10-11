@@ -41,13 +41,21 @@ CI: `.github/workflows/ci.yml` runs lint:copy, then build, then test. A failing 
 - No free text on bar screens. New guests come from the sample list in `venue.config.ts`.
 - B6: ride lines post only once a driver accepts; adjustment is its own line; tip base excludes the ride.
 
-## Ride status and charge timing
+## Ride status and charge timing (SCOPE 21:39, 22:22, 22:28, 22:29)
 
-- Guest slide starts a 10 s undo ("Requesting your ride..."). Nothing is requested and no driver can accept during it. The guest confirmation is logged when the undo ends, stamped with the slide time.
-- Then "Ride requested. Finding a driver." with "$21.00 goes on your tab when a driver accepts. Final fare may differ by up to $4.20." (live values). On accept: "Ride booked. Fare on your tab." The fare line and "Confirmed by guest, h:mm PM" appear on the tab and receipt only after accept.
-- No driver: "No driver found yet." with Ask staff for a car / Keep looking; nothing charged; receipt reads "Requested by guest, h:mm PM. No driver found. Not charged."
-- Quotes are valid 5 minutes (demo constant `QUOTE_VALID_MS`). Keep looking after that shows the new price and needs a new slide; never a silent rebook. Demo controls: force no driver, force stale quote.
-- "Tab closed. Ride booked." appears only on the morning receipt / night summary, under the total, after a date ("Friday, Oct 9. Tab closed. Ride booked."), and only if a ride was booked.
+- Guest slide starts a 10 s undo ("Requesting your ride..." / "Nothing is requested yet." / "We request your ride when the timer ends.", then "Requesting in a moment." near the end). No driver can accept during it. The guest confirmation is logged when the undo ends, stamped with the slide time.
+- Then "Ride requested. Finding a driver." with "$21.00 goes on your tab when you're picked up. Final fare may differ by up to $4.20." (live values). On accept: "Ride booked." / "Fare goes on your tab at pickup."
+- The fare line and "Confirmed by guest, h:mm PM" post at PICKUP, not accept. No driver: "Requested by guest, h:mm PM. No driver found. Not charged." Driver accepts then cancels: "Requested by guest, h:mm PM. Driver cancelled. Not charged." Demo controls: force no driver, driver accepts then cancels, force stale quote.
+- Quotes are valid 5 minutes (`QUOTE_VALID_MS`). Keep looking after that shows the new price and needs a new slide; never a silent rebook.
+- Confirm shows "You pay the final fare, never more than $X unless you approve a change." (X = live quote + cap).
+- Receipt / night summary: "[Night date]. Tab closed. Ride home on your tab." right before the ride line, only after pickup. The marketing tagline is not used in the app.
+- Bar: B6 shows the POS line "RideNite car home, [area] area, [pickup time]"; the guest record is shown separately as the RideNite record, never on the POS line. Closing a tab with a ride not yet picked up shows "Ride pending pickup"; it finishes closing at pickup (ride line posts) or closes clean on cancel, inside the 24 h hold.
+
+## Dates (device clock, America/New_York)
+
+- Night date = today, except 00:00 to 05:59 counts as the previous date (`src/lib/night.ts`).
+- Seeding is relative to now: the tab opens now minus 4 h (to the minute); sample times sit between open and now; a live booking happens at now.
+- Charge time (`src/lib/hold.ts`): next 11:00 AM ET if it is in the future and less than 24 h after open, else the latest whole hour at least 1 h before open + 24 h. Shown as "charged Sun, Oct 11 at 11:00 AM"; never "today" or "tomorrow".
 
 ## Freshness and the service worker
 

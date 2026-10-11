@@ -285,7 +285,7 @@ select.input:disabled { opacity: 1; color: var(--text-2); }
    scrolls behind the pinned slider. Price and cap line stay full-strength text; only the slider glows. */
 .navbar--center { justify-content: center; }
 .navbar--center .navbar__title { grid-column: 1 / -1; text-align: center; }
-[data-screen=P3] .cap-note { color: var(--text); }
+[data-screen=P3] .cap-note, [data-screen=P3] .quote-para, [data-screen=P3] .cap-more { color: var(--text); }
 [data-screen=P3] .cancel-bottom { min-height: var(--tap-guest); }
 .sticky-actions--slide .slide__hint { text-align: center; }
 .pickup-card { display: flex; flex-direction: column; gap: var(--s3); }
@@ -295,14 +295,17 @@ select.input:disabled { opacity: 1; color: var(--text-2); }
 .kvrow__icon .icon { width: var(--tile-icon); height: var(--tile-icon); }
 @media (max-height: 700px) {
   [data-screen=P3] .price--xl { font-size: var(--t-price); margin: 0; }
-  [data-screen=P3] .card .seg { margin: var(--s1) 0; }
   [data-screen=P3] .card { padding-top: var(--s3); padding-bottom: var(--s3); }
   [data-screen=P3] .sticky-actions { padding-top: var(--s2); gap: var(--s2); }
   [data-screen=P3] .page { gap: var(--s2); }
-  [data-screen=P3] .sticky-actions--slide .slide__hint { display: block; }
-  /* Riley p3-slide-rest-se-cancel: the top card ends at the cap line on SE */
-  [data-screen=P3] .cap-more { display: none; }
-  [data-screen=P3] .navbar { min-height: calc(var(--s7) + var(--s2)); }
+  /* SE: the max-fare line (money-promises memo) must sit above the slider, so the undo hint is dropped
+     here (the undo screen explains the 10 s window). Deviation from Riley p3-slide-rest-se-cancel. */
+  [data-screen=P3] .sticky-actions--slide .slide__hint { display: none; }
+  [data-screen=P3] .cap-more { margin: 0; }
+  [data-screen=P3] .card .seg { margin: 0; }
+  /* rev 04.1: tightened title and card padding so the longer over-cap line clears the slider fade */
+  [data-screen=P3] [data-testid=quote-card] { padding-top: var(--s1); padding-bottom: var(--s1); }
+  [data-screen=P3] .navbar { min-height: var(--s7); }
 }
 .navbar__end { display: flex; justify-content: flex-end; }
 .navbar .cancel-top { padding: 0 0 0 var(--s4); }
