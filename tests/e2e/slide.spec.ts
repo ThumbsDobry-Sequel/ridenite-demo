@@ -474,9 +474,9 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await expect(page.getByTestId('night-tagline')).toHaveText('Saturday night. Ride home is on your tab.');
     // the line sits right before the ride line
     const tag = (await page.getByTestId('night-tagline').boundingBox())!;
-    const line = (await page.getByTestId('ride-item').boundingBox())!;
+    const line = (await page.getByTestId('ride-line').boundingBox())!;
     expect(line.y).toBeGreaterThanOrEqual(tag.y + tag.height - 1);
-    expect(await page.getByTestId('night-tagline-row').evaluate((e) => (e.nextElementSibling as HTMLElement | null)?.dataset.testid)).toBe('ride-item');
+    expect(await page.getByTestId('night-tagline-row').evaluate((e) => (e.nextElementSibling as HTMLElement | null)?.dataset.testid)).toBe('ride-line');
     await nav(page, '/g/m1');
     await expect(page.getByTestId('night-tagline')).toHaveText('Saturday night. Ride home is on your tab.');
   });
@@ -522,18 +522,18 @@ test('morning receipt itemized ride line: areas, pickup time and the final ride 
   await page.clock.install({ time: new Date('2026-10-11T02:30:00Z') }); // Sat 10:30 PM ET; sample pickup 26 min earlier
   await open(page, '/g/p9');
   await page.evaluate(() => { const s = (window as any).__ridenite.store; s.setFareScenario('over'); s.setOverCapAnswer('yes'); });
-  const want = 'RideNite car home, Clarendon area to Westover area, picked up 10:10 PM, $27.40';
-  await expect(page.getByTestId('ride-item')).toContainText(want);
+  await expect(page.getByTestId('ride-route')).toHaveText('Clarendon area to Westover area, picked up 10:10 PM');
+  await expect(page.getByTestId('ride-line-amt')).toHaveText('$27.40');
   await expect(page.getByTestId('total')).toHaveText('$91.59');
   // the guest sees one ride row at the final fare (quote + adjustment + approved extra live on the POS line only)
   await expect(page.getByTestId('ride-line-amt')).toHaveText('$27.40');
   await expect(page.getByTestId('adj-line')).toHaveCount(0);
   await expect(page.getByTestId('stop-line')).toHaveCount(0);
   // areas, never full street addresses
-  await expect(page.getByTestId('ride-item')).not.toContainText('655 N Harrison');
-  await expect(page.getByTestId('ride-item')).not.toContainText('Wilson Blvd');
+  await expect(page.getByTestId('ride-detail')).not.toContainText('655 N Harrison');
+  await expect(page.getByTestId('ride-detail')).not.toContainText('Wilson Blvd');
   await nav(page, '/g/m1');
-  await expect(page.getByTestId('ride-item')).toContainText(want);
+  await expect(page.getByTestId('ride-item')).toContainText('RideNite car home, Clarendon area to Westover area, picked up 10:10 PM, $27.40');
 });
 
 test('no itemized ride line before pickup or without a ride', async ({ page }) => {
@@ -542,7 +542,7 @@ test('no itemized ride line before pickup or without a ride', async ({ page }) =
   await slide(page);
   await page.clock.runFor(18_500); // accepted, not picked up
   await page.evaluate(() => { location.hash = '/g/p9'; });
-  await expect(page.getByTestId('ride-item')).toHaveCount(0);
+  await expect(page.getByTestId('ride-line')).toHaveCount(0);
   await expect(page.getByTestId('night-tagline')).toHaveCount(0);
 });
 

@@ -48,6 +48,11 @@ export function rideItemLine(s: DemoState, pickedUp: string, rideCents: number):
   return `RideNite car home, ${from} area to ${to} area, picked up ${pickedUp}, ${fmt(rideCents)}`;
 }
 
+/** Route detail under the guest ride row: "Clarendon area to Westover area, picked up 10:10 PM". Areas only. */
+export function rideRouteLine(s: DemoState, pickedUp: string): string {
+  return `${neighborhood(venue.neighborhood)} area to ${neighborhood((s.ride?.dest ?? venue.guest.home).area)} area, picked up ${pickedUp}`;
+}
+
 function RideQuestion() {
   return <button type="button" className="textlink ride-question" data-testid="ride-question" onClick={() => navigate('/g/p10')}>{rideQuestionCopy()}</button>;
 }
@@ -203,12 +208,17 @@ export function P9() {
         <tbody data-testid="ride-section">
           <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
           {tag && <tr data-testid="night-tagline-row"><td colSpan={2} className="night-tagline" data-testid="night-tagline">{tag}</td></tr>}
-          {m.hasRide && <tr data-testid="ride-item" className="ride-item"><th scope="row" colSpan={2}>{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note" data-testid="ride-id">Ride ID <span className="ride-id">{rideId}</span>.</span></th></tr>}
-          {m.hasRide ? (
-            <tr data-testid="ride-line" data-kind="ride"><th scope="row">{RIDE_GUEST_LINE}<span className="note">{venue.driver.partner}</span>
+          {m.hasRide ? (<>
+            {/* One guest ride row (team lead, Oct 11): name left, final fare right like the bar rows; details muted across the full width. */}
+            <tr data-testid="ride-line" data-kind="ride"><th scope="row">{RIDE_GUEST_LINE}</th><td className="amt" data-testid="ride-line-amt">{fmt(split.rideCents)}</td></tr>
+            <tr data-testid="ride-detail" className="ride-detail"><td colSpan={2}>
+              <span className="note" data-testid="ride-route">{rideRouteLine(s, N.pickedUp)}</span>
+              <span className="note" data-testid="ride-id">Ride ID <span className="ride-id">{rideId}</span></span>
+              <span className="note">{venue.driver.partner}</span>
               {stop && <span className="note" data-testid="stop-note">Includes {fmt(stop.cents)} over the cap, approved by you. {venue.overCapReason}.</span>}
-              {cl && <><span className="note confirm-record" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</span><span className="note" data-testid="confirm-record-amounts">{cl.amounts}</span></>}</th><td className="amt" data-testid="ride-line-amt">{fmt(split.rideCents)}</td></tr>
-          ) : (
+              {cl && <><span className="note confirm-record" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</span><span className="note" data-testid="confirm-record-amounts">{cl.amounts}</span></>}
+            </td></tr>
+          </>          ) : (
             <tr data-testid="no-ride-line"><th scope="row">No ride on this {T.bill}<span className="note">Nothing was added for a ride.</span>
               {nd && <span className="note" data-testid="no-driver-record">{nd}</span>}</th><td className="amt">{fmt(0)}</td></tr>
           )}
