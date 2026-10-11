@@ -2,10 +2,11 @@ import { nightShort, nightWeekday } from '../lib/night';
 import { holdText } from '../lib/hold';
 import type { DemoState } from '../store/types';
 import { useState } from 'react';
-import { venue } from '../venue.config';
+import { T, venue } from '../venue.config';
 import { navigate } from '../router';
 import { useDemoState, useStore } from '../store';
 import { morningFor, nightTimes } from '../lib/morning';
+import { neighborhood } from '../lib/tab';
 import { nightTagline } from '../lib/brand';
 import { noDriverLine, confirmLine, fmtET } from '../lib/confirmRecord';
 import { useNow } from '../hooks';
@@ -27,6 +28,13 @@ const nowStamp = () => ETD.format(new Date()).replace(/, (\d{1,2}:)/, ', $1');
 /** Money-promises memo (Harper's safer copy), exact; venue name from config. Drink questions still go to the bar. */
 export const rideQuestionCopy = () =>
   `Ride charge look wrong? Tap here. We'll check it with ${venue.name} today. If it's wrong, ${venue.name} refunds it to your card, and we'll text you when that's done. Your bank may take a few business days to show it.`;
+/** Itemized ride line (Vera rev 04.2): "RideNite car home, Clarendon area to Westover area, picked up 10:04 PM, $27.40". Areas only. */
+export function rideItemLine(s: DemoState, pickedUp: string, rideCents: number): string {
+  const from = neighborhood(venue.neighborhood);
+  const to = neighborhood((s.ride?.dest ?? venue.guest.home).area);
+  return `RideNite car home, ${from} area to ${to} area, picked up ${pickedUp}, ${fmt(rideCents)}`;
+}
+
 function RideQuestion() {
   return <button type="button" className="textlink ride-question" data-testid="ride-question" onClick={() => navigate('/g/p10')}>{rideQuestionCopy()}</button>;
 }
@@ -34,7 +42,7 @@ function RideQuestion() {
 /** Morning receipt wording follows the venue setting (B8): Neutral (recommended) or Detailed. */
 export function receiptSubject(s: DemoState): string {
   return s.bar.settings.receipt === 'detailed'
-    ? `Your receipt from ${venue.name}: tab and ${s.bar.settings.tabLineName} ride`
+    ? `Your receipt from ${venue.name}: ${T.bill} and ${s.bar.settings.tabLineName} ride`
     : `Your receipt from ${venue.name}`;
 }
 
@@ -48,7 +56,7 @@ export function Inbox() {
       <h1 className="h2">Morning inbox</h1>
       <p className="foot">Simulated messages on this phone. Nothing was really sent.</p>
       <ListRow icon="chat" title="Messages: RideNite" subtitle={`${receiptSubject(s)} is ready`} testId="open-m2" onClick={() => navigate('/g/m2')} />
-      <ListRow icon="mail" title={`Email: ${receiptSubject(s)}`} subtitle={`Last night's tab, ready to review. ${fmt(m.totalCents)}`} testId="open-m1" onClick={() => navigate('/g/m1')} />
+      <ListRow icon="mail" title={`Email: ${receiptSubject(s)}`} subtitle={`Last night's ${T.bill}, ready to review. ${fmt(m.totalCents)}`} testId="open-m1" onClick={() => navigate('/g/m1')} />
       <Fict>Sample messages. Names, numbers and links are fictional.</Fict>
     </Screen>
   );
@@ -64,10 +72,10 @@ export function M2() {
       <h1 className="h2">Messages</h1>
       <div className="thread">
         <p className="stamp">{nightWeekday(Date.now())} {N.booked}</p>
-        <p className="bubble">RideNite: Your car is requested. {venue.driver.first}, {venue.driver.carShort}, plate {venue.driver.plate}, about {venue.etaMinutes} min. It goes on your tab at {venue.name} ({fmt(venue.quoteCents)}). Before you get in, check the plate.</p>
+        <p className="bubble">RideNite: Your car is requested. {venue.driver.first}, {venue.driver.carShort}, plate {venue.driver.plate}, about {venue.etaMinutes} min. It goes on your {T.bill} at {venue.name} ({fmt(venue.quoteCents)}). Before you get in, check the plate.</p>
         <p className="bubble">RideNite: Your car is about 2 min away. You can wait inside. We'll text you when it's at the door.</p>
         <p className="stamp">{N.complete}</p>
-        <p className="bubble">RideNite: You've arrived. Your ride from {venue.name} is on your tab.</p>
+        <p className="bubble">RideNite: You've arrived. Your ride from {venue.name} is on your {T.bill}.</p>
         <p className="stamp">{nowClock()}</p>
         <p className="bubble">RideNite: {receiptSubject(s)} is ready: <a href="#/g/p9" data-testid="sms-link">rdnt.example/m/abc123</a> Reply STOP to opt out, HELP for help.</p>
       </div>
@@ -94,13 +102,13 @@ export function M1() {
         </div>
       </Card>
       <h1 className="h3">Good morning, {venue.guest.first}.</h1>
-      <p className="callout">Here's last night's tab from {venue.name}, including your ride home: {N.pickedUp}, {fmt(m.rideCents)}, on your tab.</p>
+      <p className="callout">Here's last night's tab from {venue.name}, including your ride home: {N.pickedUp}, {fmt(m.rideCents)}, on your {T.bill}.</p>
       <table className="inv">
         <tbody>
           <tr><th scope="row">Drinks and food</th><td className="amt">{fmt(m.tipBaseCents)}</td></tr>
           <tr><th scope="row">{venue.taxLabel}</th><td className="amt">{fmt(m.taxCents)}</td></tr>
           {tag && <tr data-testid="night-tagline-row"><td colSpan={2} className="night-tagline" data-testid="night-tagline">{tag}</td></tr>}
-          <tr><th scope="row">{s.bar.settings.tabLineName}, {N.pickedUp} to {N.complete}<span className="note">{venue.driver.partner}, {venue.driver.plate}</span></th><td className="amt">{fmt(m.rideCents)}</td></tr>
+          {m.hasRide && <tr data-testid="ride-item"><th scope="row">{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note">{s.bar.settings.tabLineName}, {venue.driver.partner}, {venue.driver.plate}</span></th><td className="amt">{fmt(m.rideCents)}</td></tr>}
           <tr><th scope="row">Staff tip ({s.tipPct}%)</th><td className="amt">{fmt(m.tipCents)}</td></tr>
           <tr className="total"><th scope="row">Total</th><td className="amt">{fmt(m.totalCents)}</td></tr>
         </tbody>
@@ -133,7 +141,7 @@ export function P9() {
       <Card>
         <h2 className="h3">Your night</h2>
         <ul className="tl">
-          <li><b className="num">{N.tabOpened}</b><span>Tab opened at {venue.name}</span></li>
+          <li><b className="num">{N.tabOpened}</b><span>{T.Bill} opened at {venue.name}</span></li>
           {m.hasRide && <>
           <li><b className="num">{N.booked}</b><span>Ride home booked (you confirmed)</span></li>
           <li><b className="num">{N.pickedUp}</b><span>Picked up. {venue.driver.name}, {venue.driver.carShort}, {venue.driver.plate}</span></li>
@@ -150,11 +158,12 @@ export function P9() {
           <tr><th scope="row">{venue.taxLabel}<span className="note">{venue.taxNote}</span></th><td className="amt" data-testid="tax">{fmt(m.taxCents)}</td></tr>
           <tr className="sec"><th colSpan={2} scope="colgroup">Ride</th></tr>
           {tag && <tr data-testid="night-tagline-row"><td colSpan={2} className="night-tagline" data-testid="night-tagline">{tag}</td></tr>}
+          {m.hasRide && <tr data-testid="ride-item" className="ride-item"><th scope="row" colSpan={2}>{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note">Made up of the lines below.</span></th></tr>}
           {m.hasRide ? (
             <tr data-testid="ride-line"><th scope="row">{s.bar.settings.tabLineName}, quoted fare<span className="note">{venue.driver.partner}</span>
               {cl && <><span className="note confirm-record" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</span><span className="note" data-testid="confirm-record-amounts">{cl.amounts}</span></>}</th><td className="amt">{fmt(m.quoteCents)}</td></tr>
           ) : (
-            <tr data-testid="no-ride-line"><th scope="row">No ride on this tab<span className="note">Nothing was added for a ride.</span>
+            <tr data-testid="no-ride-line"><th scope="row">No ride on this {T.bill}<span className="note">Nothing was added for a ride.</span>
               {nd && <span className="note" data-testid="no-driver-record">{nd}</span>}</th><td className="amt">{fmt(0)}</td></tr>
           )}
           {r.postedAdjCents !== 0 && (
@@ -227,7 +236,7 @@ export function P10() {
     <Screen id="P10">
       <Top left={<BackButton to="/g/p9" />} ctx={venue.name} />
       <h1 className="h2">What's wrong?</h1>
-      {cl && <Card testId="dispute-record"><p className="kv__k">Ride on your tab</p><p className="callout" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</p><p className="foot" data-testid="confirm-record-amounts">{cl.amounts}</p></Card>}
+      {cl && <Card testId="dispute-record"><p className="kv__k">Ride on your {T.bill}</p><p className="callout" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</p><p className="foot" data-testid="confirm-record-amounts">{cl.amounts}</p></Card>}
       {REASONS.map((r) => <ListRow key={r} compact title={r} selected={reason === r} pressed={reason === r} onClick={() => setReason(r)} />)}
       <div className="field">
         <label htmlFor="note">Note about the charge (optional)</label>

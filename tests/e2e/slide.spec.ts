@@ -473,9 +473,9 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home on your tab.');
     // the line sits right before the ride line
     const tag = (await page.getByTestId('night-tagline').boundingBox())!;
-    const line = (await page.getByTestId('ride-line').boundingBox())!;
+    const line = (await page.getByTestId('ride-item').boundingBox())!;
     expect(line.y).toBeGreaterThanOrEqual(tag.y + tag.height - 1);
-    expect(await page.getByTestId('night-tagline-row').evaluate((e) => (e.nextElementSibling as HTMLElement | null)?.dataset.testid)).toBe('ride-line');
+    expect(await page.getByTestId('night-tagline-row').evaluate((e) => (e.nextElementSibling as HTMLElement | null)?.dataset.testid)).toBe('ride-item');
     await nav(page, '/g/m1');
     await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home on your tab.');
   });
@@ -490,4 +490,32 @@ test('slider at rest: lit fill ends at the thumb right edge with a soft fade, ne
   const bg = await page.locator('[data-testid=confirm] .slide__fill').evaluate((e) => getComputedStyle(e).backgroundImage);
   expect(bg).toMatch(/transparent|rgba\(0, 0, 0, 0\)/);
   expect(Number(await page.locator('[data-testid=confirm] .slide__fill').evaluate((e) => getComputedStyle(e).opacity))).toBe(1);
+});
+
+test('morning receipt itemized ride line: areas, pickup time and the final ride total ($27.40 in the P9 scenario)', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-10-11T02:30:00Z') }); // Sat 10:30 PM ET; sample pickup 26 min earlier
+  await open(page, '/g/p9');
+  await page.evaluate(() => { const s = (window as any).__ridenite.store; s.setFareScenario('over'); s.setOverCapAnswer('yes'); });
+  const want = 'RideNite car home, Clarendon area to Westover area, picked up 10:04 PM, $27.40';
+  await expect(page.getByTestId('ride-item')).toContainText(want);
+  await expect(page.getByTestId('total')).toHaveText('$91.59');
+  // the itemized fare equals the ride lines on the tab: quote + adjustment
+  const amts = await page.locator('[data-testid=ride-line] .amt, [data-testid=adj-line] .amt').allInnerTexts();
+  const cents = amts.map((t) => Math.round(Math.abs(parseFloat(t.replace(/[^0-9.]/g, ''))) * 100) * (/[-\u2212]/.test(t) ? -1 : 1));
+  expect(cents.reduce((a, b) => a + b, 0)).toBe(2740);
+  // areas, never full street addresses
+  await expect(page.getByTestId('ride-item')).not.toContainText('655 N Harrison');
+  await expect(page.getByTestId('ride-item')).not.toContainText('Wilson Blvd');
+  await nav(page, '/g/m1');
+  await expect(page.getByTestId('ride-item')).toContainText(want);
+});
+
+test('no itemized ride line before pickup or without a ride', async ({ page }) => {
+  await page.clock.install();
+  await open(page, '/g/p3');
+  await slide(page);
+  await page.clock.runFor(18_500); // accepted, not picked up
+  await page.evaluate(() => { location.hash = '/g/p9'; });
+  await expect(page.getByTestId('ride-item')).toHaveCount(0);
+  await expect(page.getByTestId('night-tagline')).toHaveCount(0);
 });
