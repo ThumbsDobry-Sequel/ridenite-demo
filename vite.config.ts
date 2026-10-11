@@ -39,7 +39,7 @@ export default defineConfig({
   plugins: [react(), serviceWorker()],
   base: '/',
   // RIDENITE_HIDE_BUILD_STAMP=1 (set by the /pitch/demo/ export): no build stamp and no build time in the bundle.
-  define: { __APP_VERSION__: JSON.stringify(APP_VERSION), __BUILD_TIME_ET__: JSON.stringify(HIDE_STAMP ? '' : BUILD_TIME_ET), __SHOW_BUILD_STAMP__: JSON.stringify(!HIDE_STAMP) },
+  define: { __APP_VERSION__: JSON.stringify(APP_VERSION), __BUILD_TIME_ET__: JSON.stringify(HIDE_STAMP ? '' : BUILD_TIME_ET), __SHOW_BUILD_STAMP__: JSON.stringify(!HIDE_STAMP), __NO_CALENDAR_DATES__: JSON.stringify(HIDE_STAMP) },
   build: {
     outDir: 'dist',
     sourcemap: false,

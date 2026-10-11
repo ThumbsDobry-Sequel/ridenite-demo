@@ -13,6 +13,7 @@
 import { venue } from '../venue.config';
 import { etWallToUtc } from './hold';
 import { etYmdh, type YMD } from './night';
+import { displayDateFmt } from './dateFmt';
 
 const DOW = (d: YMD) => new Date(Date.UTC(d.y, d.m - 1, d.d)).getUTCDay(); // 0 Sun .. 6 Sat
 const addDays = (d: YMD, n: number): YMD => { const t = new Date(Date.UTC(d.y, d.m - 1, d.d + n)); return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() }; };
@@ -61,7 +62,7 @@ export function evidenceDueBy(noticeMs: number, processorDeadlineMs: number): YM
 }
 
 export const ymdIso = (d: YMD): string => `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
-const SHORT = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' });
+const SHORT = displayDateFmt({ timeZone: 'UTC', month: 'short', day: 'numeric' });
 /** "Jan 8" */
 export const fmtWindowDate = (d: YMD): string => SHORT.format(new Date(Date.UTC(d.y, d.m - 1, d.d, 12)));
 /** First instant after the window: midnight ET at the start of the next day. */
@@ -122,7 +123,7 @@ export function payoutReturnCents(feeChargedCents: number, returnCents: number =
   return returnCents === 0 ? 0 : -returnCents;
 }
 
-const MD = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
+const MD = displayDateFmt({ timeZone: 'America/New_York', month: 'short', day: 'numeric' });
 /** "RideNite fee credited, ride RN-7Q4K2M, Oct 9, dispute lost: -$1.00" (ride ID as on guest receipts) */
 export function payoutReturnLine(rideNo: string, pickupMs: number, outcome: 'dispute_lost' | 'refunded_under_rule', feeChargedCents: number): string {
   const why = outcome === 'dispute_lost' ? 'dispute lost' : 'refunded under the refund rule';

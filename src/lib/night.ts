@@ -1,4 +1,5 @@
 import { venue } from '../venue.config';
+import { displayDateFmt } from './dateFmt';
 
 /**
  * Night date (SCOPE date rules, 22:27): from the device clock in America/New_York. It is today's date,
@@ -20,7 +21,7 @@ export function nightDate(now: number): YMD {
   return { y: prev.getUTCFullYear(), m: prev.getUTCMonth() + 1, d: prev.getUTCDate() };
 }
 
-const LONG = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'long', month: 'short', day: 'numeric' });
+const LONG = displayDateFmt({ timeZone: 'UTC', weekday: 'long', month: 'short', day: 'numeric' });
 /** "Saturday, Oct 10" */
 export const fmtNightLong = (n: YMD): string => LONG.format(new Date(Date.UTC(n.y, n.m - 1, n.d, 12)));
 export const nightLabel = (now: number): string => fmtNightLong(nightDate(now));
@@ -46,7 +47,7 @@ export function sampleNightTimes(openedAt: number, now: number) {
   return { tabOpened: openedAt, booked: m(now - dropAgo - trip - eta), pickedUp: m(now - dropAgo - trip), complete: m(now - dropAgo) };
 }
 
-const SHORT = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' });
+const SHORT = displayDateFmt({ timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' });
 /** "Sat Oct 10" (no comma, matches the receipt heading style) */
 export const nightShort = (now: number): string => SHORT.format(new Date(Date.UTC(nightDate(now).y, nightDate(now).m - 1, nightDate(now).d, 12))).replace(',', '');
 /** Morning heading, true at any hour: "Night of Sat, Oct 10". Pass the tab-open time: the night date

@@ -6,8 +6,9 @@ import { MoreRow } from './home';
 import { sampleAnchor, sampleOwnerStatement } from '../lib/ownerData';
 import { fmt, fmtSigned } from '../lib/money';
 import { etYmdh } from '../lib/night';
+import { displayDateFmt } from '../lib/dateFmt';
 
-const MDW = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric' });
+const MDW = displayDateFmt({ timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric' });
 
 /* Owner preview: static placeholder screens, no logic. Every number carries a visible
    "Sample data" label and is never presented as real (founder rule: no invented stats). */
