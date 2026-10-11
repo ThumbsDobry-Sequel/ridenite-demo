@@ -333,8 +333,8 @@ html { scroll-padding-top: calc(var(--header-h) + var(--s2)); }
 .pickup-inline .kv__k { display: inline; margin-right: var(--s1); }
 @media (max-width: 380px) { .pickup-inline { font-size: var(--t-footnote); } }
 /* SE g02 (Riley, Oct 11): ETA folds into the pickup line and the separate car card goes away at 375. */
-.eta-fold { display: none; }
-@media (max-width: 380px) { .eta-fold { display: inline; } .pickup-card { display: none; } }
+.eta-fold, .pickup-short { display: none; }
+@media (max-width: 380px) { .eta-fold, .pickup-short { display: inline; } .pickup-card, .pickup-full { display: none; } }
 .row--top .grow { gap: 0; }
 
 /* Over-cap and cap lines: neutral surface plus icon; amber stays on the primary action only */

@@ -105,7 +105,7 @@ for (const vp of [{ width: 390, height: 844 }, { width: 375, height: 667 }]) {
     await page.setViewportSize(vp);
     await open(page, '/g/p3');
     const top = (await page.locator('.sticky-actions--slide').boundingBox())!.y;
-    for (const id of ['pickup-line', 'max-line', ...(vp.height > 700 ? ['car-line'] : [])]) {
+    for (const id of [vp.width <= 380 ? 'pickup-short' : 'pickup-line', 'max-line', ...(vp.height > 700 ? ['car-line'] : [])]) {
       const b = (await page.getByTestId(id).boundingBox())!;
       expect(b.y + b.height, id).toBeLessThanOrEqual(top);
     }
@@ -115,6 +115,9 @@ for (const vp of [{ width: 390, height: 844 }, { width: 375, height: 667 }]) {
       await expect(page.getByTestId('eta-fold')).toBeVisible();
       await expect(page.getByTestId('eta-fold')).toHaveText(', about 6 min');
       await expect(page.getByTestId('pickup-card')).toBeHidden();
+      // one line: "Pickup Front door, about 6 min" (the venue part drops at 375)
+      await expect(page.locator('.pickup-inline').first()).toHaveJSProperty('innerText', 'Pickup Front door, about 6 min');
+      expect((await page.locator('.pickup-inline').first().boundingBox())!.height).toBeLessThan(30);
       for (const id of ['cap-line', 'max-line']) { const b = (await page.getByTestId(id).boundingBox())!; expect(b.y + b.height, id).toBeLessThanOrEqual(top); }
     } else {
       await expect(page.getByTestId('eta-fold')).toBeHidden();

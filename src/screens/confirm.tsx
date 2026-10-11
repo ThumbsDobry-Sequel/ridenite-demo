@@ -66,6 +66,10 @@ export function P3() {
     navigate('/g/p4');
   };
 
+  // At 375 the short spot ("Front door") replaces "Front door, Maison Cheryl" so "Pickup Front door, about 6 min" stays on one line.
+  const pickup = venue.pickupShort.replace(/\.$/, '');
+  const cut = pickup.indexOf(',');
+  const pickupSpot = cut < 0 ? pickup : pickup.slice(0, cut);
   return (
     <Screen id="P3" tight>
       {/* No Back here (founder decision): Cancel under the slider is the one way out, nothing booked. */}
@@ -84,7 +88,7 @@ export function P3() {
           <button type="button" className="textlink textlink--inline change-link" data-testid="change-dest" onClick={() => navigate('/g/p2')}>Change</button>
         </div>
         <p className="h3" data-testid="confirm-dest">{isHome ? 'Home, ' : ''}{areaLabel(dest)}</p>
-        <p className="callout pickup-inline"><span className="kv__k">Pickup</span> <span data-testid="pickup-line">{venue.pickupShort.replace(/\.$/, '')}</span><span className="eta-fold" data-testid="eta-fold">, about {venue.etaMinutes} min</span></p>
+        <p className="callout pickup-inline"><span className="kv__k">Pickup</span> <span className="pickup-full" data-testid="pickup-line">{pickup}</span><span className="pickup-short" data-testid="pickup-short">{pickupSpot}</span><span className="eta-fold" data-testid="eta-fold">, about {venue.etaMinutes} min</span></p>
         <div className="seg seg--2" role="group" aria-label="Who's riding?" data-testid="riders">
           <button type="button" aria-pressed={s.riders === 1} onClick={() => store.setRiders(1)}>Just me</button>
           <button type="button" aria-pressed={s.riders === 2} onClick={() => store.setRiders(2)}>Me + 1 to 3</button>
