@@ -4,7 +4,7 @@ import type { Handoff } from '../lib/handoff';
 import { bookedAtFor, nextStage, stageAt, UNDO_MS, type LiveStage, type Stage } from '../lib/rideState';
 import { seedState } from './seed';
 import type { UrlLink } from '../lib/urlLink';
-import type { CreateResult, DemoState, DemoStore, FareScenario, Fault, LinkedTab, Ride } from './types';
+import type { ConfirmInput, CreateResult, DemoState, DemoStore, FareScenario, Fault, LinkedTab, Ride } from './types';
 
 /**
  * v1 data layer: memory only. Every page load is a fresh demo (product decision Oct 10):
@@ -112,15 +112,22 @@ export class InMemoryStore implements DemoStore {
     return true;
   }
 
-  createRide(consentText: string): CreateResult {
+  createRide(consentText: string, confirm?: ConfirmInput): CreateResult {
     // Never two rides: a repeat tap while a ride is active returns the same ride.
     if (this.hasActiveRide()) return { ride: this.state.ride!, duplicate: true };
     // Only book against an open, linked tab.
     if (!this.state.linkedTab || this.state.tabClosed) return { ride: null, duplicate: false, refused: 'no_tab' };
     const h = this.state.handoff ?? this.defaultHandoff();
     const dest = this.state.dest ?? this.state.savedHome ?? venue.guest.home;
-    const ride: Ride = { ...this.makeRide(h, dest, this.state.quoteCents, this.now() + UNDO_MS, consentText), pending: true };
-    this.set({ ride, fault: null, prevQuoteCents: null, overCapAnswer: null, paid: false });
+    const by = confirm?.by ?? 'guest';
+    const ride: Ride = { ...this.makeRide(h, dest, this.state.quoteCents, this.now() + UNDO_MS, consentText), pending: true, confirmedAt: this.now(), confirmedBy: by };
+    const confirmations = confirm
+      ? [...this.state.confirmations, {
+        rideId: ride.id, at: this.now(), quoteCents: confirm.shownQuoteCents ?? ride.quoteCents,
+        capCents: capFor(confirm.shownQuoteCents ?? ride.quoteCents), entryPoint: ride.entryPoint, by, method: confirm.method, tab: ride.tab,
+      }]
+      : this.state.confirmations;
+    this.set({ ride, confirmations, fault: null, prevQuoteCents: null, overCapAnswer: null, paid: false });
     return { ride, duplicate: false };
   }
 

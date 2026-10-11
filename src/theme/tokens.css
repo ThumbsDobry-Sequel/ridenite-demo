@@ -98,6 +98,12 @@
   --sim-bg: #FFB547; --sim-text: #0A0D12;
   --hero-ring: rgba(255,200,61,.14);
   --ring-w: 6px;
+  /* Porch Light (signature): warm glow, used on the confirm slider only */
+  --porch-glow: rgba(255,200,61,.55);
+  --porch-glow-soft: rgba(255,200,61,.18);
+  --slide-h: 88px;
+  --slide-thumb: 72px;
+  --slide-inset: 8px;
   --track-wide: .4px;
   --track-tight: -.3px;
   --track-tighter: -1px;

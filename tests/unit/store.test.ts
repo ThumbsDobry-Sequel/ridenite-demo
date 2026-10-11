@@ -129,4 +129,35 @@ describe('InMemoryStore', () => {
     expect(s.tipPct).toBe(20);
     expect(s.linkedTab?.tab).toBe(venue.tabNumber);
   });
+
+  it('logs the confirm immediately with the shown quote and cap; record line only after the undo window', async () => {
+    const { confirmLine } = await import('../../src/lib/confirmRecord');
+    const { store, advance } = mk();
+    store.createRide('c', { method: 'slide', by: 'guest', shownQuoteCents: 2100 });
+    expect(store.getState().confirmations[0]).toMatchObject({ quoteCents: 2100, capCents: 420, entryPoint: 'guest_request', method: 'slide' });
+    expect(confirmLine(store.getState())).toBeNull();
+    advance(UNDO_MS); store.tick();
+    expect(confirmLine(store.getState())?.text).toMatch(/^Confirmed by guest, \d{1,2}:\d{2} [AP]M$/);
+  });
+
+  it('undone confirm: no record line, no ride on the tab', async () => {
+    const { confirmLine } = await import('../../src/lib/confirmRecord');
+    const { morningFor } = await import('../../src/lib/morning');
+    const { store } = mk();
+    store.createRide('c', { method: 'slide' });
+    store.undoRide();
+    expect(confirmLine(store.getState())).toBeNull();
+    const m = morningFor(store.getState());
+    expect(m.hasRide).toBe(false);
+    expect(m.rideCents).toBe(0);
+    expect(m.totalCents).toBe(6419);
+  });
+
+  it('staff booking reads "Booked by staff, price shown to guest"', async () => {
+    const { confirmLine } = await import('../../src/lib/confirmRecord');
+    const { store, advance } = mk();
+    store.createRide('s', { method: 'staff_saw_price', by: 'staff' });
+    advance(UNDO_MS); store.tick();
+    expect(confirmLine(store.getState())?.text).toMatch(/^Booked by staff, price shown to guest, /);
+  });
 });

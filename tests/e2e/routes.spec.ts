@@ -51,7 +51,7 @@ for (const route of ROUTES) {
         els.filter((e) => {
           const r = e.getBoundingClientRect();
           const st = getComputedStyle(e);
-          return r.width > 0 && r.height > 0 && st.visibility !== 'hidden' && (r.width < 55.5 || r.height < 55.5);
+          return r.width > 0 && r.height > 0 && st.visibility !== 'hidden' && !e.matches('.sr-only:not(:focus)') && (r.width < 55.5 || r.height < 55.5);
         }).map((e) => `${e.tagName} "${(e.textContent || (e as HTMLElement).getAttribute('aria-label') || '').trim().slice(0, 30)}" ${Math.round(e.getBoundingClientRect().width)}x${Math.round(e.getBoundingClientRect().height)}`));
       expect(small).toEqual([]);
     });

@@ -3,6 +3,7 @@ import { venue } from '../venue.config';
 import { navigate } from '../router';
 import { useDemoState, useStore } from '../store';
 import { morningFor } from '../lib/morning';
+import { confirmLine } from '../lib/confirmRecord';
 import { fmt, fmtSigned } from '../lib/money';
 import { Banner, Button, Card, Chip, Fict, ListRow } from '../components/primitives';
 import { Icon } from '../components/Icon';
@@ -84,7 +85,8 @@ export function P9() {
   const store = useStore();
   const s = useDemoState();
   const m = morningFor(s);
-  const r = m.recon!;
+  const cl = confirmLine(s);
+  const r = m.recon ?? { postedAdjCents: 0, heldCents: 0, declinedCents: 0, finalCents: 0, quoteCents: 0, capCents: 0, diffCents: 0, outcome: 'none' as const };
   const adjName = r.postedAdjCents < 0 ? 'Ride fare credit' : 'Ride fare adjustment';
   return (
     <Screen id="P9" tight>
@@ -95,9 +97,11 @@ export function P9() {
         <h2 className="h3">Your night</h2>
         <ul className="tl">
           <li><b className="num">{N.tabOpened}</b><span>Tab opened at {venue.name}</span></li>
+          {m.hasRide && <>
           <li><b className="num">{N.booked}</b><span>Ride home booked (you confirmed)</span></li>
           <li><b className="num">{N.pickedUp}</b><span>Picked up. {venue.driver.name}, {venue.driver.carShort}, {venue.driver.plate}</span></li>
           <li><b className="num">{N.complete}</b><span>Ride complete near {s.ride?.dest.line ?? venue.guest.home.line}. Final fare {fmt(m.finalCents)}</span></li>
+          </>}
         </ul>
       </Card>
       <table className="inv" aria-label="Itemized bill" data-testid="invoice">
@@ -108,7 +112,12 @@ export function P9() {
           {venue.menu.filter((i) => i.kind === 'food').map((i) => <tr key={i.name}><th scope="row">{i.name}</th><td className="amt">{fmt(i.cents)}</td></tr>)}
           <tr><th scope="row">{venue.taxLabel}<span className="note">{venue.taxNote}</span></th><td className="amt" data-testid="tax">{fmt(m.taxCents)}</td></tr>
           <tr className="sec"><th colSpan={2} scope="colgroup">Ride</th></tr>
-          <tr><th scope="row">{venue.tabLineName}, quoted fare<span className="note">{venue.driver.partner}, quote you OK'd at {N.booked}</span></th><td className="amt">{fmt(m.quoteCents)}</td></tr>
+          {m.hasRide ? (
+            <tr data-testid="ride-line"><th scope="row">{venue.tabLineName}, quoted fare<span className="note">{venue.driver.partner}</span>
+              {cl && <><span className="note confirm-record" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</span><span className="note" data-testid="confirm-record-amounts">{cl.amounts}</span></>}</th><td className="amt">{fmt(m.quoteCents)}</td></tr>
+          ) : (
+            <tr data-testid="no-ride-line"><th scope="row">No ride on this tab<span className="note">Nothing was added for a ride.</span></th><td className="amt">{fmt(0)}</td></tr>
+          )}
           {r.postedAdjCents !== 0 && (
             <tr data-testid="adj-line"><th scope="row">{adjName} (final fare {fmt(r.finalCents)}, quoted {fmt(r.quoteCents)})<span className="note">{r.postedAdjCents > 0 ? `Within the ${fmt(r.capCents)} you saw before booking.` : 'The fare came in lower, so you get the difference back.'}</span></th><td className="amt">{fmtSigned(r.postedAdjCents)}</td></tr>
           )}
@@ -169,12 +178,15 @@ const REASONS = ["I don't recognize a charge", 'An amount is wrong', "The ride d
 /** P10 dispute. A note about charges is the only free text allowed (UI 10). */
 export function P10() {
   const store = useStore();
+  const s = useDemoState();
+  const cl = confirmLine(s);
   const [reason, setReason] = useState<string | null>(null);
   const [note, setNote] = useState('');
   return (
     <Screen id="P10">
       <Top left={<BackButton to="/g/p9" />} ctx={venue.name} />
       <h1 className="h2">What's wrong?</h1>
+      {cl && <Card testId="dispute-record"><p className="kv__k">Ride on your tab</p><p className="callout" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</p><p className="foot" data-testid="confirm-record-amounts">{cl.amounts}</p></Card>}
       {REASONS.map((r) => <ListRow key={r} compact title={r} selected={reason === r} pressed={reason === r} onClick={() => setReason(r)} />)}
       <div className="field">
         <label htmlFor="note">Note about the charge (optional)</label>

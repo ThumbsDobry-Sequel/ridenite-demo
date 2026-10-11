@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { inViewport, nav, open, state, store } from './helpers';
+import { inViewport, nav, open, state, store, slide } from './helpers';
 
 const BELONG = "Card, keys, phone, jacket, bag. Check with staff if they're holding your card.";
 
@@ -7,8 +7,7 @@ test('storage is empty after reload (memory-only demo)', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => { localStorage.setItem('ridenite.demo', '{"stale":true}'); sessionStorage.setItem('ridenite.x', '1'); });
   await page.getByTestId('ride-home').tap();
-  await page.waitForTimeout(700); // deliberate tap after the 0.6 s guard
-  await page.getByTestId('confirm').tap();
+  await slide(page);
   await page.reload();
   await expect(page.getByTestId('sim-banner')).toBeVisible();
   const keys = await page.evaluate(() => [...Object.keys(localStorage), ...Object.keys(sessionStorage)].filter((k) => k.startsWith('ridenite')));
@@ -18,8 +17,7 @@ test('storage is empty after reload (memory-only demo)', async ({ page }) => {
 test('reload mid-ride resets to a fresh demo, nothing booked', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('ride-home').tap();
-  await page.waitForTimeout(700); // deliberate tap after the 0.6 s guard
-  await page.getByTestId('confirm').tap();
+  await slide(page);
   await store(page, 's.getState().ride.bookedAt = Date.now() - 1; s.tick()');
   expect((await state(page)).bookings).toHaveLength(1);
   await page.reload();
@@ -40,8 +38,7 @@ test('cold table QR link on a first visit (empty storage) links the tab; refresh
   await expect(page.getByTestId('ride-home')).toBeVisible();
   expect((await state(page)).linkedTab).toMatchObject({ tab: '5120' });
   await page.getByTestId('ride-home').tap();
-  await page.waitForTimeout(700); // deliberate tap after the 0.6 s guard
-  await page.getByTestId('confirm').tap();
+  await slide(page);
   await expect(page.getByTestId('undo')).toBeVisible();
   expect((await state(page)).ride.tab).toBe('5120');
   await ctx.close();
@@ -88,8 +85,7 @@ test('first-time guest: Where to, suggestions from first keystroke, Confirm, boo
   await expect(page.getByTestId('suggest-0')).toContainText('655 N Harrison St');
   await page.getByTestId('suggest-0').tap();
   await expect(page.getByTestId('confirm-dest')).toContainText('655 N Harrison St');
-  await page.clock.runFor(800); // deliberate tap after the 0.6 s guard
-  await page.getByTestId('confirm').tap();
+  await slide(page);
   await page.clock.runFor(10_500);
   expect((await state(page)).bookings).toHaveLength(1);
 });
@@ -111,8 +107,7 @@ test('belongings: card on the way, Got it dismisses, nudge at 2 min, car-here re
   await page.clock.install();
   await page.goto('/');
   await page.getByTestId('ride-home').tap();
-  await page.clock.runFor(800); // deliberate tap after the 0.6 s guard
-  await page.getByTestId('confirm').tap();
+  await slide(page);
   await page.clock.runFor(10_500);
   const card = page.getByTestId('belongings-card');
   await expect(card).toContainText('Do you have everything?');
@@ -212,7 +207,7 @@ test('E2 accepted: $23.50 quote, $4.70 cap, morning total $88.79', async ({ page
   await open(page, '/g/demo');
   await page.getByTestId('fault-E2').tap();
   await expect(page.locator('main')).toContainText('$4.70');
-  await page.getByTestId('e2-yes').tap();
+  await slide(page, 'e2-yes');
   await page.clock.runFor(10_500);
   expect((await state(page)).ride).toMatchObject({ quoteCents: 2350, capCents: 470 });
   await nav(page, '/g/p9');

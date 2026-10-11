@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { inViewport, nav, open, state, store, tapper } from './helpers';
+import { inViewport, nav, open, state, store, tapper, slide } from './helpers';
 
 test.describe('home @sizes', () => {
   test('Ride home is the biggest tappable element, >= 88px, fully in view on load', async ({ page }) => {
@@ -43,38 +43,24 @@ test.describe('home @sizes', () => {
     expect(primaries).toEqual(['ride-home']);
   });
 
-  test('launch to booked in exactly 2 taps', async ({ page }) => {
+  test('launch to booked: one tap on Ride home plus one slide', async ({ page }) => {
     await page.clock.install();
     await page.goto('/');
     const t = tapper(page);
     await t.tap('ride-home');
-    await page.clock.runFor(800); // a deliberate second tap, not a double tap
-    await t.tap('confirm');
+    await slide(page);
     await expect(page.getByTestId('undo')).toBeVisible();
     await page.clock.runFor(10_500);
     await expect(page.locator('[data-screen=P4]')).toBeVisible();
-    expect(t.count).toBe(2);
+    expect(t.count).toBe(1); // one tap, then the slide
     expect((await state(page)).bookings).toHaveLength(1);
-  });
-
-  test('Confirm double tap books once', async ({ page }) => {
-    await page.clock.install();
-    await open(page, '/g/p3');
-    await page.clock.runFor(800);
-    await page.getByTestId('confirm').dblclick();
-    await page.clock.runFor(11_000);
-    await expect(page.locator('[data-screen=P4]')).toBeVisible(); // second tap did not hit Undo
-    const s = await state(page);
-    expect(s.bookings).toHaveLength(1);
-    expect(s.consents).toHaveLength(1);
   });
 
   test('Undo is outlined, 88px, visible the full 10 s with a countdown; undo leaves nothing booked', async ({ page }) => {
     await page.clock.install();
     await page.goto('/');
     await page.getByTestId('ride-home').tap();
-    await page.clock.runFor(800);
-    await page.getByTestId('confirm').tap();
+    await slide(page);
     const undo = page.getByTestId('undo');
     await expect(undo).toBeVisible();
     expect((await undo.boundingBox())!.height).toBeGreaterThanOrEqual(88);
@@ -97,8 +83,7 @@ test.describe('home @sizes', () => {
   test('backgrounding past the deadline books exactly once (visibilitychange)', async ({ page }) => {
     await page.clock.install();
     await open(page, '/g/p3');
-    await page.clock.runFor(800);
-    await page.getByTestId('confirm').tap();
+    await slide(page);
     await page.clock.fastForward(30_000);
     await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
     await page.clock.runFor(1_000);
@@ -109,8 +94,7 @@ test.describe('home @sizes', () => {
     await page.clock.install();
     await page.goto('/');
     await page.getByTestId('ride-home').tap();
-    await page.clock.runFor(800);
-    await page.getByTestId('confirm').tap();
+    await slide(page);
     await page.getByTestId('menu-btn').tap();
     await page.getByRole('button', { name: 'Home', exact: true }).tap();
     await expect(page.getByTestId('ride-home')).toHaveCount(0);
@@ -159,12 +143,14 @@ test.describe('home @sizes', () => {
     expect(straddling).toEqual([]);
   });
 
-  test('a fast double tap from home (100 ms apart) does not book', async ({ page }) => {
+  test('taps on the slider never book (two fast taps from home)', async ({ page }) => {
     await page.clock.install();
     await page.goto('/');
     await page.getByTestId('ride-home').tap();
     await page.clock.runFor(100);
-    await page.locator('[data-testid=confirm]').tap();
+    await page.getByTestId('confirm-thumb').tap();
+    await page.getByTestId('confirm-thumb').tap();
+    await page.getByTestId('confirm').tap();
     await page.clock.runFor(15_000);
     const s = await state(page);
     expect(s.ride).toBeNull();
@@ -177,13 +163,13 @@ test.describe('home @sizes', () => {
     await open(page, '/g/p3');
     await store(page, 's.setPriceMovesOnRefresh(true)');
     await page.clock.fastForward(121_000);
-    await page.getByTestId('confirm').tap();
+    await slide(page);
     await expect(page.getByText('The price was updated')).toBeVisible();
     await expect(page.getByTestId('quote')).toHaveText('$23.50');
     await expect(page.getByTestId('cap-line')).toContainText('$4.70');
     expect((await state(page)).ride).toBeNull();
     await page.clock.runFor(1_000);
-    await page.getByTestId('confirm').tap();
+    await slide(page);
     await expect(page.getByTestId('undo')).toBeVisible();
     expect((await state(page)).ride.quoteCents).toBe(2350);
   });

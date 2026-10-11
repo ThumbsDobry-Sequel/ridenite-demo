@@ -21,6 +21,9 @@ export interface Ride {
   /** Set while inside the 10 s undo window; cleared on commit. */
   pending?: boolean;
   consentText: string;
+  /** Dispute record: when and how the price was confirmed. */
+  confirmedAt?: number;
+  confirmedBy?: 'guest' | 'staff';
   scenario: FareScenario;
   /** Frozen at this stage (fault panel) until the guest acts. */
   hold?: LiveStage;
@@ -43,6 +46,21 @@ export interface Consent {
   at: number;
 }
 
+/** shownQuoteCents: the quote on screen at the confirm (snapshot for the record). */
+export interface ConfirmInput { method: ConfirmMethod; by?: 'guest' | 'staff'; shownQuoteCents?: number }
+export type ConfirmMethod = 'slide' | 'long_press' | 'a11y' | 'staff_saw_price';
+/** Dispute record (founder decision 2026-10-10): time, quote, cap and entry point. Facts only. */
+export interface Confirmation {
+  rideId: string;
+  at: number;
+  quoteCents: number;
+  capCents: number;
+  entryPoint: EntryPoint;
+  by: 'guest' | 'staff';
+  method: ConfirmMethod;
+  tab: string;
+}
+
 /** Event log entries hold facts only: no reason, notes, condition or drink count fields (UI 14b). */
 export interface StaffPing { kind: 'guest_request' | 'quiet_request'; seat: string; at: number }
 
@@ -59,6 +77,8 @@ export interface DemoState {
   ride: Ride | null;
   bookings: { rideId: string; at: number }[];
   consents: Consent[];
+  /** Every completed confirm (slide, long press, accessible action), kept even if undone. */
+  confirmations: Confirmation[];
   staffPings: StaffPing[];
   savedHome: Address | null;
   fareScenario: FareScenario;
@@ -98,7 +118,7 @@ export interface DemoStore {
 
   // booking: Confirm starts a 10 s undo window, then the ride counts as booked.
   // Idempotent: repeat taps return the existing ride.
-  createRide(consentText: string): CreateResult;
+  createRide(consentText: string, confirm?: ConfirmInput): CreateResult;
   /** Re-quote before booking (Confirm open > 2 min). Returns true if the price changed. */
   refreshQuote(): boolean;
   linkTab(t: Omit<LinkedTab, 'at'>): void;

@@ -17,6 +17,7 @@ export function seedState(now: number): DemoState {
     ride: null,
     bookings: [],
     consents: [],
+    confirmations: [],
     staffPings: [],
     // Saved home on this phone (fictional), so the three-tap path works out of the box.
     savedHome: venue.guest.home,

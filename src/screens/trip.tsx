@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TAP_GUARD_MS } from './confirm';
 import { venue } from '../venue.config';
 import { navigate } from '../router';
@@ -77,6 +77,29 @@ export function Belongings({ ride, stage }: { ride: Ride | null; stage: Stage | 
   );
 }
 
+/**
+ * Undo accepts only a fresh touch: a pointerdown that starts on the button after this screen
+ * appeared (a finger still down from the slide never counts), or a keyboard / assistive action.
+ */
+function UndoButton({ armedAt, onUndo }: { armedAt: number; onUndo: () => void }) {
+  const store = useStore();
+  const fresh = useRef(false);
+  const key = useRef(false);
+  return (
+    <button type="button" className="btn btn--outline btn--xl" data-testid="undo"
+      onPointerDown={() => { fresh.current = true; }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') key.current = true; }}
+      onClick={() => {
+        const ok = fresh.current || key.current;
+        fresh.current = false; key.current = false;
+        if (!ok || store.now() < armedAt) return;
+        onUndo();
+      }}>
+      <span>Undo</span>
+    </button>
+  );
+}
+
 /** P4: inside the undo window shows Undo; then "Your car is requested" with the belongings card. */
 export function P4() {
   const store = useStore();
@@ -95,10 +118,9 @@ export function P4() {
           <p className="countdown num" data-testid="undo-countdown" aria-live="polite" aria-atomic="true">{left}</p>
           <p className="callout muted">seconds to undo. Nothing is booked yet.</p>
         </Card>
-        <div className="sticky-actions">
-          <Button variant="outline" size="xl" testId="undo" onClick={() => { if (store.now() < armedAt) return; store.undoRide(); navigate('/g/home?undone=1'); }}>Undo</Button>
-          <p className="fict">Your ride books when the timer ends.</p>
-        </div>
+        {/* Riley p4-undo-v2: Undo sits right under the countdown card, away from the slider's end. */}
+        <UndoButton armedAt={armedAt} onUndo={() => { store.undoRide(); navigate('/g/home?undone=1'); }} />
+        <p className="fict center">Your ride books when the timer ends.</p>
       </Screen>
     );
   }

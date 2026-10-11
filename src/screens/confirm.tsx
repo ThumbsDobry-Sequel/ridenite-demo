@@ -7,13 +7,15 @@ import { fmt } from '../lib/money';
 import { STAGE_ROUTE } from '../lib/rideState';
 import { Banner, Button, Card } from '../components/primitives';
 import { Icon } from '../components/Icon';
+import { SlideToConfirm } from '../components/SlideToConfirm';
+import type { ConfirmMethod } from '../store/types';
 import { BackButton, Screen, Top } from '../components/layout';
 
 export const fareNote = (q: number) =>
   `${fmt(q)} on your tab at ${venue.name}. Final fare may differ by up to ${fmt(capFor(q))}. More than that and we'll ask you first. If it comes in lower, you get the difference back.`;
 
 export const QUOTE_TTL_MS = 120_000;
-/** Taps on Confirm and Undo are ignored this long after the screen appears. */
+/** Taps on Undo are ignored this long after the screen appears (a fast double action never undoes). */
 export const TAP_GUARD_MS = 600;
 
 /** P3 CONFIRM (Riley mockup p3-confirm): one card with destination, quote and cap line,
@@ -23,8 +25,7 @@ export function P3() {
   const s = useDemoState();
   const [openedAt, setOpenedAt] = useState(() => store.now());
   const [updated, setUpdated] = useState(false);
-  // Ignore taps for 0.6 s after this screen appears, so a fast double tap on Ride home never books.
-  const [armedAt] = useState(() => store.now() + TAP_GUARD_MS);
+  const [slideKey, setSlideKey] = useState(0);
   const dest = s.dest ?? s.savedHome ?? venue.guest.home;
   const q = s.quoteCents;
   const cap = capFor(q);
@@ -43,16 +44,15 @@ export function P3() {
     );
   }
 
-  const confirm = () => {
-    if (store.now() < armedAt) return;
+  const confirm = (method: ConfirmMethod) => {
     // Stale quote: refresh first and never book silently on a changed price.
     if (store.now() - openedAt > QUOTE_TTL_MS) {
       const changed = store.refreshQuote();
       setOpenedAt(store.now());
-      if (changed) { setUpdated(true); return; }
+      if (changed) { setUpdated(true); setSlideKey((k) => k + 1); return; }
     }
     store.setDestination(dest);
-    const res = store.createRide(fareNote(store.getState().quoteCents));
+    const res = store.createRide(fareNote(store.getState().quoteCents), { method, by: 'guest', shownQuoteCents: store.getState().quoteCents });
     if (res.refused === 'no_tab') { store.requestStaff(venue.seat); navigate('/g/p3w?cold=1'); return; }
     navigate('/g/p4');
   };
@@ -84,9 +84,8 @@ export function P3() {
         <p className="foot muted" data-testid="pickup-line">Pickup: {venue.pickupShort}<span className="eta-note"> Car in about {venue.etaMinutes} min.</span></p>
       </Card>
       <div className="sticky-actions">
-        <Button size="xl" testId="confirm" onClick={confirm}>Confirm ride</Button>
+        <SlideToConfirm key={slideKey} label="Slide to confirm" a11yLabel={`Confirm ride, ${fmt(q)} on your tab`} onComplete={confirm} />
         <Button variant="secondary" testId="cancel" className="cancel-bottom" onClick={() => navigate('/g/home')}>Cancel</Button>
-        <p className="fict undo-note">You can undo for 10 seconds. Fictional sample fare.</p>
       </div>
     </Screen>
   );
@@ -108,11 +107,11 @@ export function E2() {
         <p className="callout cap-line"><Icon name="clock" /> Your new quote once you tap Yes. Final fare may differ by up to {fmt(capFor(q))}.</p>
       </Card>
       <div className="spacer" />
-      <Button size="xl" icon="check" testId="e2-yes" onClick={() => {
+      <SlideToConfirm testId="e2-yes" label={`Slide: ${fmt(q)} is OK`} a11yLabel={`Yes, ${fmt(q)} is OK`} onComplete={(method) => {
         store.acceptNewQuote();
-        const res = store.createRide(fareNote(q));
+        const res = store.createRide(fareNote(q), { method, by: 'guest', shownQuoteCents: q });
         navigate(res.refused === 'no_tab' ? '/g/p3w?cold=1' : '/g/p4');
-      }}>Yes, {fmt(q)} is OK</Button>
+      }} />
       <Button variant="secondary" onClick={() => { store.applyFault('E1'); navigate('/g/e1'); }}>No, look for another car</Button>
     </Screen>
   );

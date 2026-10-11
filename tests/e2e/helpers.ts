@@ -36,3 +36,18 @@ export async function nav(page: Page, hash: string) {
   await page.evaluate((h) => { location.hash = h; }, hash);
   await expect(page.getByTestId('sim-banner')).toBeVisible();
 }
+
+/** Hold-and-slide confirm: drag the thumb `fraction` of its travel and release. */
+export async function slide(page: Page, testId = 'confirm', fraction = 0.95, opts: { release?: boolean } = {}) {
+  const thumb = page.getByTestId(`${testId}-thumb`);
+  await expect(thumb).toBeVisible();
+  const t = (await page.getByTestId(testId).boundingBox())!;
+  const b = (await thumb.boundingBox())!;
+  const inset = b.x - t.x;
+  const travel = t.width - b.width - inset * 2;
+  const x0 = b.x + b.width / 2, y = b.y + b.height / 2;
+  await page.mouse.move(x0, y);
+  await page.mouse.down();
+  await page.mouse.move(x0 + travel * fraction, y, { steps: 12 });
+  if (opts.release !== false) await page.mouse.up();
+}
