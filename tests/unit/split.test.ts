@@ -6,7 +6,8 @@ import { tabItems, tabTotals } from '../../src/lib/tab';
 import { venue } from '../../src/venue.config';
 import type { FareScenario } from '../../src/lib/fare';
 import { etWallToUtc } from '../../src/lib/hold';
-import { payoutReturnEligible, addBusinessDays, disputeNoticeDue, returnWindowEnds, returnWindowStatus, ymdIso, returnWindowClosesAt } from '../../src/lib/payouts';
+const et0 = (y: number, m: number, d: number, h: number, min = 0) => etWallToUtc(y, m, d, h, min);
+import { PayoutReturnError, payoutReturnCents, payoutReturnEligible, addBusinessDays, evidenceDueBy, businessDaysBetween, payoutReturnLine, statementFootnote, returnWindowEnds, returnWindowStatus, ymdIso, returnWindowClosesAt } from '../../src/lib/payouts';
 
 const T0 = Date.parse('2026-10-11T02:30:00Z');
 
@@ -118,9 +119,14 @@ describe('owner preview data model (no UI yet)', () => {
 
 describe('payout return window: pickup date (ET) + 90 calendar days; dispute notice: + 3 business days', () => {
   const et = (y: number, m: number, d: number, h: number, min = 0) => etWallToUtc(y, m, d, h, min);
-  it('config values: 90 calendar days, 3 business days', () => {
+  it('config: 90 calendar days; no fixed forwarding deadline in config; fee $1.00', () => {
     expect(venue.payoutReturnWindowDays).toBe(90);
-    expect(venue.disputeNoticeBusinessDays).toBe(3);
+    expect('disputeNoticeBusinessDays' in venue).toBe(false);
+    expect(venue.perRideFeeCents).toBe(100);
+  });
+  it('an Oct 10 ride: chip reads "Return window open until Jan 8"', () => {
+    const end = returnWindowEnds(et(2026, 10, 10, 22, 4));
+    expect(returnWindowStatus(end, et(2026, 10, 11, 9, 0))).toBe('Return window open until Jan 8');
   });
   it('sample Saturday ride (Sat Oct 10, 10:04 PM ET) ends Fri Jan 8, 2027', () => expect(ymdIso(returnWindowEnds(et(2026, 10, 10, 22, 4)))).toBe('2027-01-08'));
   it('Saturday-night ride picked up after midnight (Sun Oct 11, 12:40 AM ET) counts from Sunday: Sat Jan 9, 2027', () => expect(ymdIso(returnWindowEnds(et(2026, 10, 11, 0, 40)))).toBe('2027-01-09'));
@@ -136,12 +142,12 @@ describe('payout return window: pickup date (ET) + 90 calendar days; dispute not
     expect(returnWindowClosesAt(end)).toBe(et(2027, 1, 9, 0, 0));
     expect(returnWindowStatus(end, et(2027, 1, 9, 0, 0))).toBe('Payout final');
   });
-  it('dispute notice business days: Fri notice -> Wed; Sat notice -> Wed; Thu -> Tue; month boundary Thu Oct 29 -> Tue Nov 3', () => {
-    expect(ymdIso(disputeNoticeDue(et(2026, 10, 9, 15, 0)))).toBe('2026-10-14');
-    expect(ymdIso(disputeNoticeDue(et(2026, 10, 10, 15, 0)))).toBe('2026-10-14');
-    expect(ymdIso(disputeNoticeDue(et(2026, 10, 15, 15, 0)))).toBe('2026-10-20');
-    expect(ymdIso(disputeNoticeDue(et(2026, 10, 29, 15, 0)))).toBe('2026-11-03');
+  it('business-day helper: Fri + 3 -> Wed; Sat + 3 -> Wed; month boundary Thu Oct 29 + 3 -> Tue Nov 3; year boundary', () => {
+    expect(ymdIso(addBusinessDays(et(2026, 10, 9, 15, 0), 3))).toBe('2026-10-14');
+    expect(ymdIso(addBusinessDays(et(2026, 10, 10, 15, 0), 3))).toBe('2026-10-14');
+    expect(ymdIso(addBusinessDays(et(2026, 10, 29, 15, 0), 3))).toBe('2026-11-03');
     expect(ymdIso(addBusinessDays(et(2026, 12, 31, 12, 0), 3))).toBe('2027-01-05');
+    expect(businessDaysBetween({ y: 2026, m: 10, d: 9 }, { y: 2026, m: 10, d: 14 })).toBe(3);
   });
   it('bar tab (B6) ride lines carry returnWindowEnds when the pickup time is known; bar lines never do', () => {
     const t = tabTotals({ items: tabItems([['Old Fashioned', 1]]), taxRate: venue.taxRate, tabLineName: 'Courtesy car', ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123', pickupMs: et(2026, 10, 9, 23, 15) } });
@@ -155,15 +161,15 @@ describe('payout return eligibility: keyed on the processor dispute notice date 
   const pickupMs = et(2026, 10, 10, 22, 4); // window ends Fri Jan 8, 2027
   const deadline = et(2027, 2, 1, 23, 59);
   it('notice on day 90 (Jan 8) with evidence filed before the deadline: eligible', () =>
-    expect(payoutReturnEligible({ pickupMs, noticeMs: et(2027, 1, 8, 23, 30), evidenceFiledMs: et(2027, 1, 20, 12, 0), processorDeadlineMs: deadline })).toBe(true));
+    expect(payoutReturnEligible({ pickupMs, outcome: 'dispute_lost', noticeMs: et(2027, 1, 8, 23, 30), evidenceFiledMs: et(2027, 1, 20, 12, 0), processorDeadlineMs: deadline })).toBe(true));
   it('notice on day 91 (Jan 9): not eligible, even with evidence on time', () =>
-    expect(payoutReturnEligible({ pickupMs, noticeMs: et(2027, 1, 9, 0, 5), evidenceFiledMs: et(2027, 1, 10, 12, 0), processorDeadlineMs: deadline })).toBe(false));
+    expect(payoutReturnEligible({ pickupMs, outcome: 'dispute_lost', noticeMs: et(2027, 1, 9, 0, 5), evidenceFiledMs: et(2027, 1, 10, 12, 0), processorDeadlineMs: deadline })).toBe(false));
   it('notice in window but evidence filed at or after the processor deadline, or never: not eligible', () => {
-    expect(payoutReturnEligible({ pickupMs, noticeMs: et(2026, 11, 2, 9, 0), evidenceFiledMs: deadline, processorDeadlineMs: deadline })).toBe(false);
-    expect(payoutReturnEligible({ pickupMs, noticeMs: et(2026, 11, 2, 9, 0), evidenceFiledMs: null, processorDeadlineMs: deadline })).toBe(false);
+    expect(payoutReturnEligible({ pickupMs, outcome: 'dispute_lost', noticeMs: et(2026, 11, 2, 9, 0), evidenceFiledMs: deadline, processorDeadlineMs: deadline })).toBe(false);
+    expect(payoutReturnEligible({ pickupMs, outcome: 'dispute_lost', noticeMs: et(2026, 11, 2, 9, 0), evidenceFiledMs: null, processorDeadlineMs: deadline })).toBe(false);
   });
   it('the decision uses the notice date, not today: a late review of an in-window notice stays eligible', () =>
-    expect(payoutReturnEligible({ pickupMs, noticeMs: et(2026, 12, 15, 9, 0), evidenceFiledMs: et(2026, 12, 20, 9, 0), processorDeadlineMs: et(2027, 1, 14, 0, 0) })).toBe(true));
+    expect(payoutReturnEligible({ pickupMs, outcome: 'dispute_lost', noticeMs: et(2026, 12, 15, 9, 0), evidenceFiledMs: et(2026, 12, 20, 9, 0), processorDeadlineMs: et(2027, 1, 14, 0, 0) })).toBe(true));
 });
 
 describe('sample owner-statement rides, seeded relative to now (SCOPE 23:07)', () => {
@@ -186,5 +192,112 @@ describe('sample owner-statement rides, seeded relative to now (SCOPE 23:07)', (
     const rides = sampleOwnerRides(Date.parse('2027-06-01T16:00:00Z'));
     expect(rides.some((r) => r.status === 'Payout final')).toBe(true);
     expect(rides.some((r) => r.status.startsWith('Return window open until '))).toBe(true);
+  });
+});
+
+describe('evidenceDueBy: 1 business day, or same business day if the processor deadline is 3 business days away or less', () => {
+  const et = (y: number, m: number, d: number, h: number, min = 0) => etWallToUtc(y, m, d, h, min);
+  it('Toast-like 15-day deadline: Mon notice -> Tue', () => expect(ymdIso(evidenceDueBy(et(2026, 10, 12, 10, 0), et(2026, 10, 27, 23, 0)))).toBe('2026-10-13'));
+  it('Fri notice, deadline far away -> Mon', () => expect(ymdIso(evidenceDueBy(et(2026, 10, 9, 16, 0), et(2026, 10, 23, 23, 0)))).toBe('2026-10-12'));
+  it('Fri notice, deadline Wed (3 business days) -> same day Fri', () => expect(ymdIso(evidenceDueBy(et(2026, 10, 9, 16, 0), et(2026, 10, 14, 23, 0)))).toBe('2026-10-09'));
+  it('Fri notice, deadline Thu (4 business days) -> Mon', () => expect(ymdIso(evidenceDueBy(et(2026, 10, 9, 16, 0), et(2026, 10, 15, 23, 0)))).toBe('2026-10-12'));
+  it('Sat notice, deadline Tue -> Mon (same business day, next one open)', () => expect(ymdIso(evidenceDueBy(et(2026, 10, 10, 11, 0), et(2026, 10, 13, 23, 0)))).toBe('2026-10-12'));
+  it('month boundary: Fri Oct 30 notice, deadline far -> Mon Nov 2', () => expect(ymdIso(evidenceDueBy(et(2026, 10, 30, 12, 0), et(2026, 11, 20, 23, 0)))).toBe('2026-11-02'));
+});
+
+describe('Payout Return: RideNite fee only, eligibility on the dispute notice date (Harper 23:11, Jason 23:12)', () => {
+  const et = (y: number, m: number, d: number, h: number, min = 0) => etWallToUtc(y, m, d, h, min);
+  const pickupMs = et(2026, 10, 10, 22, 4); // window ends Jan 8, 2027
+  const deadline = et(2027, 1, 20, 23, 0);
+  it('statement line format, always -$1.00 (never the fare)', () => {
+    expect(payoutReturnLine('4821', et(2026, 10, 9, 23, 0), 'dispute_lost', 100)).toBe('Ride Payout returned (RideNite fee), ride 4821, Oct 9, dispute lost: -$1.00');
+    expect(payoutReturnLine('4820', et(2026, 10, 8, 22, 0), 'refunded_under_rule', 100)).toBe('Ride Payout returned (RideNite fee), ride 4820, Oct 8, refunded under the refund rule: -$1.00');
+  });
+  it('footnote names the 90-day notice window, keeps dispute fee and fare with the bar', () => {
+    expect(statementFootnote()).toContain('notice dated within 90 days of the ride');
+    expect(statementFootnote()).toContain('Your dispute fee and the ride fare stay with you.');
+  });
+  it('dispute lost, notice on day 90, evidence filed in time: eligible; day 91: not', () => {
+    expect(payoutReturnEligible({ pickupMs, outcome: 'dispute_lost', noticeMs: et(2027, 1, 8, 20, 0), evidenceFiledMs: et(2027, 1, 12, 9, 0), processorDeadlineMs: deadline })).toBe(true);
+    expect(payoutReturnEligible({ pickupMs, outcome: 'dispute_lost', noticeMs: et(2027, 1, 9, 9, 0), evidenceFiledMs: et(2027, 1, 12, 9, 0), processorDeadlineMs: deadline })).toBe(false);
+  });
+  it('dispute won by the bar: no return', () =>
+    expect(payoutReturnEligible({ pickupMs, outcome: 'dispute_won', noticeMs: et(2026, 11, 2, 9, 0), evidenceFiledMs: et(2026, 11, 3, 9, 0), processorDeadlineMs: deadline })).toBe(false));
+  it('bar refunds under the refund rule: returned, no window', () =>
+    expect(payoutReturnEligible({ pickupMs, outcome: 'refunded_under_rule' })).toBe(true));
+  it('evidence not filed in time: not eligible, unless RideNite sent the pack late', () => {
+    const base = { pickupMs, outcome: 'dispute_lost' as const, noticeMs: et(2026, 11, 2, 9, 0), forwardedMs: et(2026, 11, 2, 10, 0), evidenceFiledMs: null, processorDeadlineMs: et(2026, 11, 9, 23, 0) };
+    expect(payoutReturnEligible({ ...base, evidenceSentMs: et(2026, 11, 3, 9, 0) })).toBe(false); // sent on time (due Tue Nov 3), bar did not file
+    expect(payoutReturnEligible({ ...base, evidenceSentMs: et(2026, 11, 5, 9, 0) })).toBe(true); // RideNite late
+  });
+  it('bar forwarded within 2 business days but the deadline left no time: condition met', () =>
+    expect(payoutReturnEligible({ pickupMs, outcome: 'dispute_lost', noticeMs: et(2026, 11, 2, 9, 0), forwardedMs: et(2026, 11, 4, 9, 0), evidenceSentMs: et(2026, 11, 4, 12, 0), evidenceFiledMs: null, processorDeadlineMs: et(2026, 11, 4, 23, 0) })).toBe(true));
+  it('sample statement: ride 4821 "Oct 9, dispute lost" and a refund-rule return, each -$1.00, Sample data; owner copy uses the agreed timing words', async () => {
+    const { sampleOwnerStatement } = await import('../../src/lib/ownerData');
+    const st = sampleOwnerStatement(T0); // Sat Oct 10, 10:30 PM ET
+    expect(st.label).toBe('Sample data');
+    expect(st.feeReturns.map((f) => f.line)).toContain('Ride Payout returned (RideNite fee), ride 4821, Oct 9, dispute lost: -$1.00');
+    expect(st.feeReturns.some((f) => f.outcome === 'refunded_under_rule')).toBe(true);
+    for (const f of st.feeReturns) { expect(f.cents).toBe(-100); expect(f.label).toBe('Sample data'); }
+    expect(st.feeReturnsCents).toBe(-100 * st.feeReturns.length);
+    expect(st.forwarding).toContain('as soon as you reasonably can');
+    expect(st.evidence).toBe('RideNite sends the evidence pack within 1 business day, or the same business day if your processor deadline is 3 business days away or less.');
+    expect(JSON.stringify(st)).not.toMatch(/3 business days of receiving|within 3 business days\b(?! away)/);
+  });
+});
+
+describe('"never more than $X" is all-in (Harper 23:11 condition list)', () => {
+  it('quote parts (fare, taxes, booking fee, tolls, wait, tip) sum to the quote; X = all-in quote + cap', async () => {
+    const { allInQuote, maxChargeCents, capFor } = await import('../../src/lib/fare');
+    expect(Object.keys(venue.quoteParts).sort()).toEqual(['bookingFee', 'fare', 'taxes', 'tip', 'tolls', 'wait']);
+    expect(allInQuote(venue.quoteParts)).toBe(venue.quoteCents);
+    expect(maxChargeCents(venue.quoteCents)).toBe(venue.quoteCents + capFor(venue.quoteCents));
+    expect(maxChargeCents(2100)).toBe(2520);
+    const { maxLine } = await import('../../src/screens/confirm');
+    expect(maxLine(2100)).toBe('You pay the final fare, never more than $25.20 unless you approve a change.');
+  });
+  it('without the guest\'s yes, the ride on the tab never exceeds X; cleaning, damage and no-show fees are never ride line types', async () => {
+    const { maxChargeCents, NEVER_ON_GUEST_RIDE_LINE } = await import('../../src/lib/fare');
+    for (const ans of [null, 'no'] as const) {
+      const s = stateFor('over', ans);
+      const m = morningFor(s, T0);
+      expect(m.rideCents).toBeLessThanOrEqual(maxChargeCents(m.quoteCents));
+      for (const l of checkLines(s, m)) expect(NEVER_ON_GUEST_RIDE_LINE as readonly string[]).not.toContain(l.type);
+    }
+  });
+});
+
+describe('per-ride fee stored at booking (Harper payout-return.md section 7)', () => {
+  it('each booked ride records the fee charged; changing config afterwards does not change the return', () => {
+    const st = new InMemoryStore({ clock: () => T0 });
+    const r0 = st.getState().bar.rides[0];
+    expect(r0.feeChargedCents).toBe(100);
+    const v = venue as unknown as { perRideFeeCents: number };
+    const before = v.perRideFeeCents;
+    try {
+      v.perRideFeeCents = 150; // price change after booking
+      expect(st.getState().bar.rides[0].feeChargedCents).toBe(100);
+      expect(payoutReturnCents(r0.feeChargedCents)).toBe(-100);
+      expect(payoutReturnLine('4821', et0(2026, 10, 9, 23, 0), 'dispute_lost', r0.feeChargedCents)).toMatch(/: -\$1\.00$/);
+      // new bookings pick up the new fee; old rides keep theirs
+      const fresh = new InMemoryStore({ clock: () => T0 });
+      expect(fresh.getState().bar.rides[0].feeChargedCents).toBe(150);
+      expect(st.getState().sampleRideFeeChargedCents).toBe(100);
+    } finally { v.perRideFeeCents = before; }
+  });
+  it('guest check ride lines carry the stored fee', () => {
+    const s = stateFor('over', 'yes');
+    for (const l of rideLinesOnly(checkLines(s, morningFor(s, T0)))) expect(l.feeChargedCents).toBe(100);
+  });
+  it('hard check: a return can never exceed the ride\'s recorded fee; never any part of the subscription', () => {
+    expect(payoutReturnCents(100)).toBe(-100);
+    expect(payoutReturnCents(150)).toBe(-150);
+    expect(payoutReturnCents(0)).toBe(0); // waived fee: nothing to return
+    expect(payoutReturnCents(100, 50)).toBe(-50);
+    expect(() => payoutReturnCents(100, 101)).toThrow(PayoutReturnError);
+    expect(() => payoutReturnCents(100, 100 + 19900)).toThrow(PayoutReturnError); // fee + a monthly subscription share
+    expect(() => payoutReturnCents(100, 2740)).toThrow(PayoutReturnError); // fare-sized
+    expect(() => payoutReturnCents(-1)).toThrow(PayoutReturnError);
+    expect(() => payoutReturnCents(100, 1.5)).toThrow(PayoutReturnError);
   });
 });

@@ -14,7 +14,7 @@ export function seedBar(now: number): BarState {
     const stage = r.stage === 'declined' ? 'en_route' : r.stage;
     const bookedAt = bookedAtFor(stage, now);
     return {
-      id: `r-${r.tab}-seed`, tab: r.tab, seat: t.seat, guest: t.guest, entryPoint: r.tab === '4474' ? 'staff_offer' : 'guest_request',
+      id: `r-${r.tab}-seed`, feeChargedCents: venue.perRideFeeCents, tab: r.tab, seat: t.seat, guest: t.guest, entryPoint: r.tab === '4474' ? 'staff_offer' : 'guest_request',
       dest: venue.addresses[r.tab === '4472' ? 4 : r.tab === '4474' ? 5 : 6], riders: 1, quoteCents: venue.quoteCents,
       capCents: capFor(venue.quoteCents), bookedAt, consentText: '', scenario: r.scenario, confirmedAt: bookedAt, confirmedBy: 'staff',
       ...(r.stage === 'declined' ? { terminal: 'canceled_by_driver' as const } : {}),
@@ -49,6 +49,7 @@ export function seedState(now: number): DemoState {
   return {
     version: STORE_VERSION,
     seededAt: now,
+    sampleRideFeeChargedCents: venue.perRideFeeCents,
     tabOpenedAt: seedTabOpenedAt(now),
     handoff: null,
     dest: null,

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { ROUTES, open } from './helpers';
 // @ts-expect-error plain JS module
-import { lintText } from '../../scripts/copy-lint.mjs';
+import { lintStatementText, lintText } from '../../scripts/copy-lint.mjs';
 
 test('M0 smoke: noindex, PWA head tags, banner and fictional-data note', async ({ page }) => {
   await page.goto('/');
@@ -40,7 +40,7 @@ for (const route of ROUTES) {
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
       await expect(page.getByTestId('sim-label')).toBeInViewport({ ratio: 1 });
       const text = await page.evaluate(() => document.body.innerText);
-      expect(lintText(text, route)).toEqual([]);
+      expect((/^\/(b|o)(\/|$)/.test(route) ? lintStatementText : lintText)(text, route)).toEqual([]); // bar and owner routes: statement words too
       const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(over, 'no horizontal scroll').toBeLessThanOrEqual(0);
     });

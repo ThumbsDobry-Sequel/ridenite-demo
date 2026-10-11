@@ -1,9 +1,14 @@
 /**
- * Owner payout data (SCOPE 23:05, revised 23:06). Data model only: nothing here is shown to guests.
+ * Owner payout data (SCOPE 23:05 to 23:12, Harper payout-return memo section 4). Data only, never shown to guests.
  * - returnWindowEnds = ET calendar date of the ride's pickup + venue.payoutReturnWindowDays (90) calendar days.
  *   Open through the end of that day ET; after that the statement status is "Payout final".
- * - disputeNoticeDue = ET date the bar receives a dispute notice + venue.disputeNoticeBusinessDays (3) business
- *   days (Mon to Fri, weekends skipped, no holiday calendar). No UI yet.
+ * - Payout Return = RideNite's own per-ride fee as charged on that ride (stored feeChargedCents, never live config),
+ *   as an invoice credit, one ride at a time. Never more than that ride's recorded fee; never any part of the subscription.
+ *   Never the fare. Returned when a guest wins a dispute on the ride line (notice dated within the window, evidence
+ *   filed in time) or when the bar refunds the ride line under the refund rule.
+ * - Forwarding has no fixed deadline ("as soon as you reasonably can"). RideNite sends the Evidence Pack within
+ *   1 business day, or the same business day when the processor deadline is 3 business days away or less.
+ * Business days: Mon to Fri, ET, no holiday calendar.
  */
 import { venue } from '../venue.config';
 import { etWallToUtc } from './hold';
@@ -27,8 +32,33 @@ export function addBusinessDays(t: number, businessDays: number): YMD {
   return cur;
 }
 
-/** Date the bar's response to a dispute notice is due: notice date + venue.disputeNoticeBusinessDays. */
-export const disputeNoticeDue = (noticeMs: number, businessDays: number = venue.disputeNoticeBusinessDays): YMD => addBusinessDays(noticeMs, businessDays);
+const isBiz = (d: YMD) => { const w = DOW(d); return w !== 0 && w !== 6; };
+const ymdN = (d: YMD) => d.y * 10000 + d.m * 100 + d.d;
+/** Business days strictly after `from` up to and including `to` (0 if `to` is not after `from`). */
+export function businessDaysBetween(from: YMD, to: YMD): number {
+  let n = 0, cur = from;
+  while (ymdN(cur) < ymdN(to)) { cur = addDays(cur, 1); if (isBiz(cur)) n++; }
+  return n;
+}
+/** The day itself if it is a business day, else the next business day. */
+export function sameOrNextBusinessDay(d: YMD): YMD { let cur = d; while (!isBiz(cur)) cur = addDays(cur, 1); return cur; }
+
+/** Owner-facing wording for forwarding and evidence timing (use exactly this in any owner preview copy). */
+export const FORWARDING_COPY = 'Forward each dispute notice as soon as you reasonably can.';
+export const EVIDENCE_COPY = 'RideNite sends the evidence pack within 1 business day, or the same business day if your processor deadline is 3 business days away or less.';
+
+/**
+ * Date RideNite owes the Evidence Pack (ET), counted from when the bar forwarded the notice (or when RideNite
+ * saw it through processor access): same business day if the processor deadline is 3 business days away or
+ * less, otherwise 1 business day later.
+ */
+export function evidenceDueBy(noticeMs: number, processorDeadlineMs: number): YMD {
+  const { y, m, d } = etYmdh(noticeMs);
+  const start = sameOrNextBusinessDay({ y, m, d });
+  const dl = etYmdh(processorDeadlineMs);
+  const left = businessDaysBetween(start, { y: dl.y, m: dl.m, d: dl.d });
+  return left <= 3 ? start : addBusinessDays(etWallToUtc(start.y, start.m, start.d, 12), 1);
+}
 
 export const ymdIso = (d: YMD): string => `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
 const SHORT = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' });
@@ -42,16 +72,63 @@ export function returnWindowStatus(ends: YMD, now: number): string {
   return now < returnWindowClosesAt(ends) ? `Return window open until ${fmtWindowDate(ends)}` : 'Payout final';
 }
 
-/** ET calendar date as a comparable number, e.g. 20270108. */
-const ymdNum = (d: YMD) => d.y * 10000 + d.m * 100 + d.d;
-
 /**
- * Payout return eligibility (SCOPE 23:07), keyed on the processor's dispute notice date, not today:
- * eligible iff the notice date (ET) is on or before pickup date + payoutReturnWindowDays (90) calendar days,
- * AND the evidence was filed before the processor's deadline. Data only, no UI.
+ * Payout Return eligibility, keyed on the processor's dispute notice date (not today):
+ *  1. notice dated on or before pickup date + payoutReturnWindowDays (90) calendar days, and
+ *  2. evidence filed before the processor deadline. The bar's filing condition also counts as met if RideNite
+ *     sent the Evidence Pack after it was due, or if the bar forwarded within 2 business days and the deadline
+ *     still left no time to file, and
+ *  3. the guest won the dispute as to the ride line.
+ * Or: the bar refunded the ride line under the refund rule (no window).
  */
-export function payoutReturnEligible(x: { pickupMs: number; noticeMs: number; evidenceFiledMs: number | null; processorDeadlineMs: number }): boolean {
-  const inWindow = ymdNum(etYmdh(x.noticeMs)) <= ymdNum(returnWindowEnds(x.pickupMs));
-  const filedInTime = x.evidenceFiledMs != null && x.evidenceFiledMs < x.processorDeadlineMs;
-  return inWindow && filedInTime;
+export interface PayoutReturnCase {
+  pickupMs: number;
+  outcome: 'dispute_lost' | 'dispute_won' | 'refunded_under_rule';
+  noticeMs?: number;
+  forwardedMs?: number | null;
+  evidenceSentMs?: number | null;
+  evidenceFiledMs?: number | null;
+  processorDeadlineMs?: number;
 }
+export function payoutReturnEligible(c: PayoutReturnCase): boolean {
+  if (c.outcome === 'refunded_under_rule') return true;
+  if (c.outcome !== 'dispute_lost' || c.noticeMs == null || c.processorDeadlineMs == null) return false;
+  const inWindow = ymdN(etYmdh(c.noticeMs)) <= ymdN(returnWindowEnds(c.pickupMs));
+  if (!inWindow) return false;
+  if (c.evidenceFiledMs != null && c.evidenceFiledMs < c.processorDeadlineMs) return true;
+  const fwd = c.forwardedMs ?? null;
+  if (fwd != null) {
+    const due = evidenceDueBy(fwd, c.processorDeadlineMs);
+    const sentLate = c.evidenceSentMs == null || ymdN(etYmdh(c.evidenceSentMs)) > ymdN(due);
+    if (sentLate) return true; // RideNite was late
+    const n = etYmdh(c.noticeMs), f = etYmdh(fwd), dl = etYmdh(c.processorDeadlineMs);
+    const fwdQuick = businessDaysBetween({ y: n.y, m: n.m, d: n.d }, { y: f.y, m: f.m, d: f.d }) <= 2;
+    const noTimeLeft = businessDaysBetween({ y: f.y, m: f.m, d: f.d }, { y: dl.y, m: dl.m, d: dl.d }) === 0;
+    if (fwdQuick && noTimeLeft) return true;
+  }
+  return false;
+}
+
+export class PayoutReturnError extends Error {}
+/**
+ * Statement credit for one ride, as negative cents, computed from the fee recorded on that ride at booking.
+ * Hard check: the return can never exceed that ride's recorded fee (default: exactly the fee). The monthly
+ * subscription is never an input, so no part of it can be returned.
+ */
+export function payoutReturnCents(feeChargedCents: number, returnCents: number = feeChargedCents): number {
+  if (!Number.isInteger(feeChargedCents) || feeChargedCents < 0) throw new PayoutReturnError(`invalid recorded fee ${feeChargedCents}`);
+  if (!Number.isInteger(returnCents) || returnCents < 0) throw new PayoutReturnError(`invalid return ${returnCents}`);
+  if (returnCents > feeChargedCents) throw new PayoutReturnError(`return ${returnCents} exceeds the fee recorded for this ride (${feeChargedCents})`);
+  return returnCents === 0 ? 0 : -returnCents;
+}
+
+const MD = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
+/** "Ride Payout returned (RideNite fee), ride 4821, Oct 9, dispute lost: -$1.00" */
+export function payoutReturnLine(rideNo: string, pickupMs: number, outcome: 'dispute_lost' | 'refunded_under_rule', feeChargedCents: number): string {
+  const why = outcome === 'dispute_lost' ? 'dispute lost' : 'refunded under the refund rule';
+  const c = -payoutReturnCents(feeChargedCents);
+  return `Ride Payout returned (RideNite fee), ride ${rideNo}, ${MD.format(new Date(pickupMs))}, ${why}: -$${(c / 100).toFixed(2)}`;
+}
+/** Once per statement. */
+export const statementFootnote = (): string =>
+  `When a guest wins a dispute on a RideNite ride line (notice dated within ${venue.payoutReturnWindowDays} days of the ride) and you filed our evidence on time, or you refund the ride under our refund rule, we return our fee for that ride as a credit. Your dispute fee and the ride fare stay with you.`;

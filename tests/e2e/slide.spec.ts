@@ -343,7 +343,8 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await page.clock.runFor(52_000); // 60 s after the request was placed (undo end): picked up
     await expect(page.getByTestId('ride-line')).toBeVisible();
     await expect(page.getByTestId('confirm-record')).toContainText('Confirmed by guest');
-    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home on your tab.');
+    // check still open (Harper 23:11): never "Tab closed." before the POS closes the check
+    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Ride home is on your tab.');
   });
 
   test('driver accepts then cancels: E6, nothing charged; receipt reads "Requested by guest, 11:42 PM. Driver cancelled. Not charged."', async ({ page }) => {
@@ -374,7 +375,7 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
   });
 
   test('morning: Harper ride-question copy exactly; no "aren\'t charged until the bar replies"; drink questions to the bar', async ({ page }) => {
-    const copy = "Ride charge look wrong? Tap here. We'll check it with Maison Cheryl today. If it's wrong, Maison Cheryl refunds it to your card, and we'll text you when that's done. Your bank may take a few business days to show it.";
+    const copy = "Ride charge look wrong? Tap here. We'll start on it with Maison Cheryl today. If it's wrong, Maison Cheryl refunds it to your card, and we'll text you when that's done. Your bank may take a few business days to show it.";
     await open(page, '/g/p9');
     await expect(page.getByTestId('ride-question')).toHaveText(copy);
     await expect(page.locator('main')).toContainText('Questions about drinks or food go to Maison Cheryl.');
@@ -470,14 +471,29 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await page.getByTestId('menu-btn').tap();
     await expect(page.getByTestId('menu-sheet')).not.toContainText('Tab closed');
     await open(page, '/g/p9');
-    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home on your tab.');
+    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Ride home is on your tab.');
     // the line sits right before the ride line
     const tag = (await page.getByTestId('night-tagline').boundingBox())!;
     const line = (await page.getByTestId('ride-item').boundingBox())!;
     expect(line.y).toBeGreaterThanOrEqual(tag.y + tag.height - 1);
     expect(await page.getByTestId('night-tagline-row').evaluate((e) => (e.nextElementSibling as HTMLElement | null)?.dataset.testid)).toBe('ride-item');
     await nav(page, '/g/m1');
-    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home on your tab.');
+    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Ride home is on your tab.');
+  });
+
+  test('"Tab closed." only after the check closes: guest pays, or the bartender closes the tab', async ({ page }) => {
+    await page.clock.install({ time: new Date('2026-10-11T02:30:00Z') });
+    await open(page, '/g/p9');
+    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Ride home is on your tab.');
+    await page.evaluate(() => (window as any).__ridenite.store.pay());
+    await nav(page, '/g/p9');
+    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home included: $24.60.');
+    await nav(page, '/g/m1');
+    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home included: $24.60.');
+    await open(page, '/g/p9'); // fresh state
+    await page.evaluate(() => { const s = (window as any).__ridenite.store; s.barCloseTab(s.getState().linkedTab.tab, 'closed'); });
+    await nav(page, '/g/p9');
+    await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home included: $24.60.');
   });
 });
 

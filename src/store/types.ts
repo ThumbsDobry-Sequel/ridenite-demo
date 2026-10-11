@@ -8,6 +8,9 @@ export type Fault = 'E1' | 'E2' | 'E3' | 'E4' | 'E5' | 'E6' | 'E7';
 
 export interface Ride {
   id: string;
+  /** RideNite per-ride fee charged for this ride, stored at booking (Harper payout-return.md section 7).
+   *  Payout Returns use this value, never live config. 0 if the fee was waived. */
+  feeChargedCents: number;
   tab: string;
   seat: string;
   guest: string;
@@ -141,6 +144,8 @@ export type BarBookResult =
 export interface DemoState {
   version: number;
   seededAt: number;
+  /** Fee charged on the seeded sample ride, stored at seed time (same rule as feeChargedCents on live rides). */
+  sampleRideFeeChargedCents: number;
   /** When the guest's tab opened (sample). The card hold deadline is computed from it. */
   tabOpenedAt: number;
   handoff: Handoff | null;
@@ -262,7 +267,7 @@ export interface DemoStore {
   barSetRideScenario(rideId: string, s: FareScenario): void;
   /** Demo: jump a ride to drop-off so the final fare lines post. */
   barFinishRide(rideId: string): void;
-  /** All rides the bar sees, the guest phone's ride included. */
+  /** All rides the bar sees, plus the ride on the guest phone. */
   barRides(): BarRide[];
   barActiveRide(tab: string): BarRide | null;
 }

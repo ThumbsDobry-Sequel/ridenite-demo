@@ -4,7 +4,7 @@ import { encodeHandoff, parseHandoff } from '../../src/lib/handoff';
 import { readUrlLink } from '../../src/lib/urlLink';
 import { venue } from '../../src/venue.config';
 // @ts-expect-error plain JS module
-import { lintText } from '../../scripts/copy-lint.mjs';
+import { lintStatementText, lintText } from '../../scripts/copy-lint.mjs';
 
 describe('forgiving address match (UI 9b)', () => {
   it('suggests from the first keystroke', () => {
@@ -67,6 +67,16 @@ describe('copy lint', () => {
     for (const t of ['Rides are Guaranteed', 'Every ride is insured', 'Add a Protection Plan', 'Zero risk for the bar', 'A guarantee.']) expect(lintText(t).length, t).toBeGreaterThan(0);
     for (const t of ['uninsuredish', 'zero risky']) expect(lintText(t).filter((p) => /insured|zero risk/i.test(p.match)).length, t).toBe(0);
     expect(lintText('No liability for the bar')).toHaveLength(1);
+    // "included" only with the amount right after it (Harper 23:11)
+    expect(lintText('Tab closed. Ride home included: $27.40.')).toEqual([]);
+    for (const t of ['Ride home included.', 'Ride home included', 'A ride is included with your tab', 'included $5']) expect(lintText(t).length, t).toBeGreaterThan(0);
+    // bar screens and statements: insurance and guaranty words, whole words only
+    for (const t of ['Dispute coverage', 'File a claim', 'Claims', 'Your loss', 'We indemnify you', 'No deductible', 'Premium tier', 'Dispute plan', 'Return policy', 'We guarantee it', 'We reimburse the fare', 'Reimbursement'])
+      expect(lintStatementText(t).length, t).toBeGreaterThan(0);
+    for (const t of ['planned', 'explained', 'reclaimed', 'glossy', 'airplane', 'Ride Payout returned (RideNite fee), ride 4821, Oct 9, dispute lost: -$1.00'])
+      expect(lintStatementText(t), t).toEqual([]);
+    expect(lintStatementText("follow venue policy")).toHaveLength(1);
+    expect(lintStatementText("follow the venue's procedure.")).toEqual([]);
     // bar vs RideNite split (SCOPE 23:01): no claims that ride disputes stay off the bar
     for (const t of ['Ride disputes Never Hit The Bar.', 'Chargebacks never reach the bar', "Disputes stay off the bar's account", 'Kept off the bar\u2019s account', 'You cannot dispute this', "You can't dispute it later", 'You can\u2019t dispute', 'No disputes after Friday']) expect(lintText(t).length, t).toBeGreaterThan(0);
   });

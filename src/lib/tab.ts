@@ -20,6 +20,8 @@ export interface TabLine {
   type: 'item' | 'tax' | 'ride_quote' | 'ride_adjustment' | 'ride_credit' | 'ride_held';
   /** Ride lines only: fictional RideNite ride ID (RN-xxxxxx). */
   rideId?: string;
+  /** Ride lines only, owner data: RideNite fee charged for this ride, as stored at booking. */
+  feeChargedCents?: number;
   /** Ride lines only, owner data: pickup date (ET) + venue.payoutReturnWindowDays calendar days, "YYYY-MM-DD". */
   returnWindowEnds?: string;
   name: string;
@@ -49,7 +51,7 @@ export function tabTotals(opts: {
   tabLineName: string;
   /** Exact ride line text, e.g. the bar POS line "RideNite car home, Clarendon area, 11:52 PM". */
   rideLineName?: string;
-  ride?: { quoteCents: number; finalCents: number | null; overCapAnswer?: OverCapAnswer; rideId?: string; pickupMs?: number } | null;
+  ride?: { quoteCents: number; finalCents: number | null; overCapAnswer?: OverCapAnswer; rideId?: string; pickupMs?: number; feeChargedCents?: number } | null;
 }): TabTotals {
   const lines: TabLine[] = [];
   const grouped = new Map<string, { cents: number; qty: number }>();
@@ -67,14 +69,15 @@ export function tabTotals(opts: {
   if (opts.ride) {
     const q = opts.ride.quoteCents;
     const rideId = opts.ride.rideId;
+    const feeChargedCents = opts.ride.feeChargedCents;
     const returnWindowEndsIso = opts.ride.pickupMs != null ? ymdIso(returnWindowEnds(opts.ride.pickupMs)) : undefined;
-    lines.push({ kind: 'ride', type: 'ride_quote', rideId, returnWindowEnds: returnWindowEndsIso, name: opts.rideLineName ?? `${opts.tabLineName}, quoted fare`, cents: q });
+    lines.push({ kind: 'ride', type: 'ride_quote', rideId, returnWindowEnds: returnWindowEndsIso, feeChargedCents, name: opts.rideLineName ?? `${opts.tabLineName}, quoted fare`, cents: q });
     rideCents = q;
     if (opts.ride.finalCents != null) {
       recon = reconcile(q, opts.ride.finalCents, opts.ride.overCapAnswer ?? null);
       const f = (c: number) => `$${(c / 100).toFixed(2)}`;
-      if (recon.postedAdjCents > 0) lines.push({ kind: 'ride', type: 'ride_adjustment', rideId, returnWindowEnds: returnWindowEndsIso, name: `Ride fare adjustment (final fare ${f(recon.finalCents)}, quoted ${f(q)})`, cents: recon.postedAdjCents });
-      if (recon.postedAdjCents < 0) lines.push({ kind: 'ride', type: 'ride_credit', rideId, returnWindowEnds: returnWindowEndsIso, name: `Ride fare credit (final fare ${f(recon.finalCents)}, quoted ${f(q)})`, cents: recon.postedAdjCents });
+      if (recon.postedAdjCents > 0) lines.push({ kind: 'ride', type: 'ride_adjustment', rideId, returnWindowEnds: returnWindowEndsIso, feeChargedCents, name: `Ride fare adjustment (final fare ${f(recon.finalCents)}, quoted ${f(q)})`, cents: recon.postedAdjCents });
+      if (recon.postedAdjCents < 0) lines.push({ kind: 'ride', type: 'ride_credit', rideId, returnWindowEnds: returnWindowEndsIso, feeChargedCents, name: `Ride fare credit (final fare ${f(recon.finalCents)}, quoted ${f(q)})`, cents: recon.postedAdjCents });
       if (recon.heldCents > 0) lines.push({ kind: 'ride', type: 'ride_held', rideId, name: 'Held for the guest\'s OK, not charged to the bar', cents: recon.heldCents });
       rideCents += recon.postedAdjCents;
       heldCents = recon.heldCents;

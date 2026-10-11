@@ -20,6 +20,15 @@ export const SAFE = /\bsafe\b|unsafe/i;
 export const LIT = /\blit\b/i;
 /** Harper legal items (money-promises memo): whole word or phrase. */
 export const LEGAL = /\bguarantee\b|\bguaranteed\b|\binsured\b|\bprotection plan\b|\bzero risk\b|\bnever hit the bar\b|\bnever reach the bar\b|\boff the bar['\u2019]s account\b|\bcannot dispute\b|\bcan['\u2019]t dispute\b|\bno disputes after\b/i;
+/** "included" only with the dollar amount right after it ("Ride home included: $27.40."); bare use reads as a free ride (Harper 23:11). */
+export const INCLUDED = /\bincluded\b(?!: \$)/i;
+/**
+ * Harper payout-return memo (23:11): insurance and guaranty words, banned on bar screens, bar-facing config copy
+ * and owner statements (in addition to everything above). Whole words, with common inflections.
+ */
+export const STATEMENT_LEGAL = /\b(coverage|claims?|claimed|loss|losses|indemnif(?:y|ies|ied|ication)|deductibles?|premiums?|plans?|polic(?:y|ies)|guarantee[sd]?|reimburse[sd]?|reimbursements?|reimbursing)\b/i;
+/** Files that hold bar-facing or statement copy. */
+export const STATEMENT_FILES = [/^src\/screens\/bar\//, /^src\/screens\/owner\.tsx$/, /^src\/lib\/ownerData\.ts$/, /^src\/lib\/payouts\.ts$/, /^src\/venue\.config\.ts$/];
 export const APPROVED = [
   'If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment.',
   // same approved sentence with the venue bill noun read from venue.config.ts (renders identically)
@@ -45,6 +54,18 @@ export function lintText(text, file = '<text>') {
     const g = line.match(LEGAL);
     if (g) problems.push({ file, line: i + 1, match: g[0] });
     if (/where you were/i.test(line)) problems.push({ file, line: i + 1, match: 'where you were' });
+    const inc = line.match(INCLUDED);
+    if (inc) problems.push({ file, line: i + 1, match: 'included (without ": $" amount)' });
+  });
+  return problems;
+}
+
+/** Bar screens and statements: everything in lintText plus STATEMENT_LEGAL. */
+export function lintStatementText(text, file = '<text>') {
+  const problems = lintText(text, file);
+  text.split(/\r?\n/).forEach((line, i) => {
+    const m = line.match(STATEMENT_LEGAL);
+    if (m) problems.push({ file, line: i + 1, match: m[0] });
   });
   return problems;
 }
@@ -75,7 +96,8 @@ if (isMain) {
   for (const f of files) {
     let text = readFileSync(f, 'utf8');
     if (extname(f) === '.css') text = cssContentStrings(text);
-    problems = problems.concat(lintText(text, relative(ROOT, f)));
+    const rel = relative(ROOT, f).split('\\').join('/');
+    problems = problems.concat(STATEMENT_FILES.some((re) => re.test(rel)) ? lintStatementText(text, rel) : lintText(text, rel));
   }
   if (problems.length) {
     for (const p of problems) console.error(`copy-lint: ${p.file}:${p.line} banned "${p.match}"`);

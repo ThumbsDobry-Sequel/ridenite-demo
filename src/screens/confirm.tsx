@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { T, venue } from '../venue.config';
 import { navigate, parseHash } from '../router';
 import { useDemoState, useStore } from '../store';
-import { capFor } from '../lib/fare';
+import { capFor, maxChargeCents } from '../lib/fare';
 import { fmt } from '../lib/money';
 import { STAGE_ROUTE } from '../lib/rideState';
 import { Banner, Button, Card } from '../components/primitives';
@@ -16,7 +16,7 @@ export const fareNote = (q: number) =>
   `${fmt(q)} on your ${T.bill} at ${venue.name}. Final fare may differ by up to ${fmt(capFor(q))}. ${maxLine(q)}`;
 
 /** Money-promises memo (Harper): the most the guest pays, from the live quote and cap. Never hardcoded. */
-export const maxLine = (q: number) => `You pay the final fare, never more than ${fmt(q + capFor(q))} unless you approve a change.`;
+export const maxLine = (q: number) => `You pay the final fare, never more than ${fmt(maxChargeCents(q))} unless you approve a change.`;
 
 /** Quote valid for 5 minutes (demo constant, SCOPE "Ride status and charge timing"). */
 export const QUOTE_TTL_MS = QUOTE_VALID_MS;

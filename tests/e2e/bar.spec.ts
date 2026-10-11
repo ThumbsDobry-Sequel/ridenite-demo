@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { nav, open, slide, state, store, tapper } from './helpers';
 // @ts-expect-error plain JS module
-import { lintText } from '../../scripts/copy-lint.mjs';
+import { lintStatementText } from '../../scripts/copy-lint.mjs';
 
 /* M2 bartender flow. Every test here is tagged @bar and runs at 390x844, 375x667, 430x932 and iPad 1024x768. */
 
@@ -59,7 +59,7 @@ for (const sc of SCREENS) {
       await expect(page.getByTestId('sim-label')).toBeInViewport({ ratio: 1 });
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
       await expect(page.getByTestId('sim-label')).toBeInViewport({ ratio: 1 });
-      expect(lintText(await page.evaluate(() => document.body.innerText), sc.name)).toEqual([]);
+      expect(lintStatementText(await page.evaluate(() => document.body.innerText), sc.name)).toEqual([]);
       expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), 'no horizontal scroll').toBeLessThanOrEqual(0);
       expect(await page.locator('input, textarea, select, [contenteditable=true], [contenteditable=""]').count(), 'no free-text input').toBe(0);
       const small = await page.$$eval('button, a[href], [role=button], [role=checkbox], [role=radio], [role=switch]', (els) =>
@@ -202,7 +202,9 @@ test.describe('M2 booking rules (Piper B)', () => {
     await tonight(page);
     await page.getByTestId('ask-4471').tap();
     const book = page.getByTestId('b3-book');
-    await Promise.all([book.tap(), book.tap().catch(() => {})]);
+    // Two near-simultaneous taps. Either tap may be the one that books; the other then finds the button gone,
+    // so both are allowed to give up quickly. The guard is proven by exactly one ride and one booking below.
+    await Promise.all([book.tap({ timeout: 5_000 }).catch(() => {}), book.tap({ timeout: 5_000 }).catch(() => {})]);
     await expect(page.locator('[data-screen=booked]')).toBeVisible();
     const s = await state(page);
     expect(s.bar.rides.filter((r: any) => r.tab === '4471')).toHaveLength(1);

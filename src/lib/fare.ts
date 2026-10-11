@@ -1,5 +1,5 @@
 /**
- * Fare policy of record (UI 0a item 4, POS 3a): quote plus capped adjustment.
+ * Fare rule of record (UI 0a item 4, POS 3a): quote plus capped adjustment.
  * Cap = the lesser of 20% of the quote or $5.00, in cents, shown before booking.
  */
 export const CAP_PCT = 0.2;
@@ -7,6 +7,18 @@ export const CAP_MAX_CENTS = 500;
 
 export const capFor = (quoteCents: number): number =>
   Math.min(Math.round(quoteCents * CAP_PCT), CAP_MAX_CENTS);
+
+/** Parts of an all-in quote. Every amount that can land on the guest's ride line is one of these. */
+export interface QuoteParts { fare: number; taxes: number; bookingFee: number; tolls: number; wait: number; tip: number }
+export const allInQuote = (p: QuoteParts): number => p.fare + p.taxes + p.bookingFee + p.tolls + p.wait + p.tip;
+/** Charges that never go on the guest's ride line (Harper 23:11): provider cleaning or damage fees, no-show fees. */
+export const NEVER_ON_GUEST_RIDE_LINE = ['cleaning_fee', 'damage_fee', 'no_show_fee'] as const;
+/**
+ * Most the guest can pay without a new tap on their own phone: the all-in quote (taxes, fees, tolls, wait
+ * time and tip are all inside it) plus the cap. Anything above it that the guest did not approve is never added to
+ * the tab (see reconcile: held, then declined and absorbed).
+ */
+export const maxChargeCents = (allInQuoteCents: number): number => allInQuoteCents + capFor(allInQuoteCents);
 
 export type OverCapAnswer = 'yes' | 'no' | null;
 

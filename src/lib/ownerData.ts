@@ -1,15 +1,15 @@
 /**
- * Data for the owner preview (SCOPE 23:01, 23:05). No UI yet: it waits on Riley's mock.
+ * Data for the owner preview (SCOPE 23:01 to 23:12). No UI yet: it waits on Riley's mock.
  * - Evidence pack: ride lines only (rideLinesOnly), each with its ride ID, plus the guest record facts.
- * - Monthly statement: split into Bar sales and RideNite rides, every figure labeled Sample data.
- *   No payout-return or reimbursement money line: the type has no field for one. Each ride carries only a
- *   status text from its return window ("Return window open until Fri, Oct 16", then "Payout final").
+ * - Monthly statement: split into Bar sales and RideNite rides, every figure labeled Sample data. Each ride
+ *   carries a muted status chip ("Return window open until Jan 8", then "Payout final").
+ * - Fee returns: RideNite's own per-ride fee only, as an invoice credit per ride (Harper 23:11). Never fare-sized.
  */
 import { checkLines, rideLinesOnly, splitSubtotals, type CheckLine } from './checkLines';
 import { morningFor } from './morning';
 import { confirmLine } from './confirmRecord';
 import type { DemoState } from '../store/types';
-import { returnWindowEnds, returnWindowStatus, ymdIso } from './payouts';
+import { payoutReturnCents, payoutReturnLine, returnWindowEnds, returnWindowStatus, statementFootnote, ymdIso, FORWARDING_COPY, EVIDENCE_COPY } from './payouts';
 import { venue } from '../venue.config';
 import { rideRef } from './checkLines';
 
@@ -62,7 +62,7 @@ function ridesOf(lines: readonly CheckLine[], now: number) {
 /** Status chip style for the owner statement: always muted text, never amber. */
 export const STATUS_TONE = 'muted' as const;
 
-export interface SampleOwnerRide { rideId: string; pickupMs: number; rideCents: number; returnWindowEnds: string; status: string; tone: typeof STATUS_TONE; label: typeof SAMPLE_LABEL }
+export interface SampleOwnerRide { rideId: string; rideNo: string; pickupMs: number; feeChargedCents: number; rideCents: number; returnWindowEnds: string; status: string; tone: typeof STATUS_TONE; label: typeof SAMPLE_LABEL }
 
 const DAY = 86_400_000;
 /**
@@ -70,10 +70,44 @@ const DAY = 86_400_000;
  * ("Payout final") and some recent ("Return window open until Jan 8"). Fictional amounts reuse spec fares.
  */
 export function sampleOwnerRides(now: number): SampleOwnerRide[] {
-  const seeds: [number, number][] = [[120, 2100], [95, 2460], [40, 1890], [2, 2740]]; // [days ago, ride cents]
+  const seeds: [number, number][] = [[120, 2100], [95, 2460], [40, 1890], [1, 2460], [2, 2740]]; // [days ago, ride cents]
   return seeds.map(([ago, cents], i) => {
     const pickupMs = now - ago * DAY;
     const end = returnWindowEnds(pickupMs);
-    return { rideId: rideRef(`sample-owner-${i}-${venue.slug}`), pickupMs, rideCents: cents, returnWindowEnds: ymdIso(end), status: returnWindowStatus(end, now), tone: STATUS_TONE, label: SAMPLE_LABEL };
+    return { rideId: rideRef(`sample-owner-${i}-${venue.slug}`), rideNo: String(4818 + i), pickupMs, feeChargedCents: venue.perRideFeeCents, rideCents: cents, returnWindowEnds: ymdIso(end), status: returnWindowStatus(end, now), tone: STATUS_TONE, label: SAMPLE_LABEL };
   });
+}
+
+export interface FeeReturn { rideNo: string; rideId: string; outcome: 'dispute_lost' | 'refunded_under_rule'; cents: number; line: string; label: typeof SAMPLE_LABEL }
+
+/**
+ * Sample fee returns for the statement, seeded relative to now: ride 4821 (yesterday, guest won the dispute)
+ * and ride 4820 (refunded by the bar under the refund rule). Each is -$1.00, RideNite's own fee.
+ */
+export function sampleFeeReturns(now: number): FeeReturn[] {
+  const rides = sampleOwnerRides(now);
+  const pick = (no: string) => rides.find((r) => r.rideNo === no)!;
+  return ([['4821', 'dispute_lost'], ['4820', 'refunded_under_rule']] as const).map(([no, outcome]) => {
+    const r = pick(no);
+    return { rideNo: no, rideId: r.rideId, outcome, cents: payoutReturnCents(r.feeChargedCents), line: payoutReturnLine(no, r.pickupMs, outcome, r.feeChargedCents), label: SAMPLE_LABEL };
+  });
+}
+
+export interface OwnerStatementSample {
+  label: typeof SAMPLE_LABEL;
+  rides: SampleOwnerRide[];
+  feeReturns: FeeReturn[];
+  feeReturnsCents: number;
+  footnote: string;
+  forwarding: string;
+  evidence: string;
+}
+/** Everything the owner statement preview needs, Sample data only. */
+export function sampleOwnerStatement(now: number): OwnerStatementSample {
+  const feeReturns = sampleFeeReturns(now);
+  return {
+    label: SAMPLE_LABEL, rides: sampleOwnerRides(now), feeReturns,
+    feeReturnsCents: feeReturns.reduce((a, f) => a + f.cents, 0),
+    footnote: statementFootnote(), forwarding: FORWARDING_COPY, evidence: EVIDENCE_COPY,
+  };
 }

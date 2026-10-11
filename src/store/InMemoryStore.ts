@@ -94,7 +94,7 @@ export class InMemoryStore implements DemoStore {
 
   private makeRide(h: Handoff, dest: Address, quoteCents: number, bookedAt: number, consentText = ''): Ride {
     return {
-      id: `r-${h.tab}-${bookedAt}`, tab: h.tab, seat: h.seat, guest: h.guest, entryPoint: h.ep, dest,
+      id: `r-${h.tab}-${bookedAt}`, feeChargedCents: venue.perRideFeeCents, tab: h.tab, seat: h.seat, guest: h.guest, entryPoint: h.ep, dest,
       riders: this.state.riders, quoteCents, capCents: capFor(quoteCents), bookedAt, consentText, scenario: this.state.fareScenario,
     };
   }
@@ -332,7 +332,7 @@ export class InMemoryStore implements DemoStore {
     }
     const now = this.now();
     const ride: Ride = {
-      id: `r-${d.tab}-${now}`, tab: d.tab, seat: t.seat, guest: t.guest, entryPoint: d.ep, dest: d.dest,
+      id: `r-${d.tab}-${now}`, feeChargedCents: venue.perRideFeeCents, tab: d.tab, seat: t.seat, guest: t.guest, entryPoint: d.ep, dest: d.dest,
       riders: 1, quoteCents: d.quoteCents, capCents: capFor(d.quoteCents), bookedAt: now,
       consentText: '', confirmedAt: now, confirmedBy: d.sawBy, scenario: 'higher',
       ...(this.state.forceNoDriver ? { noDriver: true } : {}),

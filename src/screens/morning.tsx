@@ -8,7 +8,7 @@ import { useDemoState, useStore } from '../store';
 import { morningFor, nightTimes } from '../lib/morning';
 import { neighborhood } from '../lib/tab';
 import { checkLines, receiptRideId, splitSubtotals } from '../lib/checkLines';
-import { nightTagline } from '../lib/brand';
+import { guestCheckClosed, nightTagline } from '../lib/brand';
 import { noDriverLine, confirmLine, fmtET } from '../lib/confirmRecord';
 import { useNow } from '../hooks';
 import { fmt, fmtSigned } from '../lib/money';
@@ -28,7 +28,7 @@ const nowStamp = () => ETD.format(new Date()).replace(/, (\d{1,2}:)/, ', $1');
 
 /** Money-promises memo (Harper's safer copy), exact; venue name from config. Drink questions still go to the bar. */
 export const rideQuestionCopy = () =>
-  `Ride charge look wrong? Tap here. We'll check it with ${venue.name} today. If it's wrong, ${venue.name} refunds it to your card, and we'll text you when that's done. Your bank may take a few business days to show it.`;
+  `Ride charge look wrong? Tap here. We'll start on it with ${venue.name} today. If it's wrong, ${venue.name} refunds it to your card, and we'll text you when that's done. Your bank may take a few business days to show it.`;
 /** Itemized ride line (Vera rev 04.2): "RideNite car home, Clarendon area to Westover area, picked up 10:04 PM, $27.40". Areas only. */
 export function rideItemLine(s: DemoState, pickedUp: string, rideCents: number): string {
   const from = neighborhood(venue.neighborhood);
@@ -90,7 +90,7 @@ export function M1() {
   const s = useDemoState();
   const m = morningFor(s);
   const N = useN(s);
-  const tag = nightTagline(m.hasRide);
+  const tag = nightTagline(m.hasRide, guestCheckClosed(s), m.rideCents);
   const split = splitSubtotals(checkLines(s, m));
   return (
     <Screen id="M1">
@@ -145,7 +145,7 @@ export function P9() {
   const r = m.recon ?? { postedAdjCents: 0, heldCents: 0, declinedCents: 0, finalCents: 0, quoteCents: 0, capCents: 0, diffCents: 0, outcome: 'none' as const };
   const adjName = r.postedAdjCents < 0 ? 'Ride fare credit' : 'Ride fare adjustment';
   const N = useN(s);
-  const tag = nightTagline(m.hasRide);
+  const tag = nightTagline(m.hasRide, guestCheckClosed(s), m.rideCents);
   const lines = checkLines(s, m);
   const split = splitSubtotals(lines);
   const rideId = receiptRideId(s);

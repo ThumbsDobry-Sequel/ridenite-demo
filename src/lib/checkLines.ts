@@ -15,6 +15,8 @@ export interface CheckLine {
   kind: LineKind; type: CheckLineType; name: string; cents: number;
   /** Ride lines only. */
   rideId?: string;
+  /** Ride lines only, owner data: RideNite fee charged for this ride, as stored at booking. */
+  feeChargedCents?: number;
   /** Ride lines only, owner data (never shown to guests): pickup date (ET) + venue.payoutReturnWindowDays calendar days, "YYYY-MM-DD". */
   returnWindowEnds?: string;
 }
@@ -43,14 +45,16 @@ export function checkLines(s: DemoState, m: ReturnType<typeof morningFor>): Chec
   if (m.hasRide) {
     const rideId = receiptRideId(s);
     const win = ymdIso(returnWindowEnds(nightTimes(s).pickedUp));
+    const live = s.ride && !s.ride.pending ? s.ride : null;
+    const fee = live ? live.feeChargedCents : s.sampleRideFeeChargedCents;
     const r = m.recon;
-    lines.push({ kind: 'ride', type: 'ride_quote', name: `${s.bar.settings.tabLineName}, quoted fare`, cents: m.quoteCents, rideId, returnWindowEnds: win });
+    lines.push({ kind: 'ride', type: 'ride_quote', name: `${s.bar.settings.tabLineName}, quoted fare`, cents: m.quoteCents, rideId, returnWindowEnds: win, feeChargedCents: fee });
     if (r && r.postedAdjCents > 0) {
       const within = Math.min(r.postedAdjCents, r.capCents);
-      lines.push({ kind: 'ride', type: 'ride_adjustment', name: 'Ride fare adjustment', cents: within, rideId, returnWindowEnds: win });
-      if (r.postedAdjCents > within) lines.push({ kind: 'ride', type: 'ride_stop', name: 'Approved by you over the cap', cents: r.postedAdjCents - within, rideId, returnWindowEnds: win });
+      lines.push({ kind: 'ride', type: 'ride_adjustment', name: 'Ride fare adjustment', cents: within, rideId, returnWindowEnds: win, feeChargedCents: fee });
+      if (r.postedAdjCents > within) lines.push({ kind: 'ride', type: 'ride_stop', name: 'Approved by you over the cap', cents: r.postedAdjCents - within, rideId, returnWindowEnds: win, feeChargedCents: fee });
     }
-    if (r && r.postedAdjCents < 0) lines.push({ kind: 'ride', type: 'ride_credit', name: 'Ride fare credit', cents: r.postedAdjCents, rideId, returnWindowEnds: win });
+    if (r && r.postedAdjCents < 0) lines.push({ kind: 'ride', type: 'ride_credit', name: 'Ride fare credit', cents: r.postedAdjCents, rideId, returnWindowEnds: win, feeChargedCents: fee });
   }
   return lines;
 }

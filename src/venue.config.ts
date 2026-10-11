@@ -30,11 +30,12 @@ export const venue = {
   nightCutoffHour: 6,
   /** Card hold window in hours (Toast-style POS hold). The charge time must land inside it. */
   holdHours: 24,
-  /** Owner payouts (data only, no guest copy, no UI yet). Each ride line's payout return window ends this many
-   *  calendar days after the ride's pickup date (ET). */
+  /** RideNite's per-ride fee invoiced to the bar (owner data only). Read ONLY at booking: each ride stores the fee
+   *  actually charged (feeChargedCents) and any Payout Return is computed from that stored value, never from here. */
+  perRideFeeCents: 100,
+  /** Owner data only. Payout Return window: calendar days after the ride's pickup date (ET) by which the
+   *  processor's dispute notice must be dated. Harper recommends 150; Jason has not approved it yet. One-line change. */
   payoutReturnWindowDays: 90,
-  /** Business days (Mon to Fri, ET, no holiday calendar) the bar has after receiving a dispute notice. Data only. */
-  disputeNoticeBusinessDays: 3,
   pickupSpot: 'front door, N Fillmore St',
   pickupShort: 'Front door, N Fillmore St.',
   /** Fictional 555-01xx number. */
@@ -46,7 +47,7 @@ export const venue = {
   procedure: [
     'Let the manager on duty know (Imani tonight).',
     'Go over in person, low-key. Book the car without asking why.',
-    'If the guest raises a concern, get the manager or security first and follow venue policy. The car is one option.',
+    "If the guest raises a concern, get the manager or security first and follow the venue's procedure. The car is one option.",
   ],
 
   /** Tax applies to drinks and food only, never ride lines (POS 3a item 5). */
@@ -71,6 +72,9 @@ export const venue = {
 
   /** Sample quote and fare scenarios (POS 3b). */
   quoteCents: 2100,
+  /** The quote is all-in (Harper 23:11): everything that can land on the guest's ride line is inside it, so
+   *  "never more than $X" (X = quote + cap) holds. Fictional sample split; parts must sum to quoteCents. */
+  quoteParts: { fare: 1660, taxes: 110, bookingFee: 330, tolls: 0, wait: 0, tip: 0 },
   e2NewQuoteCents: 2350,
   finalFareCents: { higher: 2460, lower: 1890, equal: 2100, over: 2740 },
   /** Fictional RideNite ride ID for the seeded sample ride (shown on the receipt ride line detail). */
@@ -133,7 +137,7 @@ export const venue = {
     procedure: [
       'Let the manager on duty know (Theo tonight).',
       'Go over in person, low-key. Book the house car without asking why.',
-      'If the guest raises a concern, get the manager or security first and follow venue policy. The car is one option.',
+      "If the guest raises a concern, get the manager or security first and follow the venue's procedure. The car is one option.",
     ],
     feeCents: 100,
     // Item names are Maison Cheryl menu items; prices and guests are sample data.

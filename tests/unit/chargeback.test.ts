@@ -62,8 +62,10 @@ describe('date and charge acceptance (mocked clock, America/New_York)', () => {
       expect(holdText(open, t)).not.toMatch(/today|tomorrow/i);
       // heading uses the night date (6:00 AM cutoff)
       expect(nightLabel(t)).toBe(heading);
-      expect(nightTagline(true, t)).toBe(`${heading}. Tab closed. Ride home on your tab.`);
-      expect(nightTagline(false, t)).toBeNull();
+      expect(nightTagline(true, true, 2740, t)).toBe(`${heading}. Tab closed. Ride home included: $27.40.`);
+      expect(nightTagline(true, false, 2740, t)).toBe(`${heading}. Ride home is on your tab.`);
+      expect(nightTagline(false, true, 2740, t)).toBeNull();
+      expect(nightTagline(false, false, 2740, t)).toBeNull();
     });
   }
 
@@ -91,10 +93,10 @@ describe('receipt line and copy', () => {
   it('the bare marketing tagline "Tab closed. Ride booked." is not used anywhere in the app', () => {
     for (const [f, t] of src) expect(t.includes('Tab closed. Ride booked.'), f).toBe(false);
   });
-  it('no "included", "free" or "on us" in guest ride copy strings', () => {
+  it('no bare "included" (only "included: $amount", Harper 23:11), "free" or "on us" in guest ride copy strings', () => {
     for (const [f, t] of src) {
       const strings = t.match(/(['"`])(?:(?!\1).)*\1|>[^<>{}]+</g) ?? [];
-      for (const x of strings) expect(/\bon us\b|\bincluded\b|\bfree ride|\bride (is )?free\b/i.test(x), `${f}: ${x}`).toBe(false);
+      for (const x of strings) expect(/\bon us\b|\bincluded\b(?!: \$)|\bfree ride|\bride (is )?free\b/i.test(x), `${f}: ${x}`).toBe(false);
     }
   });
 });

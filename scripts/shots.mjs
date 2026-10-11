@@ -50,6 +50,7 @@ await page.evaluate(() => window.__ridenite.store.applyFault('E1'));
 await shot('E1', '#/g/e1');
 await page.evaluate(() => window.__ridenite.store.resetDemoData());
 await shot('P9', '#/g/p9');
+await shot('M1', '#/g/m1');
 await page.evaluate(() => window.__ridenite.store.applyFault('E7'));
 await shot('E7', '#/g/e7');
 await page.evaluate(() => window.__ridenite.store.resetDemoData());
