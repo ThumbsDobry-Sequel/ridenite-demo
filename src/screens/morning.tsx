@@ -13,6 +13,8 @@ import { guestCheckClosed, nightTagline } from '../lib/brand';
 import { noDriverLine, confirmLine, fmtET } from '../lib/confirmRecord';
 import { useNow } from '../hooks';
 import { fmt, fmtSigned } from '../lib/money';
+import { reconcile } from '../lib/fare';
+import type { Route } from '../router';
 import { Banner, Button, Card, Chip, Fict, ListRow } from '../components/primitives';
 import { Icon } from '../components/Icon';
 import { BackButton, Screen, Top, VenueChip } from '../components/layout';
@@ -32,7 +34,7 @@ const stampAt = (t: number) => ETT.format(new Date(t)).replace(',', '');
 const nowClock = () => ETT.format(new Date()).replace(',', '');
 const nowStamp = () => ETD.format(new Date()).replace(/, (\d{1,2}:)/, ', $1');
 
-/** Money-promises memo (Harper's safer copy), exact; venue name from config. Drink questions still go to the bar. */
+/** Money-promises memo (Harper's copy), exact; venue name from config. Bar tab questions still go to the bar. */
 export const rideQuestionCopy = () =>
   `Ride charge look wrong? Tap here. We'll start on it with ${venue.name} today. If it's wrong, ${venue.name} refunds it to your card, and we'll text you when that's done. Your bank may take a few business days to show it.`;
 /** Itemized ride line (Vera rev 04.2): "RideNite car home, Clarendon area to Westover area, picked up 10:04 PM, $27.40". Areas only. */
@@ -114,11 +116,11 @@ export function M1() {
       <table className="inv" data-testid="invoice">
         <tbody data-testid="bar-section">
           <tr className="sec"><th colSpan={2} scope="colgroup">Bar sales</th></tr>
-          <tr><th scope="row">{venue.menu.some((i) => i.kind === 'drink') ? 'Drinks and food' : 'Food'}</th><td className="amt">{fmt(m.tipBaseCents)}</td></tr>
+          <tr><th scope="row">Food and items</th><td className="amt">{fmt(m.tipBaseCents)}</td></tr>
           <tr><th scope="row">{venue.taxLabel}</th><td className="amt">{fmt(m.taxCents)}</td></tr>
           <tr><th scope="row">Staff tip ({s.tipPct}%)</th><td className="amt">{fmt(m.tipCents)}</td></tr>
           <tr className="subtotal"><th scope="row">Bar sales subtotal</th><td className="amt" data-testid="bar-subtotal">{fmt(split.barCents)}</td></tr>
-          <tr><td colSpan={2} className="sec-foot" data-testid="bar-question">Questions about drinks or food go to {venue.name}.</td></tr>
+          <tr><td colSpan={2} className="sec-foot" data-testid="bar-question">Questions about your bar tab go to {venue.name}.</td></tr>
         </tbody>
         <tbody data-testid="ride-section">
           <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
@@ -141,7 +143,7 @@ export function M1() {
   );
 }
 
-/** P9 review and pay (UI 6 P9, POS 3a/3b). Tip on drinks and food only. */
+/** P9 review and pay (UI 6 P9, POS 3a/3b). Tip on bar tab items only. */
 export function P9() {
   const store = useStore();
   const s = useDemoState();
@@ -177,23 +179,22 @@ export function P9() {
       <table className="inv" aria-label="Itemized bill" data-testid="invoice">
         <tbody data-testid="bar-section">
           <tr className="sec"><th colSpan={2} scope="colgroup">Bar sales</th></tr>
-          {venue.menu.some((i) => i.kind === 'drink') && <tr className="sec sec--sub"><th colSpan={2} scope="colgroup">Drinks</th></tr>}
-          {venue.menu.filter((i) => i.kind === 'drink').map((i) => <tr key={i.name} data-kind="bar"><th scope="row">{i.name}</th><td className="amt">{fmt(i.cents)}</td></tr>)}
+                    {venue.menu.filter((i) => i.kind === 'drink').map((i) => <tr key={i.name} data-kind="bar"><th scope="row">{i.name}</th><td className="amt">{fmt(i.cents)}</td></tr>)}
           <tr className="sec sec--sub"><th colSpan={2} scope="colgroup">Food</th></tr>
           {venue.menu.filter((i) => i.kind === 'food').map((i) => <tr key={i.name} data-kind="bar"><th scope="row">{i.name}</th><td className="amt">{fmt(i.cents)}</td></tr>)}
           <tr data-kind="bar"><th scope="row">{venue.taxLabel}<span className="note">{venue.taxNote}</span></th><td className="amt" data-testid="tax">{fmt(m.taxCents)}</td></tr>
           <tr className="sec sec--sub"><th colSpan={2} scope="colgroup">Tip for bar staff</th></tr>
           <tr><td colSpan={2}>
-            <div className="seg" role="group" aria-label="Staff tip on drinks and food">
+            <div className="seg" role="group" aria-label="Staff tip on food and items">
               {venue.tipOptions.map((p) => (
                 <button key={p} type="button" aria-pressed={s.tipPct === p} data-testid={`tip-${p}`} onClick={() => store.setTip(p)}>{p ? `${p}%` : 'None'}</button>
               ))}
             </div>
-            <span className="note">Tip is on drinks and food ({fmt(m.tipBaseCents)}), not the ride.</span>
+            <span className="note">Tip is on food and items ({fmt(m.tipBaseCents)}), not the ride.</span>
           </td></tr>
           <tr data-kind="bar"><th scope="row">Staff tip ({s.tipPct}%)</th><td className="amt" data-testid="tip-amt">{fmt(m.tipCents)}</td></tr>
           <tr className="subtotal"><th scope="row">Bar sales subtotal</th><td className="amt" data-testid="bar-subtotal">{fmt(split.barCents)}</td></tr>
-          <tr><td colSpan={2} className="sec-foot" data-testid="bar-question">Questions about drinks or food go to {venue.name}.</td></tr>
+          <tr><td colSpan={2} className="sec-foot" data-testid="bar-question">Questions about your bar tab go to {venue.name}.</td></tr>
         </tbody>
         <tbody data-testid="ride-section">
           <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
@@ -214,7 +215,7 @@ export function P9() {
           )}
           {r.heldCents > 0 && (
             <tr data-testid="held-line" className="needs-ok-row"><th scope="row"><span className="needs-ok__l"><Icon name="help" /><b>Needs your OK</b></span><span className="note">{fmt(r.heldCents)} over the {fmt(r.capCents)} cap. {venue.overCapReason}. Not charged unless you OK it.</span>
-              <button type="button" className="textlink textlink--inline" onClick={() => navigate('/g/e8')}>Review</button></th><td className="amt">{fmt(0)}</td></tr>
+              <button type="button" className="textlink textlink--inline" onClick={() => navigate('/g/e8t')}>Review</button></th><td className="amt">{fmt(0)}</td></tr>
           )}
           {r.outcome === 'declined' && <tr data-testid="max-approved"><th scope="row" colSpan={2}>{maxApprovedLine(r.quoteCents + r.capCents)}</th></tr>}
           <tr className="subtotal"><th scope="row">RideNite rides subtotal</th><td className="amt" data-testid="ride-subtotal">{fmt(split.rideCents)}</td></tr>
@@ -232,17 +233,24 @@ export function P9() {
   );
 }
 
-/** E8 over the cap because of traffic or the driver's route (no guest change): the guest's OK on their own phone. */
-export function E8() {
+/**
+ * E8 over the cap because of traffic or the driver's route (no guest change): the guest's OK on their own phone.
+ * /g/e8 (fault panel, screenshots) shows the seeded sample traffic ride (tab #4479, Fri, Oct 9, same ride ID as its
+ * receipt and the owner statement). /g/e8t is the same screen for the ride on this phone (P9 "Review" link).
+ */
+export function E8({ tonight = false }: { tonight?: boolean }) {
   const store = useStore();
   const s = useDemoState();
+  const t = sampleTrafficRide(Date.now());
   const m = morningFor({ ...s, ride: s.ride ? { ...s.ride, scenario: 'over' } : null, fareScenario: 'over', overCapAnswer: null });
-  const r = m.recon!;
+  const r = tonight ? m.recon! : reconcile(t.quoteCents, t.finalCents, null);
   const over = r.diffCents - Math.min(r.diffCents, r.capCents);
+  const done = tonight ? '/g/p9' : '/g/sample-traffic';
   return (
     <Screen id="E8">
-      <Top left={<VenueChip />} ctx={nowClock()} />
+      <Top left={<VenueChip />} ctx={tonight ? nowClock() : 'Sample ride'} />
       <h1 className="h2">Your ride came to {fmt(r.finalCents)}.</h1>
+      {!tonight && <p className="callout" data-testid="e8-ride">{nightOfHeading(t.pickupMs)} · {T.Bill} #{t.tab} · Ride ID {t.rideId} <span className="sample-tag">Sample data</span></p>}
       <Card>
         <div className="row callout"><span>Quote you OK'd</span><span className="num">{fmt(r.quoteCents)}</span></div>
         <div className="row callout"><span>Added, as shown before booking (up to {fmt(r.capCents)})</span><span className="num" data-testid="e8-added">{fmtSigned(Math.min(r.diffCents, r.capCents))}</span></div>
@@ -250,8 +258,8 @@ export function E8() {
       </Card>
       <p className="body">{venue.overCapReason}, so the trip came in higher than quoted. The extra {fmt(over)} is not charged unless you say yes.</p>
       <div className="spacer" />
-      <Button testId="e8-yes" onClick={() => { store.setOverCapAnswer('yes'); navigate('/g/p9'); }}>Yes, add {fmt(over)}</Button>
-      <Button variant="secondary" testId="e8-no" onClick={() => { store.setOverCapAnswer('no'); navigate('/g/p9'); }}>No, don't add it</Button>
+      <Button testId="e8-yes" onClick={() => { if (tonight) store.setOverCapAnswer('yes'); navigate(tonight ? done : '/g/sample-traffic?ok=1'); }}>Yes, add {fmt(over)}</Button>
+      <Button variant="secondary" testId="e8-no" onClick={() => { if (tonight) store.setOverCapAnswer('no'); navigate(done); }}>No, don't add it</Button>
       <p className="foot">If you say no, it is not charged.</p>
       <Fict>Fictional sample amounts.</Fict>
     </Screen>
@@ -280,7 +288,7 @@ export function P10() {
       {!reason && <p className="foot">Pick what's wrong to send it.</p>}
       <div className="spacer" />
       <Button testId="send-dispute" onClick={() => { if (!reason) return; store.sendDispute(reason); navigate('/g/p11'); }}>Send to {venue.name}</Button>
-      <p className="foot">Questions about drinks or food go to {venue.name}.</p>
+      <p className="foot">Questions about your bar tab go to {venue.name}.</p>
     </Screen>
   );
 }
@@ -311,8 +319,13 @@ export function P11() {
 }
 
 /** Separate sample ride on its own tab: over the cap because of traffic, guest declined on their own phone. */
-export function SampleTrafficReceipt() {
-  const t = sampleTrafficRide(Date.now());
+export function SampleTrafficReceipt({ route }: { route?: Route }) {
+  const base = sampleTrafficRide(Date.now());
+  // ?ok=1: the guest said yes on E8, so the extra posts and there is no declined amount (and no credit).
+  const ok = route?.query.get('ok') === '1';
+  const recon = ok ? reconcile(base.quoteCents, base.finalCents, 'yes') : base.recon;
+  const rideCents = base.quoteCents + recon.postedAdjCents;
+  const t = { ...base, recon, rideCents, totalCents: base.barCents + rideCents };
   return (
     <Screen id="sample-traffic">
       <Top back="/g/demo" ctx="Sample receipt" />
@@ -330,8 +343,8 @@ export function SampleTrafficReceipt() {
         <tbody>
           <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
           <tr><th scope="row">{venue.tabLineName}, quoted fare<span className="note" data-testid="ride-id">Ride ID {t.rideId}</span></th><td className="amt">{fmt(t.quoteCents)}</td></tr>
-          <tr><th scope="row">Ride fare adjustment<span className="note">Within the {fmt(t.capCents)} you saw before booking.</span></th><td className="amt">{fmtSigned(t.recon.postedAdjCents)}</td></tr>
-          <tr data-testid="max-approved"><th scope="row" colSpan={2}>{maxApprovedLine(t.quoteCents + t.capCents)}</th></tr>
+          <tr><th scope="row">Ride fare adjustment<span className="note">{ok ? `Includes the ${fmt(t.finalCents - t.quoteCents - t.capCents)} you approved.` : `Within the ${fmt(t.capCents)} you saw before booking.`}</span></th><td className="amt">{fmtSigned(t.recon.postedAdjCents)}</td></tr>
+          {!ok && <tr data-testid="max-approved"><th scope="row" colSpan={2}>{maxApprovedLine(t.quoteCents + t.capCents)}</th></tr>}
           <tr className="subtotal"><th scope="row">RideNite rides subtotal</th><td className="amt" data-testid="ride-subtotal">{fmt(t.rideCents)}</td></tr>
         </tbody>
         <tbody>

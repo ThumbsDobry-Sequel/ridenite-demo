@@ -42,15 +42,15 @@ export function P2t({ route }: { route: Route }) {
     <Screen id="P2t">
       <Top back="/g/p2" ctx="Type it" />
       <div className="field">
-        <label htmlFor="addr">Address or place</label>
+        <label htmlFor="addr">Area or place</label>
         <input className="input" id="addr" value={q} onChange={(e) => { setQ(e.target.value); setSimulated(false); }}
-          autoComplete="street-address" enterKeyHint="search" data-testid="addr-input" />
+          autoComplete="off" enterKeyHint="search" data-testid="addr-input" />
       </div>
       <Button variant="secondary" icon="pin" testId="use-location" onClick={useLocation}>Use my location</Button>
       {simulated && <Banner tone="info" icon="pin"><span data-testid="sim-location">Sample location (simulated). Your real location is not used.</span></Banner>}
       {q.trim() && (
         <>
-          <p className="foot" aria-live="polite">{results.length ? 'Did you mean' : `No match yet. Try the street name, or ask the ${T.staff}.`}</p>
+          <p className="foot" aria-live="polite">{results.length ? 'Did you mean' : `No match yet. Try the neighborhood, or ask the ${T.staff}.`}</p>
           <div className="stack">
             {results.map((a, i) => (
               <ListRow key={a.line + a.area} icon="pin" compact title={a.line}

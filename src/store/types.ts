@@ -21,6 +21,8 @@ export interface Ride {
   capCents: number;
   /** When the ride counts as booked (end of the undo window). */
   bookedAt: number;
+  /** Pickup time kept when "Demo: next status" skips the trip (else bookedAt + the demo pickup offset). */
+  pickedUpAt?: number;
   /** Set while inside the 10 s undo window; cleared on commit. */
   pending?: boolean;
   consentText: string;
@@ -73,7 +75,7 @@ export interface Confirmation {
   tab: string;
 }
 
-/** Event log entries hold facts only: no reason, notes, condition or drink count fields (UI 14b). */
+/** Event log entries hold facts only: no reason, notes, condition or order count fields (UI 14b). */
 export interface StaffPing { kind: 'guest_request' | 'quiet_request'; seat: string; at: number }
 
 export interface LinkedTab { tab: string; seat: string; guest: string; via: 'seed' | 'table_qr' | 'staff_link'; at: number }

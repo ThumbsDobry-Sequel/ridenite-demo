@@ -31,12 +31,12 @@ export interface TabLine {
 
 export interface TabTotals {
   lines: TabLine[];
-  subtotalCents: number; // drinks + food
-  taxCents: number; // on drinks and food only
+  subtotalCents: number; // bar tab items
+  taxCents: number; // on bar tab items only
   rideCents: number; // quote line + posted adjustment or credit (never the held part)
   heldCents: number;
   totalBeforeTipCents: number;
-  /** Tip prompt base: drinks and food only, never the ride lines. */
+  /** Tip prompt base: bar tab items only, never the ride lines. */
   tipBaseCents: number;
   recon: Reconciliation | null;
 }

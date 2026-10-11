@@ -18,6 +18,11 @@ export const BANNED = /safe ride|get home safe|home safe|leave the light on|ever
 export const SAFE = /\bsafe\b|unsafe/i;
 /** Drink names (Quinn/Nico, Oct 11): the demo tab carries food and neutral items only, nothing that reads as a drinking cue. */
 export const DRINK_NAMES = /\b(old fashioned|house beer|pear necessities|beers?|wines?|cocktails?|martinis?|whiske?y|vodka|tequila|bourbon|margaritas?|sangria|ipa)\b/i;
+/** 'drink'/'drinks' in user copy (Piper/Riley/Quinn, Oct 11): say 'your bar tab' or 'food and items'. The code token 'drink' (MenuItem kind) is skipped. */
+export const DRINKS = /\bdrinks?\b/i;
+const DRINK_TOKEN = /(['"])drink\1/g;
+/** Street addresses (Oct 11): area-only labels everywhere. A number followed by a street word, or a ZIP after VA/DC. */
+export const STREET = /\b\d{2,5} (?:[NSEW] )?[A-Z][a-z]+(?: [A-Z][a-z]+)? (?:St|Street|Blvd|Ave|Avenue|Dr|Rd|Pike|Way|Pl|Ln)\b|\b(?:VA|DC) \d{5}\b/;
 /** Standalone 'lit' reads as alcohol related (founder, Oct 10). Whole word only: little, split, literally pass. */
 export const LIT = /\blit\b/i;
 /** Harper legal items (money-promises memo): whole word or phrase. */
@@ -56,6 +61,10 @@ export function lintText(text, file = '<text>') {
     if (s) problems.push({ file, line: i + 1, match: s[0] });
     const dn = line.match(DRINK_NAMES);
     if (dn) problems.push({ file, line: i + 1, match: dn[0] });
+    const dk = line.replace(DRINK_TOKEN, '').match(DRINKS);
+    if (dk) problems.push({ file, line: i + 1, match: dk[0] });
+    const st = line.match(STREET);
+    if (st) problems.push({ file, line: i + 1, match: st[0] });
     const l = line.match(LIT);
     if (l) problems.push({ file, line: i + 1, match: l[0] });
     const g = line.match(LEGAL);

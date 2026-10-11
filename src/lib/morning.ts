@@ -1,7 +1,7 @@
 import { guestActivity } from './confirmRecord';
 import { venue } from '../venue.config';
 import { morningTotals, type MorningTotals } from './fare';
-import { DEMO_TIMELINE, isChargedStage, pickupAt, rideStage } from './rideState';
+import { dropOffAt, isChargedStage, pickupAt, rideStage } from './rideState';
 import { sampleNightTimes } from './night';
 import type { DemoState } from '../store/types';
 
@@ -35,7 +35,7 @@ export function nightTimes(state: DemoState): { tabOpened: number; booked: numbe
   const r = state.ride && !state.ride.pending ? state.ride : null;
   if (r) {
     const slide = [...state.slides].reverse().find((x) => x.rideId === r.id);
-    return { tabOpened: state.tabOpenedAt, booked: slide?.at ?? r.confirmedAt ?? r.bookedAt, pickedUp: pickupAt(r), complete: r.bookedAt + DEMO_TIMELINE.complete };
+    return { tabOpened: state.tabOpenedAt, booked: slide?.at ?? r.confirmedAt ?? r.bookedAt, pickedUp: pickupAt(r), complete: dropOffAt(r) };
   }
   return sampleNightTimes(state.tabOpenedAt, state.seededAt);
 }

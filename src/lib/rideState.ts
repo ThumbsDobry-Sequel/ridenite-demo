@@ -21,7 +21,8 @@ export const DEMO_TIMELINE: Record<LiveStage, number> = {
   near: 30_000,
   arrived: 45_000,
   picked_up: 60_000,
-  complete: 90_000,
+  // Believable trip (Oct 11): drop-off 14 min after pickup (11:32 -> 11:46). The demo jumps the clock (Demo: next status, or the recorder).
+  complete: 900_000,
 };
 const ORDER: LiveStage[] = ['requested', 'en_route', 'near', 'arrived', 'picked_up', 'complete'];
 
@@ -92,4 +93,7 @@ export const isAcceptedStage = (st: Stage | null | undefined): boolean => !!st &
 export const CHARGED: Stage[] = ['picked_up', 'complete'];
 export const isChargedStage = (st: Stage | null | undefined): boolean => !!st && CHARGED.includes(st);
 /** Simulated pickup time for a ride on the demo timeline. */
-export const pickupAt = (r: { bookedAt: number }): number => r.bookedAt + DEMO_TIMELINE.picked_up;
+export const pickupAt = (r: { bookedAt: number; pickedUpAt?: number }): number => r.pickedUpAt ?? r.bookedAt + DEMO_TIMELINE.picked_up;
+/** Story trip length: drop-off is always this long after pickup, also when "Demo: next status" skips the wait. */
+export const TRIP_MS = DEMO_TIMELINE.complete - DEMO_TIMELINE.picked_up;
+export const dropOffAt = (r: { bookedAt: number; pickedUpAt?: number }): number => pickupAt(r) + TRIP_MS;

@@ -32,7 +32,7 @@ export function B2() {
         <button type="button" className="btn btn--secondary bbtn-56 bseg" aria-pressed={ep === 'guest_request'} data-testid="b2-ask" onClick={() => setEp('guest_request')}>Guest asked</button>
         <button type="button" className="btn btn--secondary bbtn-56 bseg" aria-pressed={ep === 'staff_offer'} data-testid="b2-offer" onClick={() => setEp('staff_offer')}>I offered</button>
       </div>
-      <p className="foot">We record only which one. No reason, notes or drink counts.</p>
+      <p className="foot">We record only which one. No reason or notes.</p>
       <div className="bpanel">
         <p className="callout"><b>Can I get you a car home? It goes on your {T.bill}.</b></p>
         <p className="foot">A car never replaces stopping service.</p>
@@ -126,7 +126,7 @@ export function B3({ route }: { route: Route }) {
           {venue.addresses.slice(3, 7).map((a) => (
             <button key={a.line} type="button" role="radio" aria-checked={d.dest?.line === a.line} className="brow brow--44"
               data-testid={`b3-dest-${a.line.replace(/\W+/g, '-').toLowerCase()}`} onClick={() => store.barPickDest(a)}>
-              <span className="bradio" aria-hidden="true" /><span className="grow">{a.line}<span className="foot"> {a.area.split(',')[0]}</span></span>
+              <span className="bradio" aria-hidden="true" /><span className="grow">{a.line}</span>
             </button>
           ))}
         </div>

@@ -13,7 +13,7 @@ import { Chip, Sheet } from '../../components/primitives';
 import type { BarSettings, FareScenario } from '../../store/types';
 import { barRideHeadline, barStatus, EP_LABEL, HeaderBook, SheetHead, tabCents, toGuest } from './common';
 import { startBooking } from './tonight';
-import { rideRef } from '../../lib/checkLines';
+import { rideRefFor } from '../../lib/checkLines';
 
 /* B6 tab detail, B9 plate card, B10 quiet request, More, B8 settings (trimmed). */
 
@@ -45,7 +45,7 @@ export function B6({ route }: { route: Route }) {
   const tot = tabTotals({
     items: tabItems(t.items), taxRate: venue.taxRate, tabLineName: s.bar.settings.tabLineName,
     rideLineName: ride ? barRideLineName(ride.dest, pickupAt(ride), fmtET) : undefined,
-    ride: ride && charged ? { quoteCents: ride.quoteCents, finalCents: done ? venue.finalFareCents[ride.scenario] + (ride.stopDeltaCents ?? 0) : null, overCapAnswer: isGuestRide ? s.overCapAnswer : null, rideId: rideRef(ride.id), pickupMs: pickupAt(ride), feeChargedCents: ride.feeChargedCents } : null,
+    ride: ride && charged ? { quoteCents: ride.quoteCents, finalCents: done ? venue.finalFareCents[ride.scenario] + (ride.stopDeltaCents ?? 0) : null, overCapAnswer: isGuestRide ? s.overCapAnswer : null, rideId: rideRefFor(ride, s), pickupMs: pickupAt(ride), feeChargedCents: ride.feeChargedCents } : null,
   });
   const rec = ride ? barConfirmLine(s, ride) : null;
   const st = ride && stage ? barStatus(stage, ride) : null;
@@ -68,7 +68,7 @@ export function B6({ route }: { route: Route }) {
           <tr className="btab__total" data-testid="b6-total"><th scope="row">Total before tip</th><td className="num">{fmt(tot.totalBeforeTipCents)}</td></tr>
         </tbody>
       </table>
-      <p className="foot" data-testid="b6-tip-base">Tip prompt base: {fmt(tot.tipBaseCents)} (drinks and food, not the ride).</p>
+      <p className="foot" data-testid="b6-tip-base">Tip prompt base: {fmt(tot.tipBaseCents)} (food and items, not the ride).</p>
       {ride && !charged && stage !== 'no_cars' && <p className="foot" data-testid="b6-not-yet">Ride pending pickup. The fare goes on this {T.bill} at pickup.</p>}
       {ride && stage === 'no_cars' && <p className="foot" data-testid="b6-no-driver">No driver found. Nothing was added to this {T.bill}.</p>}
       {ride && charged && !done && <p className="foot">Any fare adjustment or credit posts as its own line after drop-off.</p>}
@@ -235,7 +235,7 @@ export function B8({ route }: { route: Route }) {
       <Group title="Rides and pricing">
         <Seg label="Price display" value={st.priceMode} onChange={set('priceMode')} testId="set-price"
           options={[{ id: 'fare_on_tab', label: `Fare on ${T.bill}` }, { id: 'venue_perk', label: `Venue perk, first ${fmt(venue.perkCents)}` }]} />
-        <p className="foot">Offered to any guest. Never tied to drinks purchased.</p>
+        <p className="foot">Offered to any guest. Never tied to what the guest ordered.</p>
         <Seg label={`${T.Bill} line name`} value={st.tabLineName} onChange={set('tabLineName')} testId="set-line"
           options={[{ id: 'Courtesy car', label: 'Courtesy car' }, { id: 'RideNite Ride', label: 'RideNite Ride' }]} />
       </Group>

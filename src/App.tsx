@@ -28,11 +28,11 @@ const ROUTES: Record<string, (r: Route) => ReactNode> = {
   '/g/p7': () => <P7 />, '/g/p8': () => <P8 />, '/g/p13': () => <P13 />, '/g/p13f': () => <P13f />, '/g/e5': () => <E5 />,
   '/g/e1': () => <E1 />, '/g/e4': () => <E4 />, '/g/e6': () => <E6 />,
   '/g/inbox': () => <Inbox />, '/g/m1': () => <M1 />, '/g/m2': () => <M2 />, '/g/p9': () => <P9 />, '/g/p10': () => <P10 />,
-  '/g/p11': () => <P11 />, '/g/e7': () => <E7 />, '/g/e8': () => <E8 />, '/g/sample-traffic': () => <SampleTrafficReceipt />, '/g/demo': () => <DemoPanel />,
+  '/g/p11': () => <P11 />, '/g/e7': () => <E7 />, '/g/e8': () => <E8 />, '/g/e8t': () => <E8 tonight />, '/g/sample-traffic': (r) => <SampleTrafficReceipt route={r} />, '/g/demo': () => <DemoPanel />,
   '/h': (r) => <HandoffRoute route={r} />, '/v': (r) => <TableQrRoute route={r} />,
   '/o': () => <OwnerIndex />, '/o/summary': () => <OwnerSummary />, '/o/limits': () => <OwnerLimits />, '/o/bar': () => <OwnerBar />, '/o/statement': () => <OwnerStatement />,
 };
-const DAY = ['/g/inbox', '/g/m1', '/g/m2', '/g/p9', '/g/p10', '/g/p11', '/g/e8', '/g/sample-traffic'];
+const DAY = ['/g/inbox', '/g/m1', '/g/m2', '/g/p9', '/g/p10', '/g/p11', '/g/e8', '/g/e8t', '/g/sample-traffic'];
 
 function NotFound() {
   return (

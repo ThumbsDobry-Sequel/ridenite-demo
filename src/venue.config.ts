@@ -3,7 +3,7 @@
  * name, address, phone, pickup spot, menu, tax, sample quote and fare scenarios,
  * driver, guest and seeded addresses. Swapping venues means editing only this file.
  *
- * SIMULATED DEMO. Maison Cheryl (2900 Wilson Blvd, Arlington, VA) is shown with the
+ * SIMULATED DEMO. Maison Cheryl (Clarendon area) is shown with the
  * venue's permission (founder decision 2026-10-10); it is not a live RideNite partner. Menu item names come from its
  * published menu; every price, guest, driver, plate, phone number and address below
  * is fictional sample data (555-01xx numbers, example.test emails).
@@ -18,7 +18,8 @@ export interface Address { line: string; area: string; aliases?: string[] }
 export const venue = {
   slug: 'maison-cheryl',
   name: 'Maison Cheryl',
-  addressLine: '2900 Wilson Blvd, Suite 104, Arlington, VA 22201',
+  /** Area only (Piper/Riley/Quinn, Oct 11): no street address on any guest, staff, email or receipt screen. */
+  addressLine: 'Maison Cheryl, Clarendon area',
   neighborhood: 'Clarendon, Arlington',
   /** Venue header is the venue's own PNG logo (design rev 04.1: no venue font). Light recolor on night, teal on day. */
   logo: { night: '/venue/mc-horizontal-light.png', day: '/venue/mc-horizontal-teal.png', width: 471, height: 96 },
@@ -50,10 +51,10 @@ export const venue = {
     "If the guest raises a concern, get the manager or security first and follow the venue's procedure. The car is one option.",
   ],
 
-  /** Tax applies to drinks and food only, never ride lines (POS 3a item 5). */
+  /** Tax applies to bar tab items only, never ride lines (POS 3a item 5). */
   taxRate: 0.11,
   taxLabel: 'Tax 11%',
-  taxNote: 'VA sales 6% + Arlington meals 5%, on drinks and food',
+  taxNote: 'VA sales 6% + Arlington meals 5%, on food and items',
 
   priceMode: 'fare_on_tab' as PriceMode,
   perkCents: 1000,
@@ -102,7 +103,7 @@ export const venue = {
     first: 'Maya',
     phoneLast4: '0127',
     email: 'maya.r@example.test',
-    home: { line: '655 N Harrison St', area: 'Westover, Arlington, VA 22205' } as Address,
+    home: { line: 'Westover area', area: 'Westover, Arlington' } as Address,
   },
   friend: { name: 'Jess', phone: '(555) 010-4471' },
   driver: {
@@ -118,19 +119,21 @@ export const venue = {
   smsFrom: '(555) 010-0100',
 
   /** 'Use my location' is SIMULATED: no geolocation or geocoder call, it fills this sample address. */
-  sampleLocation: { line: '1200 N Garfield St', area: 'Clarendon, Arlington, VA 22201' } as Address,
+  sampleLocation: { line: 'Courthouse area', area: 'Courthouse, Arlington' } as Address,
 
   /** Seeded address list for forgiving typed matching (UI 9b). Fictional sample data. */
   addresses: [
-    { line: '655 N Harrison St', area: 'Westover, Arlington, VA 22205' },
-    { line: '655 S Harrison St', area: 'Arlington, VA 22204' },
-    { line: '655 Harrison St NW', area: 'Washington, DC' },
-    { line: '1200 N Garfield St', area: 'Clarendon, Arlington, VA 22201' },
-    { line: '3100 Clarendon Blvd', area: 'Clarendon, Arlington, VA 22201' },
-    { line: '4301 Fairfax Dr', area: 'Ballston, Arlington, VA 22203' },
-    { line: '1500 Wilson Blvd', area: 'Rosslyn, Arlington, VA 22209' },
-    { line: '2200 Columbia Pike', area: 'Arlington, VA 22204' },
-    { line: 'Capital One Arena', area: '601 F St NW, Washington, DC', aliases: ['capital one arena', 'the arena'] },
+    // Area-only labels (Oct 11): neighborhoods, never street addresses. Index 3 is the sample location and the staff
+    // default; 4-6 are the seeded bar rides; the bartender picker shows 3-6.
+    { line: 'Westover area', area: 'Westover, Arlington', aliases: ['home', 'westover village'] },
+    { line: 'Lyon Park area', area: 'Lyon Park, Arlington' },
+    { line: 'Shirlington area', area: 'Shirlington, Arlington' },
+    { line: 'Courthouse area', area: 'Courthouse, Arlington' },
+    { line: 'Lyon Village area', area: 'Lyon Village, Arlington' },
+    { line: 'Ballston area', area: 'Ballston, Arlington' },
+    { line: 'Rosslyn area', area: 'Rosslyn, Arlington' },
+    { line: 'Columbia Heights area', area: 'Columbia Heights, Washington DC' },
+    { line: 'Penn Quarter area', area: 'Penn Quarter, Washington DC', aliases: ['downtown', 'downtown dc'] },
   ] as Address[],
   /** Bartender side (M2). Seeded open tabs per UI 7 B1, with Maison Cheryl numbers. Fictional guests. */
   bar: {
@@ -163,7 +166,7 @@ export const venue = {
     seededRides: [
       { tab: '4472', stage: 'arrived', car: 'White Toyota Prius', plate: 'T555031C', plateSpoken: 'T 5 5 5 0 3 1 C', driver: 'Ravi', partner: 'Northside Car Service', scenario: 'higher' },
       { tab: '4474', stage: 'en_route', car: 'Black Honda Accord', plate: 'XKR-2207', plateSpoken: 'X K R 2 2 0 7', driver: 'Mei', partner: 'Northside Car Service', scenario: 'lower' },
-      { tab: '4476', stage: 'declined', car: 'Silver Ford Fusion', plate: 'VBN-4410', plateSpoken: 'V B N 4 4 1 0', driver: 'Omar', partner: 'Clarendon Livery', scenario: 'higher' },
+      { tab: '4476', stage: 'en_route', car: 'Silver Ford Fusion', plate: 'VBN-4410', plateSpoken: 'V B N 4 4 1 0', driver: 'Omar', partner: 'Clarendon Livery', scenario: 'higher' },
     ] as { tab: string; stage: 'arrived' | 'en_route' | 'declined'; car: string; plate: string; plateSpoken: string; driver: string; partner: string; scenario: 'higher' | 'lower' | 'equal' | 'over' }[],
     rebookPartner: 'Arlington Black Car',
     quietTab: '4473',

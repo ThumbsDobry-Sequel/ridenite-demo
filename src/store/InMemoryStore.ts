@@ -1,7 +1,7 @@
 import { venue, type Address } from '../venue.config';
 import { capFor, type OverCapAnswer } from '../lib/fare';
 import type { Handoff } from '../lib/handoff';
-import { bookedAtFor, isAcceptedStage, isChargedStage, nextStage, QUOTE_VALID_MS, rideStage, UNDO_MS, type LiveStage, type Stage } from '../lib/rideState';
+import { bookedAtFor, pickupAt, isAcceptedStage, isChargedStage, nextStage, QUOTE_VALID_MS, rideStage, UNDO_MS, type LiveStage, type Stage } from '../lib/rideState';
 import { seedState } from './seed';
 import type { UrlLink } from '../lib/urlLink';
 import type {
@@ -207,7 +207,9 @@ export class InMemoryStore implements DemoStore {
     const r = this.state.ride;
     if (!r || r.terminal || r.pending) return;
     const cur = this.stageOf(r) as LiveStage;
-    this.set({ ride: { ...r, hold: undefined, bookedAt: bookedAtFor(nextStage(cur), this.now()) } });
+    // Skipping the trip keeps the real pickup time, so pickup, drop-off (pickup + trip) and summary still agree.
+    const keep = cur === 'picked_up' ? { pickedUpAt: pickupAt(r) } : {};
+    this.set({ ride: { ...r, ...keep, hold: undefined, bookedAt: bookedAtFor(nextStage(cur), this.now()) } });
   }
   releaseHold(to?: LiveStage) {
     const r = this.state.ride;

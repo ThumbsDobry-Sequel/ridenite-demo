@@ -182,8 +182,13 @@ describe('sample owner-statement rides, seeded relative to now (SCOPE 23:07)', (
     expect(final.length).toBeGreaterThanOrEqual(1);
     expect(open.length).toBeGreaterThanOrEqual(1);
     for (const r of final) expect(now - r.pickupMs).toBeGreaterThan(90 * 86_400_000);
-    // recent ride 2 days ago (Thu Oct 8) -> open until Jan 6
-    expect(rides.find((r) => now - r.pickupMs === 2 * 86_400_000)!.status).toBe('Return window open until Jan 6');
+    // seeds count back from 11 PM ET on the demo night: 1 day = Fri Oct 9 (traffic ride RN-NHMCXN), 2 days = Thu Oct 8 -> open until Jan 6
+    expect(rides.find((r) => r.rideNo === '4822')!.status).toBe('Return window open until Jan 6');
+    const traffic = rides.find((r) => r.rideNo === '4823')!;
+    expect(traffic.rideId).toBe('RN-NHMCXN');
+    expect(new Date(traffic.pickupMs).toISOString()).toBe('2026-10-10T03:00:00.000Z'); // Fri Oct 9, 11:00 PM ET
+    // same pickup date on Sunday morning
+    expect(sampleOwnerRides(Date.parse('2026-10-11T13:00:00Z')).find((r) => r.rideNo === '4823')!.pickupMs).toBe(traffic.pickupMs);
     for (const r of open) expect(r.status).toMatch(/^Return window open until [A-Z][a-z]{2} \d{1,2}$/);
     for (const r of rides) { expect(r.label).toBe('Sample data'); expect(r.tone).toBe('muted'); expect(r.rideId).toMatch(/^RN-[0-9A-Z]{6}$/); }
   });

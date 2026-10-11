@@ -79,10 +79,10 @@ test('first-time guest: Where to, suggestions from first keystroke, Confirm, boo
   await expect(page.locator('[data-screen=P2]')).toBeVisible();
   await expect(page.getByTestId('dest-voice')).toHaveCount(0); // P2v removed for v1
   await page.getByTestId('dest-type').tap();
-  await page.getByTestId('addr-input').pressSequentially('6');
+  await page.getByTestId('addr-input').pressSequentially('w');
   await expect(page.getByTestId('suggest-0')).toBeVisible();
-  await page.getByTestId('addr-input').pressSequentially('55 harison');
-  await expect(page.getByTestId('suggest-0')).toContainText('655 N Harrison St');
+  await page.getByTestId('addr-input').pressSequentially('estovr');
+  await expect(page.getByTestId('suggest-0')).toContainText('Westover area');
   await page.getByTestId('suggest-0').tap();
   await expect(page.getByTestId('confirm-dest')).toContainText('Westover area');
   await slide(page);
@@ -99,7 +99,7 @@ test('Use my location is simulated: no geolocation call, labeled sample', async 
   await open(page, '/g/p2t');
   await page.getByTestId('use-location').tap();
   await expect(page.getByTestId('sim-location')).toContainText('Sample location (simulated)');
-  await expect(page.getByTestId('suggest-0')).toContainText('1200 N Garfield St');
+  await expect(page.getByTestId('suggest-0')).toContainText('Courthouse area');
   expect(await page.evaluate(() => (window as any).__geoCalled)).toBe(false);
 });
 
@@ -153,7 +153,7 @@ test('E1 to E8 reachable from the fault panel; each starts fresh', async ({ page
     E5: /Your ride is still booked/,
     E6: /Your driver cancelled\. Nothing was added to your tab\./,
     E7: /Add this stop\?[\s\S]*New quote: \$24\.00\. Final fare may differ by up to \$4\.80\. Never more than \$28\.80 unless you approve a change\./,
-    E8: /Your ride came to \$27\.40\./,
+    E8: /Your ride came to \$28\.30\.[\s\S]*Ride ID RN-NHMCXN/,
   };
   await open(page, '/g/demo');
   for (const id of Object.keys(expectText)) {
@@ -166,7 +166,8 @@ test('E1 to E8 reachable from the fault panel; each starts fresh', async ({ page
   await nav(page, '/g/demo');
   await page.getByTestId('fault-E8').tap();
   await expect(page.getByTestId('e8-added')).toHaveText('+$4.20');
-  await expect(page.getByTestId('e8-over')).toHaveText('$2.20');
+  await expect(page.getByTestId('e8-over')).toHaveText('$3.10');
+  await expect(page.getByTestId('e8-ride')).toContainText('Night of Fri, Oct 9');
   // needs-OK line is neutral, not amber/warning
   const bg = await page.getByTestId('needs-ok').evaluate((e) => getComputedStyle(e).backgroundColor);
   const warn = await page.evaluate(() => { const d = document.createElement('div'); d.style.background = 'var(--warning)'; document.body.append(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; });
@@ -186,7 +187,7 @@ test('P9 totals for every fare scenario, instant tip recompute, tip excludes rid
   await page.getByTestId('tip-0').tap();
   await expect(total).toHaveText('$78.99');
   await page.getByTestId('tip-20').tap();
-  await expect(page.getByText('Tip is on drinks and food ($49.00), not the ride.')).toBeVisible();
+  await expect(page.getByText('Tip is on food and items ($49.00), not the ride.')).toBeVisible();
   for (const [scen, want] of [['lower', '$83.09'], ['over', '$89.39'], ['higher', '$88.79']] as const) {
     await nav(page, '/g/demo');
     await page.getByTestId(`scen-${scen}`).tap();
@@ -195,10 +196,10 @@ test('P9 totals for every fare scenario, instant tip recompute, tip excludes rid
   }
   await nav(page, '/g/demo');
   await page.getByTestId('scen-over').tap();
-  await nav(page, '/g/e8');
+  await nav(page, '/g/e8t');
   await page.getByTestId('e8-yes').tap();
   await expect(total).toHaveText('$91.59'); // confirmed by the product lead; POS 3b row corrected
-  await nav(page, '/g/e8');
+  await nav(page, '/g/e8t');
   await page.getByTestId('e8-no').tap();
   await expect(total).toHaveText('$89.39');
 });
@@ -255,7 +256,7 @@ test('owner preview: label on every screen, every number tagged Sample data', as
   for (const r of ['/o/summary', '/o/limits', '/o/bar']) {
     await nav(page, r);
     const untagged = await page.$$eval('main p, main span, main b', (els) =>
-      els.filter((e) => /\d/.test(e.textContent ?? '') && e.children.length === 0 && !e.closest('.kv__v, .callout, .row, [data-testid=two-taps]') && !/Fri night|Table|tab #/.test(e.textContent ?? '')).map((e) => e.textContent));
+      els.filter((e) => /\d/.test(e.textContent ?? '') && e.children.length === 0 && !e.closest('.kv__v, .callout, .row, [data-testid=two-taps]') && !/Fri night|night of|Table|tab #/.test(e.textContent ?? '')).map((e) => e.textContent));
     expect(untagged).toEqual([]);
     const numbers = await page.locator('.kv__v, [data-testid=two-taps], .callout:has(.sample-tag)').count();
     const tags = await page.locator('.sample-tag').count();

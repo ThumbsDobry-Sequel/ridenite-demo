@@ -111,7 +111,8 @@ test.describe('home @sizes', () => {
       await nav(page, '/g/home');
       await expect(page.getByTestId('ride-home')).toHaveCount(0);
     }
-    await page.clock.runFor(60_000); // complete
+    await page.clock.fastForward(15 * 60_000); // complete (14 min trip, Oct 11)
+    await page.clock.runFor(1_000);
     await nav(page, '/g/home');
     await expect(page.getByTestId('ride-home')).toBeVisible();
     // direct store guard

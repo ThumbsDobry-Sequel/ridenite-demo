@@ -15,6 +15,8 @@ import { tabItems } from './tab';
 import type { MenuItem } from '../venue.config';
 import { venue } from '../venue.config';
 import { rideRef } from './checkLines';
+import { etYmdh } from './night';
+import { etWallToUtc } from './hold';
 
 const ymd = (iso: string) => { const [y, m, d] = iso.split('-').map(Number); return { y, m, d }; };
 
@@ -72,11 +74,18 @@ const DAY = 86_400_000;
  * Sample owner-statement rides seeded relative to now (SCOPE 23:07): some older than the 90-day window
  * ("Payout final") and some recent ("Return window open until Jan 8"). Fictional amounts reuse spec fares.
  */
+/** Seeds count back from 11 PM ET on the latest demo night (the ET date 18 h ago, so Saturday night and Sunday
+ *  morning both anchor on Sat), so "1 day ago" is always the night before (Fri, Oct 9 for the Sat, Oct 10 night). */
+export function sampleAnchor(now: number): number {
+  const n = etYmdh(now - 18 * 3_600_000);
+  return etWallToUtc(n.y, n.m, n.d, 23, 0);
+}
+
 export function sampleOwnerRides(now: number): SampleOwnerRide[] {
   // [days ago, ride cents]. Ride 4823 (index 5): final fare $28.30 over the $25.20 approved cap, guest declined; charged $25.20.
   const seeds: [number, number][] = [[120, 2100], [95, 2460], [40, 1890], [1, 2460], [2, 2740], [1, 2520]];
   return seeds.map(([ago, cents], i) => {
-    const pickupMs = now - ago * DAY;
+    const pickupMs = sampleAnchor(now) - ago * DAY;
     const end = returnWindowEnds(pickupMs);
     return { rideId: rideRef(`sample-owner-${i}-${venue.slug}`), rideNo: String(4818 + i), pickupMs, feeChargedCents: venue.perRideFeeCents, rideCents: cents, returnWindowEnds: ymdIso(end), status: returnWindowStatus(end, now), tone: STATUS_TONE, label: SAMPLE_LABEL };
   });

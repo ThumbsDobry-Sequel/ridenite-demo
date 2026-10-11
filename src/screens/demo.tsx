@@ -26,7 +26,7 @@ export const FAULTS: { id: Fault; label: string; route: string }[] = [
 export const ALL_GUEST_ROUTES = [
   '/g/home', '/g/p1', '/g/p1h', '/g/p3w', '/g/p12', '/g/p12s', '/g/p2', '/g/p2t', '/g/p3',
   '/g/p4', '/g/p5', '/g/p5w', '/g/e3', '/g/p6', '/g/p7', '/g/p8', '/g/p13', '/g/p13f',
-  '/g/e1', '/g/e2', '/g/e4', '/g/e5', '/g/e6', '/g/e7', '/g/e8', '/g/sample-traffic', '/g/inbox', '/g/m1', '/g/m2', '/g/p9', '/g/p10', '/g/p11', '/g/demo', '/o', '/o/summary', '/o/limits', '/o/bar',
+  '/g/e1', '/g/e2', '/g/e4', '/g/e5', '/g/e6', '/g/e7', '/g/e8', '/g/e8t', '/g/sample-traffic', '/g/inbox', '/g/m1', '/g/m2', '/g/p9', '/g/p10', '/g/p11', '/g/demo', '/o', '/o/summary', '/o/limits', '/o/bar',
 ];
 
 /** Demo panel: faults (each starts from a fresh ride state), fare scenarios, tab link, reset. */

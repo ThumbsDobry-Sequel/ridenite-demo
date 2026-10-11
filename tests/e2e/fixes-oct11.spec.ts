@@ -39,8 +39,9 @@ test('ride times agree: P6 arrive time = P7 drop-off = P9 drop-off; Sunday morni
   await page.clock.runFor(10_000 + 61_000); // undo window, then picked up
   await nav(page, '/g/p6');
   const arrive = (await page.getByTestId('p6-arrive').innerText()).replace('arrive about ', '').trim();
-  await expect(page.getByTestId('p6-eta')).toHaveText(/^\d+ min$/);
-  await page.clock.runFor(31_000);
+  await expect(page.getByTestId('p6-eta')).toHaveText('14 min');
+  await expect(page.getByTestId('p6-arrive')).toHaveText('arrive about 11:46 PM');
+  await page.clock.fastForward(14 * 60_000);
   await nav(page, '/g/p7');
   await expect(page.locator('body')).toContainText(arrive);
   await store(page, "s.barCloseTab(s.getState().linkedTab.tab, 'closed')");
@@ -67,11 +68,12 @@ test('guest ride screens, SMS and receipts are area-only; pickup at the venue fr
   await expect(page.locator('main')).toContainText('Ask staff, then confirm the price.');
   await expect(page.getByTestId('ride-home')).toContainText('To Westover area');
   const street = /\d{2,} [NS]? ?[A-Z][a-z]+ (St|Blvd|Dr|Pike|Rd|Ave)\b|Fillmore|Harrison/;
-  for (const r of ['/g/home', '/g/p3', '/g/p5', '/g/e3', '/g/p6', '/g/p7', '/g/p9', '/g/m1', '/g/m2']) {
+  for (const r of ['/g/home', '/g/p2t?loc=1', '/g/p3', '/g/p5', '/g/e3', '/g/p6', '/g/p7', '/g/p9', '/g/m1', '/g/m2', '/b/tonight', '/b/live', '/b/history', '/b/sheet?tab=4475']) {
     await nav(page, r);
     const t = await page.locator('main').innerText();
     // the venue's own business address in the receipt footer is not a ride location
-    expect(t.replace(/2900 Wilson Blvd, Suite 104, Arlington, VA 22201/g, ''), r).not.toMatch(street);
+    expect(t, r).not.toMatch(street);
+    expect(t, r).not.toMatch(/\b(VA|DC) \d{5}\b|Wilson Blvd/);
   }
   await nav(page, '/g/p5');
   await expect(page.locator('main')).toContainText('Pickup at front door, Maison Cheryl');
@@ -95,11 +97,11 @@ test('over cap, guest declined: receipt says the approved maximum only; owner st
   await nav(page, '/g/m1');
   await expect(page.getByTestId('max-approved')).toHaveText("Ride home: $25.20. That's the most you approved, so the final fare can't add more.");
   await expect(page.locator('main')).not.toContainText(money);
-  await nav(page, '/g/e8');
+  await nav(page, '/g/e8t');
   await expect(page.locator('main')).toContainText('If you say no, it is not charged.');
   await expect(page.locator('main')).not.toContainText(money);
   await nav(page, '/o/statement');
-  await expect(page.getByTestId('quote-credit-line')).toContainText(/^Quote adjustment credit, ride RN-[A-Z0-9]{6}, Oct 9: -\$3\.10 Sample data$/);
+  await expect(page.getByTestId('quote-credit-line')).toContainText(/^Quote adjustment credit, ride RN-NHMCXN, Oct 9: -\$3\.10 Sample data$/);
   await expect(page.getByTestId('quote-credit-footnote')).toHaveText("When a ride's final fare is above the guest's approved cap and the guest declines the difference, we credit the difference against our fees, up to $10 per ride. Credits apply to future invoices and aren't paid in cash.");
   for (const l of await page.getByTestId('fee-return-line').allInnerTexts()) expect(l).toMatch(/ride RN-[A-Z0-9]{6},/);
 });
@@ -136,7 +138,7 @@ for (const stage of ['en_route', 'picked_up'] as const) {
     await expect(page.locator(`[data-screen=${stage === 'en_route' ? 'P5' : 'P6'}]`)).toBeVisible();
     const r = await page.evaluate(() => (window as any).__ridenite.store.getState().ride);
     expect(r).toMatchObject({ quoteCents: 2400, capCents: 480, originalQuoteCents: 2100, stopDeltaCents: 300 });
-    await page.clock.runFor(120_000);
+    await page.clock.fastForward(15 * 60_000);
     await nav(page, '/g/p9');
     // final fare $24.60 + $3.00 = $27.60, within the new $28.80 maximum: quote $24.00 + adjustment $3.60
     await expect(page.getByTestId('ride-subtotal')).toHaveText('$27.60');
@@ -152,7 +154,7 @@ for (const stage of ['en_route', 'picked_up'] as const) {
     const after = await page.evaluate(() => (window as any).__ridenite.store.getState().ride);
     expect(after).toMatchObject({ quoteCents: 2100, capCents: 420, dest: before.dest });
     expect(after.stopDeltaCents).toBeUndefined();
-    await page.clock.runFor(120_000);
+    await page.clock.fastForward(15 * 60_000);
     await nav(page, '/g/p9');
     await expect(page.getByTestId('ride-subtotal')).toHaveText('$24.60');
     await expect(page.getByTestId('total')).toHaveText('$88.79');

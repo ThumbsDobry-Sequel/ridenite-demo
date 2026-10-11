@@ -175,6 +175,9 @@ describe('Bartender store (M2)', () => {
   });
   it('declined ride rebooks in one call with a new car', () => {
     const { store } = mk();
+    // Seeded as "Ride booked" (Oct 11); the driver then cancels.
+    expect(store.stageOf(store.barRides().find((r) => r.tab === '4476')!)).toBe('en_route');
+    store.driverCancel('r-4476-seed');
     const declined = store.barRides().find((r) => r.tab === '4476')!;
     expect(store.stageOf(declined)).toBe('canceled_by_driver');
     const n = store.barRebook(declined.id);

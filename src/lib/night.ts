@@ -29,7 +29,7 @@ export const nightLabel = (now: number): string => fmtNightLong(nightDate(now));
 export const TAB_OPEN_AGO_MS = 4 * 60 * 60 * 1000;
 export const seededTabOpen = (now: number): number => Math.round((now - TAB_OPEN_AGO_MS) / 60_000) * 60_000;
 
-/** Sample drink times, spread between tab open and now (open < t < now). */
+/** Sample order times, spread between tab open and now (open < t < now). */
 export function drinkTimes(openedAt: number, now: number, n: number): number[] {
   const step = (now - openedAt) / (n + 1);
   return Array.from({ length: n }, (_, i) => Math.round((openedAt + step * (i + 1)) / 60_000) * 60_000);

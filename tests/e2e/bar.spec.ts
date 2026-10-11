@@ -32,7 +32,7 @@ const SCREENS: { name: string; path: string; prep?: string }[] = [
   { name: 'B3 with quote', path: '/b/sheet?tab=4471', prep: "s.barStartDraft('4471','guest_request')" },
   { name: 'B3 waiting', path: '/b/sheet?tab=4475', prep: "s.barStartDraft('4475','staff_offer')" },
   { name: 'B3 QR', path: '/b/sheet?tab=4475', prep: "s.barStartDraft('4475','staff_offer'); s.barSetMode('qr')" },
-  { name: 'B3 staff', path: '/b/sheet?tab=4475', prep: "s.barStartDraft('4475','staff_offer'); s.barPickDest({ line: '3100 Clarendon Blvd', area: 'Clarendon, Arlington, VA 22201' })" },
+  { name: 'B3 staff', path: '/b/sheet?tab=4475', prep: "s.barStartDraft('4475','staff_offer'); s.barPickDest({ line: 'Lyon Village area', area: 'Lyon Village, Arlington' })" },
   { name: 'B3h', path: '/b/sheet/help', prep: "s.barStartDraft('4471','guest_request')" },
   { name: 'Booked', path: '/b/booked?ride=r-4472-seed' },
   { name: 'B4', path: '/b/live' },
@@ -81,6 +81,7 @@ for (const sc of SCREENS) {
 test.describe('M2 layout (Riley 6, Piper A)', () => {
   test('A2 Guest asked / I offered and Rebook at least 56; Book ride and Book at least 64 @bar', async ({ page }) => {
     await tonight(page);
+    await store(page, "s.driverCancel('r-4476-seed')"); // seeded as Ride booked (Oct 11); driver cancels
     for (const id of ['ask-4471', 'offer-4471', 'rebook-4476']) expect((await page.getByTestId(id).boundingBox())!.height, id).toBeGreaterThanOrEqual(56);
     const br = (await bookRide(page).boundingBox())!;
     expect(br.height).toBeGreaterThanOrEqual(wide(page) ? 44 : 64);
@@ -110,7 +111,7 @@ test.describe('M2 layout (Riley 6, Piper A)', () => {
     await tonight(page);
     await page.getByTestId('offer-4475').tap();
     await page.getByTestId('b3-mode-staff').tap();
-    await page.getByTestId('b3-dest-3100-clarendon-blvd').tap();
+    await page.getByTestId('b3-dest-lyon-village-area').tap();
     for (const y of [0, 10_000]) {
       await page.evaluate((v) => { window.scrollTo(0, v); document.querySelector('.bdrawer')?.scrollTo(0, v); }, y);
       await expect(page.getByTestId('b3-book')).toBeInViewport({ ratio: 1 });
@@ -146,7 +147,7 @@ test.describe('M2 booking rules (Piper B)', () => {
     await expect(page.getByTestId('b3-saw')).toHaveAttribute('aria-checked', 'false');
     await expect(book).toBeDisabled();
     // quote alone
-    await page.getByTestId('b3-dest-3100-clarendon-blvd').tap();
+    await page.getByTestId('b3-dest-lyon-village-area').tap();
     await expect(page.getByTestId('b3-quote')).toHaveText('$21.00');
     await expect(page.getByTestId('b3-saw')).toHaveAttribute('aria-checked', 'false');
     await expect(book).toBeDisabled();
@@ -177,7 +178,7 @@ test.describe('M2 booking rules (Piper B)', () => {
       await expect(page.getByTestId('b3-ep')).toHaveText(pill);
       expect((await state(page)).bar.draft.ep).toBe(ep);
       await page.getByTestId('b3-mode-staff').tap();
-      await page.getByTestId('b3-dest-3100-clarendon-blvd').tap();
+      await page.getByTestId('b3-dest-lyon-village-area').tap();
       await page.getByTestId('b3-saw').tap();
       await page.getByTestId('b3-book').tap();
       const r = (await state(page)).bar.rides.find((x: any) => x.tab === '4475');
@@ -311,7 +312,8 @@ test.describe('M2 handoff and live rides (Piper C)', () => {
     await page.clock.install();
     await open(page, '/b/live');
     await expect(page.getByTestId('ride-card-4472')).toBeVisible();
-    await page.clock.runFor(60_000);
+    await page.clock.fastForward(15 * 60_000); // 14 min trip (Oct 11)
+    await page.clock.runFor(1_000);
     await expect(page.getByTestId('chip-4472')).toHaveText('Completed');
     await page.clock.runFor(10 * 60_000 + 1_000);
     await expect(page.getByTestId('ride-card-4472')).toHaveCount(0);
@@ -319,6 +321,7 @@ test.describe('M2 handoff and live rides (Piper C)', () => {
 
   test('C4 driver declined: banner with one-tap Rebook; rebook works (B4 and Tonight) @bar', async ({ page }) => {
     await open(page, '/b/live');
+    await store(page, "s.driverCancel('r-4476-seed')"); // seeded as Ride booked (Oct 11); driver cancels
     const banner = page.getByTestId('decline-banner');
     await expect(banner).toBeVisible();
     await expect(banner).toHaveAttribute('role', 'alert');
@@ -328,6 +331,7 @@ test.describe('M2 handoff and live rides (Piper C)', () => {
     await expect(page.getByTestId('chip-4476')).toHaveText('Requested');
     // Tonight card path
     await tonight(page);
+    await store(page, "s.driverCancel('r-4476-seed')");
     await page.getByTestId('rebook-4476').tap();
     await expect(page.getByTestId('status-4476')).toHaveText('Requested');
   });
@@ -432,12 +436,12 @@ test.describe('M2 tab detail B6 (Piper D)', () => {
     await tonight(page);
     await page.getByTestId('offer-4475').tap();
     await page.getByTestId('b3-mode-staff').tap();
-    await page.getByTestId('b3-dest-3100-clarendon-blvd').tap();
+    await page.getByTestId('b3-dest-lyon-village-area').tap();
     await page.getByTestId('b3-saw').tap();
     await page.getByTestId('b3-book').tap();
     await page.clock.runFor(60_500);
     await nav(page, '/b/tab?tab=4475');
-    await expect(page.getByTestId('b6-ride_quote').locator('th')).toContainText(/^RideNite car home, Clarendon area, \d{1,2}:\d{2} [AP]M/);
+    await expect(page.getByTestId('b6-ride_quote').locator('th')).toContainText(/^RideNite car home, Lyon Village area, \d{1,2}:\d{2} [AP]M/);
     const rec = page.getByTestId('b6-record');
     await expect(rec).toContainText(/Booked by staff, price shown to guest, \d{1,2}:\d{2} [AP]M/);
     await expect(rec).toContainText('Quote $21.00, may differ by up to $4.20');
@@ -496,7 +500,7 @@ test.describe('Tab close with a ride pending pickup (SCOPE 22:22)', () => {
     await page.clock.runFor(52_000);
     await expect(page.getByTestId('b6-closed')).toHaveText('Tab closed.');
     await expect(page.getByTestId('b6-pending')).toHaveCount(0);
-    await expect(page.getByTestId('b6-ride_quote')).toContainText('RideNite car home, Clarendon area');
+    await expect(page.getByTestId('b6-ride_quote')).toContainText('RideNite car home, Courthouse area');
   });
 
   test('close, then the driver cancels before pickup: the tab closes clean with no ride line @bar', async ({ page }) => {

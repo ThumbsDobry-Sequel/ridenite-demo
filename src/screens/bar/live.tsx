@@ -124,7 +124,7 @@ export function B5() {
           );
         })}
       </div>
-      <p className="fict">Counts and rows only. No reasons, notes or drink counts. Earlier rides tonight are not in this demo.</p>
+      <p className="fict">Counts and rows only. No reasons or notes. Earlier rides tonight are not in this demo.</p>
     </main>
   );
 }

@@ -63,7 +63,7 @@ export interface LineItem { name: string; cents: number; kind: 'drink' | 'food' 
 export interface MorningTotals {
   drinksCents: number;
   foodCents: number;
-  /** Tip and tax base: drinks + food only, never ride lines. */
+  /** Tip and tax base: bar tab items only, never ride lines. */
   tipBaseCents: number;
   taxCents: number;
   rideCents: number; // quote line + posted adjustment/credit

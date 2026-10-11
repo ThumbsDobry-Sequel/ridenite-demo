@@ -8,20 +8,25 @@ import { APPROVED, MONEY_FILES, lintMoneyText, lintStatementText, lintText } fro
 
 describe('forgiving address match (UI 9b)', () => {
   it('suggests from the first keystroke', () => {
-    expect(suggest('6', venue.addresses).length).toBeGreaterThan(0);
+    expect(suggest('b', venue.addresses).length).toBeGreaterThan(0);
     expect(suggest('w', venue.addresses).length).toBeGreaterThan(0);
   });
   it('tolerates typos and abbreviations', () => {
-    expect(suggest('655 n harison st', venue.addresses)[0].line).toBe('655 N Harrison St');
-    expect(suggest('655 harrisn', venue.addresses).map((a) => a.line)).toContain('655 N Harrison St');
-    expect(suggest('3100 clarendn blvd', venue.addresses)[0].line).toBe('3100 Clarendon Blvd');
+    expect(suggest('westovr', venue.addresses)[0].line).toBe('Westover area');
+    expect(suggest('balston', venue.addresses).map((a) => a.line)).toContain('Ballston area');
+    expect(suggest('lyon vilage', venue.addresses)[0].line).toBe('Lyon Village area');
   });
   it('spoken numbers and landmarks', () => {
     expect(normalize('six fifty five')).toEqual(['655']);
-    expect(suggest('capital one arena', venue.addresses)[0].line).toBe('Capital One Arena');
+    expect(suggest('downtown', venue.addresses)[0].line).toBe('Penn Quarter area');
+  });
+  it('area-only list (Oct 11): no street address in any seeded place', () => {
+    const street = /\b\d{2,5} [A-Za-z]|\b(St|Blvd|Ave|Dr|Rd|Pike)\b|\b(VA|DC) \d{5}\b/;
+    for (const a of [...venue.addresses, venue.guest.home, venue.sampleLocation]) expect(`${a.line} ${a.area}`).not.toMatch(street);
+    expect(venue.addressLine).toBe('Maison Cheryl, Clarendon area');
   });
   it('max 3 suggestions, none for gibberish', () => {
-    expect(suggest('655', venue.addresses).length).toBeLessThanOrEqual(3);
+    expect(suggest('a', venue.addresses).length).toBeLessThanOrEqual(3);
     expect(suggest('zzzzqqq', venue.addresses)).toHaveLength(0);
   });
 });
@@ -29,8 +34,8 @@ describe('forgiving address match (UI 9b)', () => {
 describe('handoff link', () => {
   const base = { v: 1 as const, venue: venue.slug, tab: '4468', seat: 'Table 7', guest: 'Maya R.', ep: 'guest_request' as const, q: 2100 };
   it('round trips tab, entry point, quote and bookedAt', () => {
-    const r = parseHandoff(encodeHandoff({ ...base, at: 1760000000000, dest: '655 N Harrison St' }), venue.slug);
-    expect(r).toEqual({ ok: true, handoff: { ...base, at: 1760000000000, dest: '655 N Harrison St' } });
+    const r = parseHandoff(encodeHandoff({ ...base, at: 1760000000000, dest: 'Westover area' }), venue.slug);
+    expect(r).toEqual({ ok: true, handoff: { ...base, at: 1760000000000, dest: 'Westover area' } });
   });
   it('rejects bad input', () => {
     expect(parseHandoff(null).ok).toBe(false);
@@ -97,7 +102,7 @@ describe('copy lint', () => {
   it('rejects drink names in user copy (Quinn/Nico, Oct 11)', () => {
     for (const t of ['Old Fashioned x3', 'House Beer', 'The Pear Necessities', 'Two beers', 'Glass of wine', 'Cocktail menu', 'Martini'])
       expect(lintText(t).length, t).toBeGreaterThan(0);
-    for (const t of ['Table snacks', 'Dinner for two', 'Madeleines', 'Wilson Blvd']) expect(lintText(t), t).toEqual([]);
+    for (const t of ['Table snacks', 'Dinner for two', 'Madeleines', 'Westover area']) expect(lintText(t), t).toEqual([]);
   });
   it('fare, statement and receipt copy: no pays/covers/absorbs/settles/reimburses/protection/guarantee/insured (over-cap memo, Oct 11)', () => {
     for (const t of ['Absorbed by RideNite', 'RideNite covers the rest', 'Covered by RideNite', 'RideNite pays the driver', 'RideNite settles the rest with the car service', 'We reimburse the fare', 'Reimbursement', 'Fare protection', 'Guaranteed fare', 'Every ride is insured'])

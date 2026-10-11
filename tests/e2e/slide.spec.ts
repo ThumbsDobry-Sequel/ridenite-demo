@@ -374,16 +374,16 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await expect(page.locator('main')).toContainText("it's charged Sat, Oct 10 at 11:00 AM.");
   });
 
-  test('morning: Harper ride-question copy exactly; no "aren\'t charged until the bar replies"; drink questions to the bar', async ({ page }) => {
+  test('morning: Harper ride-question copy exactly; no "aren\'t charged until the bar replies"; bar tab questions to the bar', async ({ page }) => {
     const copy = "Ride charge look wrong? Tap here. We'll start on it with Maison Cheryl today. If it's wrong, Maison Cheryl refunds it to your card, and we'll text you when that's done. Your bank may take a few business days to show it.";
     await open(page, '/g/p9');
     await expect(page.getByTestId('ride-question')).toHaveText(copy);
-    await expect(page.locator('main')).toContainText('Questions about drinks or food go to Maison Cheryl.');
+    await expect(page.locator('main')).toContainText('Questions about your bar tab go to Maison Cheryl.');
     await expect(page.locator('main')).not.toContainText("aren't charged");
     await page.getByTestId('ride-question').tap();
     await expect(page.locator('[data-screen=P10]')).toBeVisible();
     await expect(page.locator('main')).not.toContainText("aren't charged");
-    await expect(page.locator('main')).toContainText('Questions about drinks or food go to Maison Cheryl.');
+    await expect(page.locator('main')).toContainText('Questions about your bar tab go to Maison Cheryl.');
     await page.getByText('An amount is wrong').tap();
     await page.getByTestId('send-dispute').tap();
     await expect(page.locator('[data-screen=P11]')).toBeVisible();
@@ -577,7 +577,7 @@ test('morning receipt split: Bar sales $64.19 + RideNite rides $27.40 = $91.59 (
   await expect(ride.getByTestId('stop-line').locator('.amt')).toHaveText('+$2.20');
   await expect(ride.getByTestId('ride-id')).toContainText(/Ride ID RN-[0-9A-Z]{6}/);
   // each section has its own question path
-  await expect(bar.getByTestId('bar-question')).toHaveText('Questions about drinks or food go to Maison Cheryl.');
+  await expect(bar.getByTestId('bar-question')).toHaveText('Questions about your bar tab go to Maison Cheryl.');
   await expect(ride.getByTestId('ride-question')).toContainText('Ride charge look wrong? Tap here.');
   await ride.getByTestId('ride-question').tap();
   await expect(page).toHaveURL(/#\/g\/p10$/);

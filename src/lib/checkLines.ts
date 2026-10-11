@@ -1,6 +1,6 @@
 /**
  * Bar vs RideNite split (SCOPE 23:01). Every line on the guest's check carries a kind:
- * 'bar' (drinks, food, tax, tip for bar staff) or 'ride' (quote, adjustment, approved stop, credit).
+ * 'bar' (food and items, tax, tip for bar staff) or 'ride' (quote, adjustment, approved stop, credit).
  * Ride lines carry a fictional ride ID (RN-xxxxxx). Subtotals are sums of the lines, so they always add up
  * to the check exactly. The owner evidence pack (later) filters ride lines with rideLinesOnly().
  */
@@ -31,10 +31,22 @@ export function rideRef(id: string): string {
   return `RN-${out}`;
 }
 
+/**
+ * Fixed demo seed (Oct 11): the standard night's ride, the first booked ride on the guest's tab, always carries
+ * venue.sampleRideId, so video, screenshots and receipts show one stable ID. Rebooks and other tabs hash their own id.
+ */
+export function rideRefFor(r: { id: string; tab: string }, s: Pick<DemoState, 'bookings'>): string {
+  if (r.tab === venue.tabNumber) {
+    const first = s.bookings.find((b) => b.rideId.startsWith(`r-${venue.tabNumber}-`));
+    if (!first || first.rideId === r.id) return venue.sampleRideId;
+  }
+  return rideRef(r.id);
+}
+
 /** Ride ID for the morning receipt: the ride on this phone, else the seeded sample ride. */
 export function receiptRideId(s: DemoState): string {
   const r = s.ride && !s.ride.pending ? s.ride : null;
-  return r ? rideRef(r.id) : venue.sampleRideId;
+  return r ? rideRefFor(r, s) : venue.sampleRideId;
 }
 
 /** Lines on the guest's morning check, each tagged bar or ride. */

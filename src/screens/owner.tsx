@@ -3,13 +3,19 @@ import { navigate } from '../router';
 import { Card, Chip } from '../components/primitives';
 import { Screen, Top } from '../components/layout';
 import { MoreRow } from './home';
-import { sampleOwnerStatement } from '../lib/ownerData';
-import { fmtSigned } from '../lib/money';
+import { sampleAnchor, sampleOwnerStatement } from '../lib/ownerData';
+import { fmt, fmtSigned } from '../lib/money';
+import { etYmdh } from '../lib/night';
+
+const MDW = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric' });
 
 /* Owner preview: static placeholder screens, no logic. Every number carries a visible
    "Sample data" label and is never presented as real (founder rule: no invented stats). */
 
 function DemoLabel() { return <p className="demo-screen-label" data-testid="owner-label">Demo screen, sample data</p>; }
+
+/** Statement line with its amount kept on one line (no break between '-' and '$'). */
+function Amt({ line }: { line: string }) { const i = line.lastIndexOf(': '); return <>{line.slice(0, i + 2)}<span className="nowrap">{line.slice(i + 2)}</span></>; }
 
 function Sample() { return <span className="sample-tag">Sample data</span>; }
 function Stat({ label, value }: { label: string; value: string }) {
@@ -36,23 +42,36 @@ export function OwnerIndex() {
 }
 
 export function OwnerSummary() {
+  // Same seeded rides as the monthly statement: the night before the demo night (Fri, Oct 9).
+  const now = Date.now();
+  const st = sampleOwnerStatement(now);
+  const fri = sampleAnchor(now) - 86_400_000;
+  const day = (t: number) => { const x = etYmdh(t); return `${x.y}-${x.m}-${x.d}`; };
+  const friRides = st.rides.filter((r) => day(r.pickupMs) === day(fri));
+  const adj = friRides.map((r) => r.rideCents - venue.quoteCents).filter((c) => c > 0);
+  const credits = st.quoteCredits.filter((c) => c.creditedCents > 0 && day(c.pickupMs) === day(fri));
+  const declined = credits.reduce((a, c) => a + c.creditedCents, 0);
   return (
     <Screen id="owner-summary">
       <DemoLabel />
       <Top back="/o" ctx="Owner preview" />
       <h1 className="h2">Morning summary</h1>
-      <p className="foot">{venue.name}, Fri night. Placeholder layout.</p>
+      <p className="foot" data-testid="summary-night">{venue.name}, night of {MDW.format(new Date(fri))}. Placeholder layout.</p>
       <Card>
         <Stat label={`Rides on guest ${T.bills}`} value="7" />
         <Stat label="Guest asked" value="5" />
         <Stat label="I offered" value="2" />
       </Card>
       <Card>
-        <Stat label="Fare adjustments posted" value="3, total +$8.40" />
-        <Stat label="Fare credits posted" value="1, total -$2.10" />
-        <Stat label="Held for guest OK" value="1, $2.20" />
+        <Stat label="Fare adjustments posted" value={`${adj.length}, total ${fmtSigned(adj.reduce((a, c) => a + c, 0))}`} />
+        <Stat label="Over the cap, guest declined" value={`${credits.length}, ${fmt(declined)} not charged`} />
+        {credits.map((c) => (
+          <div className="kv" key={c.rideId} data-testid="summary-quote-credit">
+            <div className="grow"><p className="kv__k">Quote adjustment credit, ride {c.rideId}</p><p className="kv__v num">{fmtSigned(-c.creditedCents)} <Sample /></p></div>
+          </div>
+        ))}
       </Card>
-      <p className="foot">Counts only. No guest names, reasons or notes are shown.</p>
+      <p className="foot">The credit is on the monthly statement for the same ride. Counts only. No guest names, reasons or notes are shown.</p>
     </Screen>
   );
 }
@@ -103,10 +122,18 @@ export function OwnerStatement() {
       <p className="foot">Credits on RideNite's invoice to {venue.name}. Placeholder layout.</p>
       <Card>
         <p className="kv__k">Credits against RideNite fees</p>
-        {st.feeReturns.map((f) => <p key={f.line} className="callout" data-testid="fee-return-line">{f.line} <Sample /></p>)}
-        {st.quoteCredits.filter((c) => c.line).map((c) => <p key={c.line!} className="callout" data-testid="quote-credit-line">{c.line} <Sample /></p>)}
+        {st.feeReturns.map((f) => <p key={f.line} className="callout" data-testid="fee-return-line"><Amt line={f.line} /> <Sample /></p>)}
+        {st.quoteCredits.filter((c) => c.line).map((c) => <p key={c.line!} className="callout" data-testid="quote-credit-line"><Amt line={c.line!} /> <Sample /></p>)}
         {st.quoteCredits.filter((c) => c.state === 'manual_review').map((c) => <p key={`mr-${c.rideId}`} className="foot" data-testid="quote-credit-review">Ride {c.rideId}: {fmtSigned(-c.manualReviewCents)} in manual review, not credited yet. <Sample /></p>)}
-        <p className="callout num">Total credits {fmtSigned(st.feeReturnsCents + st.quoteCreditsCents)} <Sample /></p>
+        <div className="row callout"><span>RideNite fee returns</span><span className="num nowrap" data-testid="fee-returns-subtotal">{fmtSigned(st.feeReturnsCents)}</span></div>
+        <div className="row callout"><span>Quote adjustment credits</span><span className="num nowrap" data-testid="quote-credits-subtotal">{fmtSigned(st.quoteCreditsCents)}</span></div>
+        <p className="callout num" data-testid="credits-total">Total credits {fmtSigned(st.feeReturnsCents + st.quoteCreditsCents)} <Sample /></p>
+      </Card>
+      <Card testId="statement-rides">
+        <p className="kv__k">Rides in these lines</p>
+        {st.rides.filter((r) => st.feeReturns.some((f) => f.rideId === r.rideId) || st.quoteCredits.some((c) => c.rideId === r.rideId)).map((r) => (
+          <p key={r.rideId} className="foot" data-testid="statement-ride">Ride {r.rideId}, {MDW.format(new Date(r.pickupMs))}, ride line {fmt(r.rideCents)} <Sample /></p>
+        ))}
       </Card>
       <p className="foot" data-testid="statement-footnote">{st.footnote}</p>
       <p className="foot" data-testid="quote-credit-footnote">{st.quoteCreditFootnote}</p>

@@ -17,8 +17,10 @@ img { max-width: 100%; }
   position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; justify-content: center; gap: var(--s2);
   padding: calc(env(safe-area-inset-top) + var(--s1)) max(var(--s3), env(safe-area-inset-right)) var(--s1) max(var(--s3), env(safe-area-inset-left));
-  background: var(--material); -webkit-backdrop-filter: var(--blur-material); backdrop-filter: var(--blur-material);
-  border-bottom: var(--hairline) solid var(--separator);
+  /* Opaque header (Piper/Riley/Quinn, Oct 11): solid page color, no transparency or blur, 1px divider, so no row
+     ever shows under the SIMULATED DEMO pill or the Menu button while scrolling. */
+  background: var(--bg); -webkit-backdrop-filter: none; backdrop-filter: none;
+  border-bottom: max(1px, var(--hairline)) solid var(--separator);
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
 }
 .simbar__label {
@@ -201,7 +203,7 @@ img { max-width: 100%; }
 .inv .note { display: block; font-size: var(--t-footnote); color: var(--text-2); }
 .seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); }
 .seg button { min-height: var(--tap-guest); border-radius: var(--r-control); border: var(--border-w) solid var(--border); background: var(--surface); color: var(--text); font-size: var(--t-callout); font-weight: var(--w-bold); cursor: pointer; }
-.seg button[aria-pressed='true'] { background: var(--surface-2); color: var(--text); border-color: var(--primary); box-shadow: inset 0 0 0 var(--border-w) var(--primary); }
+.seg button[aria-pressed='true'] { background: var(--surface-2); color: var(--text); border-color: var(--text); box-shadow: inset 0 0 0 var(--border-w) var(--text); } /* neutral selected: amber is only the slide (Oct 11) */
 .tl { list-style: none; padding: 0; margin: 0; }
 .tl li { display: grid; grid-template-columns: 5.5rem 1fr; gap: var(--s2); padding: var(--s2) 0 var(--s2) var(--s3); font-size: var(--t-footnote); border-left: var(--focus-w) solid var(--separator); }
 .status-pill { align-self: flex-start; padding: var(--s1) var(--s4); border-radius: var(--r-pill); background: var(--tint-warning); color: var(--warning); font-weight: var(--w-bold); font-size: var(--t-callout); }
@@ -269,7 +271,11 @@ select.input:disabled { opacity: 1; color: var(--text-2); }
 .simbar { justify-content: space-between; flex-wrap: wrap; row-gap: var(--s1); }
 .simbar .menu-btn { flex: none; }
 .simbar__label { flex: none; }
-.simbar { min-height: calc(env(safe-area-inset-top) + var(--tap-guest) + var(--s2)); }
+.simbar { min-height: var(--header-h); }
+:root { --header-h: calc(env(safe-area-inset-top) + var(--tap-guest) + var(--s2) + max(1px, var(--hairline))); }
+/* In-page scrolls (focus, scrollIntoView, anchors) stop below the header, never under it. */
+html { scroll-padding-top: calc(var(--header-h) + var(--s2)); }
+.page > * { scroll-margin-top: calc(var(--header-h) + var(--s2)); }
 .simbar__note { display: none; }
 .btn--outline { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 var(--border-w) var(--text); }
 .countdown { font-size: var(--t-countdown); font-weight: var(--w-heavy); line-height: 1; margin: 0; }
