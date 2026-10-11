@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 /**
- * /pitch/demo/ (Sample Venue export): the whole export runs on the pinned story clock (Sat 11:52 PM ET start), so
+ * /pitch/demo/ (Sample Venue export): the whole export runs on the pinned story clock (Sat 11:46 PM ET start), so
  * sample times read confirmed 11:26 PM, picked up 11:32 PM whatever the browser clock says. Runs at 390 and 375.
  */
 const times = async (page: Page) => (await page.locator('main').innerText()).match(/\b\d{1,2}:\d{2} [AP]M\b/g) ?? [];
@@ -108,3 +108,26 @@ test('pitch demo: story times fixed; now restarts at Sat 11:46:00 PM (within 5 s
   await page.clock.fastForward('20:00'); await page.reload(); await atLoad();
   await ctx.close();
 });
+
+/** Nico (Oct 11, 6:05): #/g/m1?morning=1 opens the morning receipt email at Sun 9:00 AM ET; __pinnedStart and the story stay pinned. */
+for (const fake of [null, '2026-10-11T12:00:00Z', '2026-12-15T19:30:00Z']) {
+  test(`pitch demo: m1?morning=1 reads Sunday morning, 9:00 AM (browser clock ${fake ?? 'real'})`, async ({ browser, viewport, baseURL }) => {
+    const ctx = await browser.newContext({ viewport, baseURL });
+    const page = await ctx.newPage();
+    if (fake) await page.clock.install({ time: new Date(fake) });
+    await page.goto('/pitch/demo/#/g/m1?morning=1');
+    await page.locator('[data-screen=M1]').waitFor();
+    await expect(page.locator('main')).toContainText('Sunday morning, 9:00 AM');
+    await expect(page.locator('main')).toContainText('Good morning');
+    await expect(page.getByTestId('ride-item')).toContainText('picked up 11:32 PM, $24.60');
+    await expect(page.locator('main')).not.toContainText('Saturday night, 11:46 PM');
+    expect(await page.evaluate(() => (window as unknown as { __pinnedStart: number }).__pinnedStart)).toBe(1791690360000);
+    expect(await page.evaluate(() => (window as unknown as { __pinnedMorning: number }).__pinnedMorning)).toBe(Date.UTC(2026, 9, 11, 13, 0, 0));
+    // plain m1 on a fresh load keeps the 11:46 PM start
+    const ctx2 = await browser.newContext({ viewport, baseURL }); const p2 = await ctx2.newPage();
+    if (fake) await p2.clock.install({ time: new Date(fake) });
+    await p2.goto('/pitch/demo/#/g/m1'); await p2.locator('[data-screen=M1]').waitFor();
+    expect(await p2.evaluate(() => (window as unknown as { __pinnedMorning: number | null }).__pinnedMorning)).toBeNull();
+    await ctx.close(); await ctx2.close();
+  });
+}

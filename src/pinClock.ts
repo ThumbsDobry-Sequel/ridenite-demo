@@ -13,10 +13,18 @@ export const PINNED_STORY = {
   pickedUp: Date.UTC(2026, 9, 11, 3, 32, 0),
   complete: Date.UTC(2026, 9, 11, 3, 46, 0),
 } as const;
+/** Pitch export only: #/g/m1?morning=1 opens the morning receipt email at Sun 9:00 AM ET (story unchanged, __pinnedStart unchanged). */
+export const PINNED_MORNING_MS = Date.UTC(2026, 9, 11, 13, 0, 0);
+export function isMorningLink(hash: string): boolean {
+  const [path, q = ''] = hash.replace(/^#/, '').split('?');
+  return path === '/g/m1' && new URLSearchParams(q).get('morning') === '1';
+}
 if (NO_CALENDAR_DATES && typeof window !== 'undefined') {
   const Real = Date;
   // 'now' = Sat 11:46:00 PM ET at this page load, then ticks in real time (ride status screens keep working)
-  const off = PINNED_START_MS - Real.now();
+  const morning = isMorningLink(window.location.hash);
+  const off = (morning ? PINNED_MORNING_MS : PINNED_START_MS) - Real.now();
+  (window as unknown as { __pinnedMorning: number | null }).__pinnedMorning = morning ? PINNED_MORNING_MS : null;
   (window as unknown as { __pinnedStart: number; __pinnedStory: typeof PINNED_STORY }).__pinnedStart = PINNED_START_MS;
   (window as unknown as { __pinnedStory: typeof PINNED_STORY }).__pinnedStory = PINNED_STORY;
   class PinnedDate extends Real {
