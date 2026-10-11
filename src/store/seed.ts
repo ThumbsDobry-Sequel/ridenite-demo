@@ -2,7 +2,6 @@ import { seededTabOpen } from '../lib/night';
 import { venue } from '../venue.config';
 import type { BarRide, BarState, DemoState } from './types';
 import { capFor } from '../lib/fare';
-import { bookedAtFor } from '../lib/rideState';
 
 /** Bartender seed (UI 7 B1 sample, Maison Cheryl numbers). Stages are set relative to load time. */
 export function seedBar(now: number): BarState {
@@ -11,13 +10,12 @@ export function seedBar(now: number): BarState {
     ...(t.tab === venue.tabNumber ? { linkSentAt: now - 4 * 60_000 } : {}) }));
   const rides: BarRide[] = b.seededRides.map((r) => {
     const t = b.tabs.find((x) => x.tab === r.tab)!;
-    const stage = r.stage === 'declined' ? 'en_route' : r.stage;
-    const bookedAt = bookedAtFor(stage, now);
+    // Varied sample times (Quinn, Oct 11): each seeded ride was booked agoSec before load, at the stage it shows.
+    const bookedAt = now - r.agoSec * 1000;
     return {
       id: `r-${r.tab}-seed`, feeChargedCents: venue.perRideFeeCents, tab: r.tab, seat: t.seat, guest: t.guest, entryPoint: r.tab === '4474' ? 'staff_offer' : 'guest_request',
-      dest: venue.addresses[r.tab === '4472' ? 4 : r.tab === '4474' ? 5 : 6], riders: 1, quoteCents: venue.quoteCents,
-      capCents: capFor(venue.quoteCents), bookedAt, consentText: '', scenario: r.scenario, confirmedAt: bookedAt, confirmedBy: 'staff',
-      ...(r.stage === 'declined' ? { terminal: 'canceled_by_driver' as const } : {}),
+      dest: venue.addresses[r.tab === '4472' ? 4 : r.tab === '4474' ? 5 : 6], riders: 1, quoteCents: r.quoteCents,
+      capCents: capFor(r.quoteCents), bookedAt, consentText: '', scenario: r.scenario, confirmedAt: bookedAt, confirmedBy: 'staff',
       carInfo: { car: r.car, plate: r.plate, plateSpoken: r.plateSpoken, driver: r.driver, partner: r.partner },
     };
   });

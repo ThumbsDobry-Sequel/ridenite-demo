@@ -38,7 +38,9 @@ export function drinkTimes(openedAt: number, now: number, n: number): number[] {
 /** Sample night times when this phone has no ride: all between tab open and now. */
 export function sampleNightTimes(openedAt: number, now: number) {
   const m = (x: number) => Math.round(x / 60_000) * 60_000;
-  return { tabOpened: openedAt, booked: m(now - 34 * 60_000), pickedUp: m(now - 26 * 60_000), complete: m(now - 8 * 60_000) };
+  // same story shape as a live ride: booked 6 min before pickup, drop-off 14 min after it
+  const dropAgo = 6 * 60_000, trip = venue.tripMinutes * 60_000, eta = venue.etaMinutes * 60_000;
+  return { tabOpened: openedAt, booked: m(now - dropAgo - trip - eta), pickedUp: m(now - dropAgo - trip), complete: m(now - dropAgo) };
 }
 
 const SHORT = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' });

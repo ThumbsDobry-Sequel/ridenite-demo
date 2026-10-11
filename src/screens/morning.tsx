@@ -31,8 +31,8 @@ export const maxApprovedLine = (maxCents: number): string => `Ride home: ${fmt(m
 const cap = (x: string) => x[0].toUpperCase() + x.slice(1);
 /** Message stamp: weekday and time of the event itself (ET), e.g. "Sat 11:31 PM". */
 const stampAt = (t: number) => ETT.format(new Date(t)).replace(',', '');
-const nowClock = () => ETT.format(new Date()).replace(',', '');
-const nowStamp = () => ETD.format(new Date()).replace(/, (\d{1,2}:)/, ', $1');
+const nowClock = () => ETT.format(new Date(Date.now())).replace(',', '');
+const nowStamp = () => ETD.format(new Date(Date.now())).replace(/, (\d{1,2}:)/, ', $1');
 
 /** Money-promises memo (Harper's copy), exact; venue name from config. Bar tab questions still go to the bar. */
 export const rideQuestionCopy = () =>
@@ -81,7 +81,9 @@ export function M2() {
       <h1 className="h2">Messages</h1>
       <div className="thread">
         <p className="stamp">{stampAt(nightTimes(s).booked)}</p>
-        <p className="bubble">RideNite: Your car is requested. {venue.driver.first}, {venue.driver.carShort}, plate {venue.driver.plate}, about {venue.etaMinutes} min. Quote {fmt(s.ride?.quoteCents ?? venue.quoteCents)}. It will go on your {T.bill} at {venue.name} at pickup. Before you get in, check the plate.</p>
+        {/* Quinn (Oct 11): driver and plate only after a driver accepts, never while the ride is only requested. */}
+        <p className="bubble">RideNite: Your ride is requested. Quote {fmt(s.ride?.quoteCents ?? venue.quoteCents)}. It will go on your {T.bill} at {venue.name} at pickup.</p>
+        <p className="bubble" data-testid="sms-assigned">RideNite: Driver on the way. {venue.driver.first}, {venue.driver.carShort}, plate {venue.driver.plate}, about {venue.etaMinutes} min. Before you get in, check the plate.</p>
         <p className="bubble">RideNite: Your car is about 2 min away. You can wait inside. We'll text you when it's at the door.</p>
         <p className="stamp">{N.complete}</p>
         <p className="bubble">RideNite: You've arrived. Your ride from {venue.name} is on your {T.bill}.</p>

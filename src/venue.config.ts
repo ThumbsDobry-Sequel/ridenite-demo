@@ -85,7 +85,9 @@ export const venue = {
   overCapReason: "Traffic on the driver's route",
   /** E7 sample: new all-in quote after the guest adds a stop ($24.00, cap $4.80, never more than $28.80). */
   stopQuoteCents: 2400,
+  /** Story source (Riley, Oct 11): booked, then pickup etaMinutes later, drop-off tripMinutes after pickup (11:26, 11:32, 11:46). */
   etaMinutes: 6,
+  tripMinutes: 14,
 
   seat: 'Table 7',
   tabNumber: '4468',
@@ -164,10 +166,17 @@ export const venue = {
     ],
     /** Seeded live rides: tab, stage at load, car. Stages advance on the demo timeline. */
     seededRides: [
-      { tab: '4472', stage: 'arrived', car: 'White Toyota Prius', plate: 'T555031C', plateSpoken: 'T 5 5 5 0 3 1 C', driver: 'Ravi', partner: 'Northside Car Service', scenario: 'higher' },
-      { tab: '4474', stage: 'en_route', car: 'Black Honda Accord', plate: 'XKR-2207', plateSpoken: 'X K R 2 2 0 7', driver: 'Mei', partner: 'Northside Car Service', scenario: 'lower' },
-      { tab: '4476', stage: 'en_route', car: 'Silver Ford Fusion', plate: 'VBN-4410', plateSpoken: 'V B N 4 4 1 0', driver: 'Omar', partner: 'Clarendon Livery', scenario: 'higher' },
-    ] as { tab: string; stage: 'arrived' | 'en_route' | 'declined'; car: string; plate: string; plateSpoken: string; driver: string; partner: string; scenario: 'higher' | 'lower' | 'equal' | 'over' }[],
+      { tab: '4472', stage: 'arrived', agoSec: 340, quoteCents: 2350, car: 'White Toyota Prius', plate: 'T555031C', plateSpoken: 'T 5 5 5 0 3 1 C', driver: 'Ravi', partner: 'Northside Car Service', scenario: 'higher' },
+      { tab: '4474', stage: 'near', agoSec: 290, quoteCents: 1875, car: 'Black Honda Accord', plate: 'XKR-2207', plateSpoken: 'X K R 2 2 0 7', driver: 'Mei', partner: 'Northside Car Service', scenario: 'lower' },
+      { tab: '4476', stage: 'en_route', agoSec: 120, quoteCents: 2600, car: 'Silver Ford Fusion', plate: 'VBN-4410', plateSpoken: 'V B N 4 4 1 0', driver: 'Omar', partner: 'Clarendon Livery', scenario: 'higher' },
+    ] as { tab: string; stage: 'arrived' | 'near' | 'en_route'; agoSec: number; quoteCents: number; car: string; plate: string; plateSpoken: string; driver: string; partner: string; scenario: 'higher' | 'lower' | 'equal' | 'over' }[],
+    /** B5 history: the earlier completed rides tonight (sample rows; count matches earlierRidesTonight). */
+    earlierHistory: [
+      { agoMin: 34, tab: '4466', entry: 'Guest request', partner: 'Clarendon Livery', finalCents: 2410 },
+      { agoMin: 58, tab: '4463', entry: 'Staff offer', partner: 'Northside Car Service', finalCents: 1960 },
+      { agoMin: 87, tab: '4461', entry: 'Guest request', partner: 'Northside Car Service', finalCents: 2275 },
+      { agoMin: 112, tab: '4458', entry: 'Guest request', partner: 'Arlington Black Car', finalCents: 1840 },
+    ],
     rebookPartner: 'Arlington Black Car',
     quietTab: '4473',
   },

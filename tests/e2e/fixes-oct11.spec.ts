@@ -33,10 +33,10 @@ test('same night: guest home says "Tonight\'s receipt", never "Last night\'s"', 
 });
 
 test('ride times agree: P6 arrive time = P7 drop-off = P9 drop-off; Sunday morning still names Saturday; tagline >= 17 pt', async ({ page }) => {
-  await page.clock.install({ time: new Date('2026-10-11T03:30:50Z') }); // Sat 11:30:50 PM ET
+  await page.clock.install({ time: new Date('2026-10-11T03:25:50Z') }); // Sat 11:25:50 PM ET (booked 11:26)
   await open(page, '/g/p3');
   await slide(page);
-  await page.clock.runFor(10_000 + 61_000); // undo window, then picked up
+  await page.clock.runFor(10_500); await page.clock.fastForward(361_000); // undo window, then picked up (+6 min)
   await nav(page, '/g/p6');
   const arrive = (await page.getByTestId('p6-arrive').innerText()).replace('arrive about ', '').trim();
   await expect(page.getByTestId('p6-eta')).toHaveText('14 min');
@@ -120,7 +120,7 @@ async function rideAt(page: import('@playwright/test').Page, stage: 'en_route' |
   await page.clock.install({ time: new Date('2026-10-11T03:30:50Z') });
   await open(page, '/g/p3');
   await slide(page);
-  await page.clock.runFor(10_000 + (stage === 'en_route' ? 9_000 : 61_000));
+  await page.clock.runFor(10_000 + 9_000); if (stage !== 'en_route') await page.clock.fastForward(352_000);
   await nav(page, stage === 'en_route' ? '/g/p5' : '/g/p6');
 }
 const approveSlide = async (page: import('@playwright/test').Page) => slide(page, 'e7-approve');

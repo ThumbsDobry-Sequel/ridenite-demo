@@ -1,7 +1,7 @@
 import { venue, type Address } from '../venue.config';
 import { capFor, type OverCapAnswer } from '../lib/fare';
 import type { Handoff } from '../lib/handoff';
-import { bookedAtFor, pickupAt, isAcceptedStage, isChargedStage, nextStage, QUOTE_VALID_MS, rideStage, UNDO_MS, type LiveStage, type Stage } from '../lib/rideState';
+import { DEMO_TIMELINE, bookedAtFor, isAcceptedStage, isChargedStage, nextStage, QUOTE_VALID_MS, rideStage, UNDO_MS, type LiveStage, type Stage } from '../lib/rideState';
 import { seedState } from './seed';
 import type { UrlLink } from '../lib/urlLink';
 import type {
@@ -27,8 +27,9 @@ export class InMemoryStore implements DemoStore {
   private urlLink: UrlLink | null | undefined;
 
   /** urlLink: tab from the QR link params (undefined = none given, use the seeded demo tab). */
-  constructor(opts: { clock?: () => number; urlLink?: UrlLink | null } = {}) {
+  constructor(opts: { clock?: () => number; urlLink?: UrlLink | null; onSkew?: (ms: number) => void } = {}) {
     this.clock = opts.clock ?? (() => Date.now());
+    this.onSkew = opts.onSkew;
     this.urlLink = opts.urlLink;
     this.state = this.fresh();
   }
@@ -55,7 +56,16 @@ export class InMemoryStore implements DemoStore {
 
   getState = () => this.state;
   subscribe = (l: () => void) => { this.listeners.add(l); return () => void this.listeners.delete(l); };
-  now = () => this.clock();
+  private skew = 0;
+  private onSkew?: (ms: number) => void;
+  now = () => this.clock() + this.skew;
+  /** Demo phone clock jump (never backwards). The app mirrors it into Date.now() so every screen agrees. */
+  jumpClock(ms: number) {
+    if (ms <= 0) return;
+    this.skew += ms;
+    this.onSkew?.(this.skew);
+    this.listeners.forEach((l) => l());
+  }
 
   requestStaff(seat: string) {
     const last = this.state.staffPings[this.state.staffPings.length - 1];
@@ -207,9 +217,12 @@ export class InMemoryStore implements DemoStore {
     const r = this.state.ride;
     if (!r || r.terminal || r.pending) return;
     const cur = this.stageOf(r) as LiveStage;
-    // Skipping the trip keeps the real pickup time, so pickup, drop-off (pickup + trip) and summary still agree.
-    const keep = cur === 'picked_up' ? { pickedUpAt: pickupAt(r) } : {};
-    this.set({ ride: { ...r, ...keep, hold: undefined, bookedAt: bookedAtFor(nextStage(cur), this.now()) } });
+    const next = nextStage(cur);
+    // Jump the demo clock to the next stage instead of rewriting the ride's times: booked, pickup, drop-off and the
+    // phone clock all stay consistent (the P9 header is never earlier than the drop-off).
+    // A held ride (fault demos) resumes at the next stage now, as before.
+    if (r.hold) { this.set({ ride: { ...r, hold: undefined, bookedAt: bookedAtFor(next, this.now()) } }); return; }
+    this.jumpClock(r.bookedAt + DEMO_TIMELINE[next] - this.now());
   }
   releaseHold(to?: LiveStage) {
     const r = this.state.ride;

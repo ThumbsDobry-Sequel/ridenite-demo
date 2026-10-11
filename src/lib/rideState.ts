@@ -1,3 +1,4 @@
+import { venue } from '../venue.config';
 /**
  * Ride state is derived from the booking timestamp (UI 4e, POS 5a), so any phone
  * holding the same bookedAt shows the same status. Demo timeline is compressed.
@@ -15,14 +16,17 @@ export const NO_DRIVER_MS = 20_000;
 export const QUOTE_VALID_MS = 5 * 60_000;
 
 /** Stage start offsets in ms after booking (demo speed). */
+// One source for the story (venue.etaMinutes, venue.tripMinutes): booked 11:26, "6 min" to pickup, driver 2 min away
+// 2 min before pickup, pickup 11:32, drop-off 11:46. The demo jumps the clock between stages ("Demo: next status",
+// or the recorder); nothing waits in real time.
+const PICKUP_MS = venue.etaMinutes * 60_000;
 export const DEMO_TIMELINE: Record<LiveStage, number> = {
   requested: 0,
   en_route: 8_000,
-  near: 30_000,
-  arrived: 45_000,
-  picked_up: 60_000,
-  // Believable trip (Oct 11): drop-off 14 min after pickup (11:32 -> 11:46). The demo jumps the clock (Demo: next status, or the recorder).
-  complete: 900_000,
+  near: PICKUP_MS - 120_000,
+  arrived: PICKUP_MS - 30_000,
+  picked_up: PICKUP_MS,
+  complete: PICKUP_MS + venue.tripMinutes * 60_000,
 };
 const ORDER: LiveStage[] = ['requested', 'en_route', 'near', 'arrived', 'picked_up', 'complete'];
 

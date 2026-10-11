@@ -284,10 +284,10 @@ test.describe('M2 handoff and live rides (Piper C)', () => {
     await expect(page.getByTestId('chip-4471')).toHaveText('Requested');
     await page.clock.runFor(8_500);
     await expect(page.getByTestId('chip-4471')).toContainText('Driver on the way');
-    await page.clock.runFor(22_000);
+    await page.clock.fastForward(232_000);
     await expect(page.getByTestId('chip-4471')).toHaveText('2 min away');
     await expect(page.getByTestId('b4n-chip').filter({ hasText: 'Bar 3' })).toHaveText('Car 2 min away, Bar 3');
-    await page.clock.runFor(15_000);
+    await page.clock.fastForward(90_000);
     await expect(page.getByTestId('chip-4471')).toHaveText('Arrived');
     await expect(page.getByTestId('b4n-chip').filter({ hasText: 'Bar 3' })).toHaveCount(0);
   });
@@ -377,7 +377,7 @@ async function bookMaya(page: Page, accept = true) {
   await page.getByTestId('b3-sim-reply').tap();
   await page.getByTestId('b3-book').tap();
   await expect(page.locator('[data-screen=booked]')).toBeVisible();
-  if (accept) await page.clock.runFor(60_500); // picked up; lines post to the tab now
+  if (accept) await page.clock.fastForward(360_500); // picked up; lines post to the tab now
 }
 
 test.describe('M2 tab detail B6 (Piper D)', () => {
@@ -391,7 +391,7 @@ test.describe('M2 tab detail B6 (Piper D)', () => {
     await page.clock.runFor(8_500); // accepted: still pending pickup
     await expect(page.getByTestId('b6-not-yet')).toHaveText('Ride pending pickup. The fare goes on this tab at pickup.');
     await expect(page.getByTestId('b6-ride_quote')).toHaveCount(0);
-    await page.clock.runFor(52_000); // picked up
+    await page.clock.fastForward(352_000); // picked up
     const q = page.getByTestId('b6-ride_quote');
     // bar POS line (SCOPE 22:22): "RideNite car home, [area], [time]"; the guest record is not on the line
     await expect(q.locator('th')).toContainText(/^RideNite car home, Westover area, \d{1,2}:\d{2} [AP]M/);
@@ -439,7 +439,7 @@ test.describe('M2 tab detail B6 (Piper D)', () => {
     await page.getByTestId('b3-dest-lyon-village-area').tap();
     await page.getByTestId('b3-saw').tap();
     await page.getByTestId('b3-book').tap();
-    await page.clock.runFor(60_500);
+    await page.clock.fastForward(360_500);
     await nav(page, '/b/tab?tab=4475');
     await expect(page.getByTestId('b6-ride_quote').locator('th')).toContainText(/^RideNite car home, Lyon Village area, \d{1,2}:\d{2} [AP]M/);
     const rec = page.getByTestId('b6-record');
@@ -467,7 +467,7 @@ test.describe('M2 tab detail B6 (Piper D)', () => {
     await expect(page.getByTestId('b6-record')).toHaveCount(0); // logged, but shown only at pickup
     await page.clock.runFor(8_000);
     await expect(page.getByTestId('b6-record')).toHaveCount(0); // accepted, not picked up
-    await page.clock.runFor(52_000);
+    await page.clock.fastForward(352_000);
     await expect(page.getByTestId('b6-record')).toContainText('Confirmed by guest');
     // undone path
     await fresh(page, '/g/p3');
@@ -497,7 +497,7 @@ test.describe('Tab close with a ride pending pickup (SCOPE 22:22)', () => {
     await nav(page, '/b/tonight');
     await expect(page.getByTestId('pending-4471')).toHaveText('Ride pending pickup');
     await nav(page, '/b/tab?tab=4471');
-    await page.clock.runFor(52_000);
+    await page.clock.fastForward(352_000);
     await expect(page.getByTestId('b6-closed')).toHaveText('Tab closed.');
     await expect(page.getByTestId('b6-pending')).toHaveCount(0);
     await expect(page.getByTestId('b6-ride_quote')).toContainText('RideNite car home, Courthouse area');

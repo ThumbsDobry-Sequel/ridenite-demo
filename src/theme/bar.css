@@ -42,8 +42,8 @@
 .icon--hero { width: var(--s8); height: var(--s8); align-self: center; color: var(--venue); }
 
 .btabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-  background: var(--material); -webkit-backdrop-filter: var(--blur-material); backdrop-filter: var(--blur-material);
-  border-top: var(--hairline) solid var(--separator); padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  /* Quinn (Oct 11): opaque, so list text never shows through on b08/b09 */
+  background: var(--bg); border-top: max(1px, var(--hairline)) solid var(--separator); padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
 .btabbar__item { min-height: var(--b-tabbar); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   background: none; border: 0; color: var(--text-2); font-size: var(--t-caption); font-weight: var(--w-bold); cursor: pointer; }
 .btabbar__item.is-on { color: var(--text); }

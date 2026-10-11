@@ -18,7 +18,6 @@ export const FAULTS: { id: Fault; label: string; route: string }[] = [
   { id: 'E3', label: 'E3 Car is waiting', route: '/g/e3' },
   { id: 'E4', label: `E4 ${T.Bill} already closed`, route: '/g/e4' },
   { id: 'E5', label: 'E5 No signal', route: '/g/e5' },
-  { id: 'E6', label: 'E6 Driver cancelled', route: '/g/e6' },
   { id: 'E7', label: 'E7 Add a stop: new quote', route: '/g/e7' },
   { id: 'E8', label: "E8 Over the cap (traffic): your OK", route: '/g/e8' },
 ];
@@ -61,11 +60,7 @@ export function DemoPanel() {
         }}>
           {s.forceNoDriver ? 'No driver found: on for the next request' : 'Force "No driver found"'}
         </Button>
-        <Button variant="secondary" testId="force-driver-cancel" onClick={() => {
-          store.driverCancel();
-          const r = store.getState().ride;
-          if (r && store.stageOf(r) === 'canceled_by_driver') navigate('/g/e6');
-        }}>Driver accepts, then cancels (current ride)</Button>
+        {/* Quinn (Oct 11): the driver-cancel / declined path is not offered in the demo. */}
         <Button variant="secondary" testId="force-stale" onClick={() => store.setForceStaleQuote(!s.forceStaleQuote)}>
           {s.forceStaleQuote ? 'Stale quote: on (new price, new slide)' : 'Force "stale quote" (older than 5 min)'}
         </Button>

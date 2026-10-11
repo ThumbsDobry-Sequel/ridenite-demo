@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { nav, open, slide, state } from './helpers';
+import { nav, open, slide, state, store } from './helpers';
 
 const transformX = (page: import('@playwright/test').Page) =>
   page.getByTestId('confirm-thumb').evaluate((e) => new DOMMatrix(getComputedStyle(e).transform).m41);
@@ -138,7 +138,7 @@ test('confirm record: logged when the undo ends, shown with the fare line only a
   await page.clock.runFor(8_000); // driver accepts: still nothing on the tab
   await expect(page.getByTestId('ride-line')).toHaveCount(0);
   await expect(page.getByTestId('confirm-record')).toHaveCount(0);
-  await page.clock.runFor(52_000); // picked up: record and fare line together
+  await page.clock.fastForward(352_000); // picked up: record and fare line together
   await expect(page.getByTestId('ride-line')).toBeVisible();
   await expect(page.getByTestId('confirm-record')).toHaveText('Confirmed by guest, 11:42 PM');
   await expect(page.getByTestId('confirm-record-amounts')).toContainText('$21.00');
@@ -167,7 +167,7 @@ test('record keeps the quote snapshot from the slide even if the quote is refres
   await page.clock.install();
   await open(page, '/g/p3');
   await slide(page);
-  await page.clock.runFor(70_500);
+  await page.clock.runFor(10_500); await page.clock.fastForward(360_000);
   await page.evaluate(() => { const s = (window as any).__ridenite.store; s.setPriceMovesOnRefresh(true); s.refreshQuote(); });
   expect((await state(page)).quoteCents).toBe(2350);
   await page.evaluate(() => { location.hash = '/g/p9'; });
@@ -190,7 +190,7 @@ test('staff booking wording: "Booked by staff, price shown to guest, h:mm PM"', 
   await page.clock.install({ time: new Date('2026-10-10T03:42:00Z') });
   await open(page, '/g/home');
   await page.evaluate(() => { const s = (window as any).__ridenite.store; s.createRide('staff', { method: 'staff_saw_price', by: 'staff' }); });
-  await page.clock.runFor(70_500);
+  await page.clock.runFor(10_500); await page.clock.fastForward(360_000);
   await page.evaluate(() => { location.hash = '/g/p9'; });
   await expect(page.getByTestId('confirm-record')).toHaveText('Booked by staff, price shown to guest, 11:42 PM');
   await expect(page.getByTestId('confirm-record')).not.toContainText('Confirmed by guest');
@@ -228,7 +228,7 @@ test('Undo sits right under the countdown card', async ({ page }) => {
 test('dispute record falls back to the sample night, labeled sample data (times relative to now)', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-10T03:42:00Z') }); // 11:42 PM ET; sample booking 34 min earlier
   await open(page, '/g/p9');
-  await expect(page.getByTestId('confirm-record')).toHaveText('Confirmed by guest, 11:08 PM (sample data)');
+  await expect(page.getByTestId('confirm-record')).toHaveText('Confirmed by guest, 11:16 PM (sample data)');
 });
 
 test.describe('Confirm Cancel (founder decision 9:30, Piper H4/H5)', () => {
@@ -340,7 +340,7 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await expect(page.getByTestId('ride-line')).toHaveCount(0);
     await expect(page.getByTestId('total')).toHaveText('$64.19');
     await expect(page.getByTestId('night-tagline')).toHaveCount(0);
-    await page.clock.runFor(52_000); // 60 s after the request was placed (undo end): picked up
+    await page.clock.fastForward(352_000); // 60 s after the request was placed (undo end): picked up
     await expect(page.getByTestId('ride-line')).toBeVisible();
     await expect(page.getByTestId('confirm-record')).toContainText('Confirmed by guest');
     // check still open (Harper 23:11): never "Tab closed." before the POS closes the check
@@ -354,7 +354,7 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
     await page.clock.runFor(18_500);
     await expect(page.getByTestId('status-booked')).toBeVisible();
     await nav(page, '/g/demo');
-    await page.getByTestId('force-driver-cancel').tap();
+    await store(page, 's.driverCancel()'); await page.evaluate(() => { location.hash = '/g/e6'; });
     await expect(page.locator('[data-screen=E6]')).toBeVisible();
     await expect(page.locator('main')).toContainText('Your driver cancelled. Nothing was added to your tab.');
     await nav(page, '/g/p9');
@@ -522,7 +522,7 @@ test('morning receipt itemized ride line: areas, pickup time and the final ride 
   await page.clock.install({ time: new Date('2026-10-11T02:30:00Z') }); // Sat 10:30 PM ET; sample pickup 26 min earlier
   await open(page, '/g/p9');
   await page.evaluate(() => { const s = (window as any).__ridenite.store; s.setFareScenario('over'); s.setOverCapAnswer('yes'); });
-  const want = 'RideNite car home, Clarendon area to Westover area, picked up 10:04 PM, $27.40';
+  const want = 'RideNite car home, Clarendon area to Westover area, picked up 10:10 PM, $27.40';
   await expect(page.getByTestId('ride-item')).toContainText(want);
   await expect(page.getByTestId('total')).toHaveText('$91.59');
   // the itemized fare equals the ride lines on the tab: quote + adjustment

@@ -3,7 +3,7 @@ import { nav, open, slide, store } from './helpers';
 
 /** Round 2 (Piper, Riley, Quinn, Oct 11): addresses, drinks wording, stable IDs, credits, header, chip, seed, trip time. */
 
-const SAT = new Date('2026-10-11T03:30:50Z'); // Sat Oct 10, 11:30:50 PM ET
+const SAT = new Date('2026-10-11T03:25:50Z'); // Sat Oct 10, 11:25:50 PM ET (booked 11:26)
 
 test('opaque header: solid page color, no blur, 1px divider; scrolled rows never show through', async ({ page }) => {
   await page.clock.install({ time: SAT });
@@ -51,7 +51,7 @@ test('stable ride ID: the standard night shows RN-7Q4K2M on P9 and M1, night and
   await page.clock.install({ time: SAT });
   await open(page, '/g/p3');
   await slide(page);
-  await page.clock.runFor(10_000 + 61_000);
+  await page.clock.runFor(10_500); await page.clock.fastForward(361_000);
   await page.clock.fastForward(14 * 60_000);
   await nav(page, '/g/p9');
   await expect(page.getByTestId('ride-id')).toContainText('RN-7Q4K2M');
@@ -66,7 +66,7 @@ test('believable trip: pickup 11:32, P6 14 min / arrive about 11:46 PM, drop-off
   await page.clock.install({ time: SAT });
   await open(page, '/g/p3');
   await slide(page);
-  await page.clock.runFor(10_000 + 61_000);
+  await page.clock.runFor(10_500); await page.clock.fastForward(361_000);
   await nav(page, '/g/p6');
   await expect(page.getByTestId('p6-eta')).toHaveText('14 min');
   await expect(page.getByTestId('p6-arrive')).toHaveText('arrive about 11:46 PM');

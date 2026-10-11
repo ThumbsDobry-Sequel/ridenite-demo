@@ -75,13 +75,14 @@ export function P3() {
       {updated && <Banner tone="info">The price was updated. Check the new quote, then confirm again.</Banner>}
       {stale && !updated && <Banner tone="info"><span data-testid="stale-banner">No driver yet, and the price changed. Check the new quote, then slide again. Nothing was added to your {T.bill}.</span></Banner>}
       <Card testId="quote-card">
-        <div className="row row--top">
-          <div className="grow">
-            <p className="kv__k">Going to</p>
-            <p className="h3" data-testid="confirm-dest">{isHome ? 'Home, ' : ''}{areaLabel(dest)}</p>
-          </div>
+        {/* Round 3 (Riley g02): Change sits on the label row so the destination gets one line, and the
+            pickup line lives here, fully above the pinned slider at 390 and 375 (it used to sit under it). */}
+        <div className="row dest-row">
+          <p className="kv__k">Going to</p>
           <button type="button" className="textlink textlink--inline change-link" data-testid="change-dest" onClick={() => navigate('/g/p2')}>Change</button>
         </div>
+        <p className="h3" data-testid="confirm-dest">{isHome ? 'Home, ' : ''}{areaLabel(dest)}</p>
+        <p className="callout pickup-inline"><span className="kv__k">Pickup</span> <span data-testid="pickup-line">{venue.pickupShort.replace(/\.$/, '')}</span></p>
         <div className="seg seg--2" role="group" aria-label="Who's riding?" data-testid="riders">
           <button type="button" aria-pressed={s.riders === 1} onClick={() => store.setRiders(1)}>Just me</button>
           <button type="button" aria-pressed={s.riders === 2} onClick={() => store.setRiders(2)}>Me + 1 to 3</button>
@@ -93,8 +94,7 @@ export function P3() {
         {perk && <p className="callout" data-testid="perk-line">Venue perk: {venue.name} takes the first {fmt(venue.perkCents)} off. You pay {fmt(Math.max(0, q - venue.perkCents))} on your {T.bill}.</p>}
       </Card>
       <Card testId="pickup-card" className="pickup-card">
-        <div className="kvrow"><span className="kvrow__icon"><Icon name="pin" /></span><div><p className="kv__k">Pickup</p><p className="h3" data-testid="pickup-line">{venue.pickupShort.replace(/\.$/, '')}</p></div></div>
-        <div className="kvrow"><span className="kvrow__icon"><Icon name="car" /></span><div><p className="kv__k">Car</p><p className="h3">Partner car, about {venue.etaMinutes} min</p></div></div>
+        <div className="kvrow kvrow--inline"><span className="kvrow__icon"><Icon name="car" /></span><p className="callout pickup-inline" data-testid="car-line"><span className="sr-only">Car: </span>Partner car, about {venue.etaMinutes} min</p></div>
       </Card>
       <div className="sticky-actions sticky-actions--slide">
         <SlideToConfirm key={slideKey} label="Slide to confirm" a11yLabel={`Confirm ride, ${fmt(q)} on your ${T.bill}`} onComplete={confirm} hint={false} />

@@ -119,13 +119,13 @@ test('belongings: card on the way, Got it dismisses, nudge at 2 min, car-here re
   await page.clock.runFor(8_000); // en_route: stays dismissed
   await expect(page.locator('[data-screen=P5]')).toBeVisible();
   await expect(page.getByTestId('belongings-card')).toHaveCount(0);
-  await page.clock.runFor(23_000); // near
+  await page.clock.fastForward(233_000); // near (2 min before the 6 min pickup)
   await expect(page.locator('[data-screen=P5w]')).toBeVisible();
   await expect(page.getByText('Driver is 2 minutes away.')).toBeVisible();
   await expect(page.getByTestId('belongings-nudge')).toContainText(BELONG);
   await page.getByTestId('belongings-ok').tap();
   await expect(page.getByTestId('belongings-nudge')).toHaveCount(0);
-  await page.clock.runFor(16_000); // arrived: reopen home reflects current state
+  await page.clock.fastForward(90_000); // arrived: reopen home reflects current state
   await nav(page, '/g/home');
   await expect(page.getByTestId('active-headline')).toHaveText('Your car is here.');
   await expect(page.getByTestId('belongings-card')).toContainText('Your car is here');
@@ -144,14 +144,13 @@ test('belongings card sits below plate and Help on P5 and never covers them @siz
   expect((await inViewport(page, 'belongings-card')).box).toBeTruthy();
 });
 
-test('E1 to E8 reachable from the fault panel; each starts fresh', async ({ page }) => {
+test('E1 to E8 (except E6, removed from the demo, Quinn Oct 11) reachable from the fault panel; each starts fresh', async ({ page }) => {
   const expectText: Record<string, RegExp> = {
     E1: /No driver found yet\.[\s\S]*Nothing was added to your tab\./,
     E2: /The price changed before your car was booked\. Nothing was added to your tab\./,
     E3: /Your car is here/,
     E4: /Your tab here is already closed\. Nothing was added to it\./,
     E5: /Your ride is still booked/,
-    E6: /Your driver cancelled\. Nothing was added to your tab\./,
     E7: /Add this stop\?[\s\S]*New quote: \$24\.00\. Final fare may differ by up to \$4\.80\. Never more than \$28\.80 unless you approve a change\./,
     E8: /Your ride came to \$28\.30\.[\s\S]*Ride ID RN-NHMCXN/,
   };
@@ -212,7 +211,7 @@ test('E2 accepted: $23.50 quote, $4.70 cap, morning total $88.79', async ({ page
   await slide(page, 'e2-yes');
   await page.clock.runFor(10_500);
   expect((await state(page)).ride).toMatchObject({ quoteCents: 2350, capCents: 470 });
-  await page.clock.runFor(60_000); // picked up; fare posts to the tab
+  await page.clock.fastForward(360_000); // picked up; fare posts to the tab
   await nav(page, '/g/p9');
   await expect(page.getByTestId('total')).toHaveText('$88.79');
 });

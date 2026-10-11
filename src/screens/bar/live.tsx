@@ -99,6 +99,7 @@ const FILTERS = ['All entry points', 'Guest request', 'Staff offer'] as const;
 export function B5() {
   const store = useStore();
   useNow(1000);
+  const s = useDemoState();
   const [f, setF] = useState<(typeof FILTERS)[number]>('All entry points');
   const rows = store.barRides().filter((r) => store.stageOf(r) !== 'pending')
     .filter((r) => f === 'All entry points' || EP_HISTORY[r.entryPoint] === f)
@@ -123,8 +124,15 @@ export function B5() {
             </div>
           );
         })}
+        {venue.bar.earlierHistory.filter((h) => f === 'All entry points' || h.entry === f).map((h) => (
+          <div key={h.tab} className="brow brow--static" data-testid="hist-row">
+            <span className="grow"><b>{fmtET(s.seededAt - h.agoMin * 60_000)} · {T.bill} #{h.tab}</b><span className="foot"> {h.entry} · {h.partner}</span></span>
+            <span className="num">{fmt(h.finalCents)}</span>
+            <span className="foot">Dropped off</span>
+          </div>
+        ))}
       </div>
-      <p className="fict">Counts and rows only. No reasons or notes. Earlier rides tonight are not in this demo.</p>
+      <p className="fict">Counts and rows only. No reasons or notes. Earlier rows are sample data.</p>
     </main>
   );
 }

@@ -325,6 +325,13 @@ html { scroll-padding-top: calc(var(--header-h) + var(--s2)); }
 .navbar__end { display: flex; justify-content: flex-end; }
 .navbar .cancel-top { padding: 0 0 0 var(--s4); }
 .change-link { flex: none; }
+/* Round 3: Change keeps its 56px tap target but takes no extra row height on the label line. */
+.dest-row { position: relative; }
+.dest-row .change-link { position: absolute; right: calc(-1 * var(--s3)); top: 50%; transform: translateY(-50%); }
+.pickup-inline { font-weight: var(--w-semibold); }
+.kvrow--inline { align-items: center; }
+.pickup-inline .kv__k { display: inline; margin-right: var(--s1); }
+@media (max-width: 380px) { .pickup-inline { font-size: var(--t-footnote); } }
 .row--top .grow { gap: 0; }
 
 /* Over-cap and cap lines: neutral surface plus icon; amber stays on the primary action only */
