@@ -368,10 +368,10 @@ test.describe('Status and charge timing (SCOPE "Ride status and charge timing")'
   test('hold copy uses the computed date, never today or tomorrow', async ({ page }) => {
     await page.clock.install({ time: new Date('2026-10-10T03:42:00Z') }); // Fri 11:42 PM ET, night of Fri Oct 9, tab opened 7:42 PM
     await open(page, '/g/p9');
-    await expect(page.getByTestId('hold-line')).toContainText("it's charged Sat, Oct 10 at 11:00 AM.");
+    await expect(page.getByTestId('hold-line')).toContainText("it's charged Saturday at 11:00 AM.");
     await expect(page.getByTestId('hold-line')).not.toContainText(/today|tomorrow/i);
     await nav(page, '/g/m1');
-    await expect(page.locator('main')).toContainText("it's charged Sat, Oct 10 at 11:00 AM.");
+    await expect(page.locator('main')).toContainText("it's charged Saturday at 11:00 AM.");
   });
 
   test('morning: Harper ride-question copy exactly; no "aren\'t charged until the bar replies"; bar tab questions to the bar', async ({ page }) => {

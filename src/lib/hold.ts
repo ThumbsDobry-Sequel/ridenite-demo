@@ -35,9 +35,9 @@ export function holdDeadline(openedAt: number): number {
   return at;
 }
 
-const DAY = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric' });
+const DAY = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'long' });
 const TIME = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' });
-/** "Sun, Oct 11 at 11:00 AM" */
+/** "Sunday at 11:00 AM": the charge is always within 24 h of tab open, so the weekday names it without a calendar date (Quinn, Oct 11). */
 export const fmtDeadline = (ms: number): string => `${DAY.format(new Date(ms))} at ${TIME.format(new Date(ms))}`;
 const HOUR = 60 * 60 * 1000;
 /**
@@ -49,5 +49,5 @@ export function chargeAt(openedAt: number, now: number): number {
   if (next11 > now && next11 - openedAt < HOLD_WINDOW_MS) return next11;
   return Math.floor((openedAt + HOLD_WINDOW_MS - HOUR) / HOUR) * HOUR; // ET offsets are whole hours
 }
-/** "charged Sun, Oct 11 at 11:00 AM" */
+/** "charged Sunday at 11:00 AM" */
 export const holdText = (openedAt: number, now: number): string => `charged ${fmtDeadline(chargeAt(openedAt, now))}`;

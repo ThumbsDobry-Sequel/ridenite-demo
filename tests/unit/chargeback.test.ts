@@ -16,7 +16,7 @@ describe('next 11:00 AM ET helper', () => {
     expect(holdDeadline(etWallToUtc(2026, 10, 10, 9))).toBe(etWallToUtc(2026, 10, 10, 11));
     expect(holdDeadline(etWallToUtc(2026, 10, 10, 11))).toBe(etWallToUtc(2026, 10, 11, 11));
     expect(holdDeadline(ET('2026-11-01T02:00:00Z'))).toBe(ET('2026-11-01T16:00:00Z'));
-    expect(fmtDeadline(ET('2026-11-01T16:00:00Z'))).toBe('Sun, Nov 1 at 11:00 AM');
+    expect(fmtDeadline(ET('2026-11-01T16:00:00Z'))).toBe('Sunday at 11:00 AM');
   });
 });
 
@@ -26,13 +26,13 @@ describe('next 11:00 AM ET helper', () => {
  */
 const CASES: [string, string, string, string][] = [
   // [label, now ISO, heading date, charge text]
-  ['Sat Oct 10, 2:00 PM', '2026-10-10T18:00:00Z', 'Saturday, Oct 10', 'charged Sun, Oct 11 at 9:00 AM'],
-  ['Sat Oct 10, 11:00 PM', '2026-10-11T03:00:00Z', 'Saturday, Oct 10', 'charged Sun, Oct 11 at 11:00 AM'],
-  ['Sun Oct 11, 1:00 AM', '2026-10-11T05:00:00Z', 'Saturday, Oct 10', 'charged Sun, Oct 11 at 11:00 AM'],
-  ['Sun Oct 11, 5:59 AM', '2026-10-11T09:59:00Z', 'Saturday, Oct 10', 'charged Sun, Oct 11 at 11:00 AM'],
-  ['Sun Oct 11, 11:30 AM', '2026-10-11T15:30:00Z', 'Sunday, Oct 11', 'charged Mon, Oct 12 at 6:00 AM'],
-  ['month boundary: Sat Oct 31, 11:00 PM (DST ends next morning)', '2026-11-01T03:00:00Z', 'Saturday, Oct 31', 'charged Sun, Nov 1 at 11:00 AM'],
-  ['month and year boundary: Fri Jan 1 2027, 12:30 AM', '2027-01-01T05:30:00Z', 'Thursday, Dec 31', 'charged Fri, Jan 1 at 11:00 AM'],
+  ['Sat Oct 10, 2:00 PM', '2026-10-10T18:00:00Z', 'Saturday, Oct 10', 'charged Sunday at 9:00 AM'],
+  ['Sat Oct 10, 11:00 PM', '2026-10-11T03:00:00Z', 'Saturday, Oct 10', 'charged Sunday at 11:00 AM'],
+  ['Sun Oct 11, 1:00 AM', '2026-10-11T05:00:00Z', 'Saturday, Oct 10', 'charged Sunday at 11:00 AM'],
+  ['Sun Oct 11, 5:59 AM', '2026-10-11T09:59:00Z', 'Saturday, Oct 10', 'charged Sunday at 11:00 AM'],
+  ['Sun Oct 11, 11:30 AM', '2026-10-11T15:30:00Z', 'Sunday, Oct 11', 'charged Monday at 6:00 AM'],
+  ['month boundary: Sat Oct 31, 11:00 PM (DST ends next morning)', '2026-11-01T03:00:00Z', 'Saturday, Oct 31', 'charged Sunday at 11:00 AM'],
+  ['month and year boundary: Fri Jan 1 2027, 12:30 AM', '2027-01-01T05:30:00Z', 'Thursday, Dec 31', 'charged Friday at 11:00 AM'],
 ];
 
 describe('date and charge acceptance (mocked clock, America/New_York)', () => {
@@ -85,7 +85,7 @@ describe('date and charge acceptance (mocked clock, America/New_York)', () => {
       expect(c).toBeGreaterThan(now);
       expect(c - open).toBeLessThan(HOLD_WINDOW_MS);
       expect(c % 3600_000).toBe(0);
-      expect(holdText(open, now)).toMatch(/^charged (Mon|Tue|Wed|Thu|Fri|Sat|Sun), [A-Z][a-z]{2} \d{1,2} at \d{1,2}:00 [AP]M$/);
+      expect(holdText(open, now)).toMatch(/^charged (Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day at \d{1,2}:00 [AP]M$/);
     }
   });
 });
