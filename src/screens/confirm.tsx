@@ -1,6 +1,6 @@
 import { QUOTE_VALID_MS } from '../lib/rideState';
 import { useState } from 'react';
-import { venue } from '../venue.config';
+import { T, venue } from '../venue.config';
 import { navigate, parseHash } from '../router';
 import { useDemoState, useStore } from '../store';
 import { capFor } from '../lib/fare';
@@ -13,7 +13,7 @@ import type { ConfirmMethod } from '../store/types';
 import { Screen, Top } from '../components/layout';
 
 export const fareNote = (q: number) =>
-  `${fmt(q)} on your tab at ${venue.name}. Final fare may differ by up to ${fmt(capFor(q))}. ${maxLine(q)}`;
+  `${fmt(q)} on your ${T.bill} at ${venue.name}. Final fare may differ by up to ${fmt(capFor(q))}. ${maxLine(q)}`;
 
 /** Money-promises memo (Harper): the most the guest pays, from the live quote and cap. Never hardcoded. */
 export const maxLine = (q: number) => `You pay the final fare, never more than ${fmt(q + capFor(q))} unless you approve a change.`;
@@ -72,7 +72,7 @@ export function P3() {
         <span className="navbar__title">Confirm ride</span>
       </div>
       {updated && <Banner tone="info">The price was updated. Check the new quote, then confirm again.</Banner>}
-      {stale && !updated && <Banner tone="info"><span data-testid="stale-banner">No driver yet, and the price changed. Check the new quote, then slide again. Nothing was added to your tab.</span></Banner>}
+      {stale && !updated && <Banner tone="info"><span data-testid="stale-banner">No driver yet, and the price changed. Check the new quote, then slide again. Nothing was added to your {T.bill}.</span></Banner>}
       <Card testId="quote-card">
         <div className="row row--top">
           <div className="grow">
@@ -89,14 +89,14 @@ export function P3() {
         {/* Design rev 04 / 04.1 (locked): one full-strength paragraph, then the over-cap line. */}
         <p className="callout quote-para"><span data-testid="tab-line">{fmt(q)} goes on your tab when you're picked up.</span>{' '}<span data-testid="cap-line">Final fare may differ by up to {fmt(cap)}.</span></p>
         <p className="foot cap-more" data-testid="max-line">More than that and we'll ask you first. {maxLine(q)}</p>
-        {perk && <p className="callout" data-testid="perk-line">Venue perk: {venue.name} covers the first {fmt(venue.perkCents)}. You pay {fmt(Math.max(0, q - venue.perkCents))} on your tab.</p>}
+        {perk && <p className="callout" data-testid="perk-line">Venue perk: {venue.name} covers the first {fmt(venue.perkCents)}. You pay {fmt(Math.max(0, q - venue.perkCents))} on your {T.bill}.</p>}
       </Card>
       <Card testId="pickup-card" className="pickup-card">
         <div className="kvrow"><span className="kvrow__icon"><Icon name="pin" /></span><div><p className="kv__k">Pickup</p><p className="h3" data-testid="pickup-line">{venue.pickupShort.replace(/\.$/, '')}</p></div></div>
         <div className="kvrow"><span className="kvrow__icon"><Icon name="car" /></span><div><p className="kv__k">Car</p><p className="h3">Partner car, about {venue.etaMinutes} min</p></div></div>
       </Card>
       <div className="sticky-actions sticky-actions--slide">
-        <SlideToConfirm key={slideKey} label="Slide to confirm" a11yLabel={`Confirm ride, ${fmt(q)} on your tab`} onComplete={confirm} hint={false} />
+        <SlideToConfirm key={slideKey} label="Slide to confirm" a11yLabel={`Confirm ride, ${fmt(q)} on your ${T.bill}`} onComplete={confirm} hint={false} />
         <Button variant="secondary" testId="cancel" className="cancel-bottom" onClick={() => navigate('/g/home?canceled=1')}>Cancel</Button>
         <p className="slide__hint foot" data-testid="slide-hint">Slide to confirm. You can undo for 10 seconds.</p>
       </div>
@@ -113,7 +113,7 @@ export function E2() {
   return (
     <Screen id="E2">
       <Top ctx={venue.guest.name} />
-      <Banner tone="info">The price changed before your car was booked. Nothing was added to your tab.</Banner>
+      <Banner tone="info">The price changed before your car was booked. Nothing was added to your {T.bill}.</Banner>
       <Card>
         <div className="row"><span className="body muted">Was</span><s className="body muted num">{fmt(prev)}</s></div>
         <div className="row"><span className="body">New quote</span><span className="price">{fmt(q)}</span></div>

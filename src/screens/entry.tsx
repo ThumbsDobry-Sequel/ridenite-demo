@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { venue } from '../venue.config';
+import { T, venue } from '../venue.config';
 import { navigate } from '../router';
 import { useStore } from '../store';
 import { encodeHandoff } from '../lib/handoff';
@@ -13,14 +13,14 @@ export function P1() {
   return (
     <Screen id="P1" tight>
       <Top ctx={venue.seat} />
-      <h1 className="large-title">Your ride home, on your tab.</h1>
-      <p className="body">Need to head out? Ask your bartender, or tap below and staff will come over. You'll see the price before anything is booked.</p>
-      <p className="foot">If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment.</p>
+      <h1 className="large-title">Your ride home, on your {T.bill}.</h1>
+      <p className="body">Need to head out? Ask your {T.staff}, or tap below and staff will come over. You'll see the price before anything is booked.</p>
+      <p className="foot">If you feel unsafe or just need to get home, you can put your ride home on your bar {T.bill}. No app, no phone, no separate payment.</p>
       <div className="spacer" />
       <Button size="xl" icon="hand" testId="ask-staff" onClick={() => { store.requestStaff(venue.seat); navigate('/g/p3w'); }}>
         Ask staff for a car
       </Button>
-      <p className="callout center">Ride goes on your tab at {venue.name}. No app needed. You'll see the price first.</p>
+      <p className="callout center">Ride goes on your {T.bill} at {venue.name}. No app needed. You'll see the price first.</p>
       <Button variant="secondary" icon="help" onClick={() => navigate('/g/p1h')}>How it works</Button>
       <TextLink onClick={() => navigate('/g/p12')}>Ask quietly instead</TextLink>
       <p className="foot center">Rides are provided by licensed drivers. {venue.name} is shown as an illustrative example, not a live RideNite partner.</p>

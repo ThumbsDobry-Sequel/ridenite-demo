@@ -2,7 +2,7 @@ import { tabCloseState } from '../../lib/tab';
 import { navigate } from '../../router';
 import { useDemoState, useStore } from '../../store';
 import { useNow } from '../../hooks';
-import { venue } from '../../venue.config';
+import { T, venue } from '../../venue.config';
 import { fmt } from '../../lib/money';
 import { fmtET } from '../../lib/confirmRecord';
 import { Icon } from '../../components/Icon';
@@ -50,7 +50,7 @@ function TabCard({ t, rank }: { t: BarTab; rank: number }) {
     <div className="bcard__head">
       <div className="grow">
         <h2 className="bcard__title">{t.seat} · {t.guest}</h2>
-        <p className="bcard__sub">tab #{t.tab}</p>
+        <p className="bcard__sub">{T.bill} #{t.tab}</p>
       </div>
       <span className="bcard__amt num" data-testid={`amt-${t.tab}`}>{fmt(tabCents(t))}</span>
     </div>
@@ -60,7 +60,7 @@ function TabCard({ t, rank }: { t: BarTab; rank: number }) {
   if (close === 'pending') {
     body = <StatusLine tone="info" icon="clock" testId={`pending-${t.tab}`}>Ride pending pickup</StatusLine>;
   } else if (close !== 'open') {
-    body = <StatusLine tone="neutral" icon="check">{close === 'closed' ? 'Tab closed' : 'Held for morning checkout'}</StatusLine>;
+    body = <StatusLine tone="neutral" icon="check">{close === 'closed' ? `${T.Bill} closed` : 'Held for morning checkout'}</StatusLine>;
   } else if (ride && stage === 'canceled_by_driver') {
     body = (
       <>
@@ -76,7 +76,7 @@ function TabCard({ t, rank }: { t: BarTab; rank: number }) {
       <>
         <StatusLine tone={st.tone} icon={st.icon} testId={`status-${t.tab}`}>{st.label}</StatusLine>
         {stage !== 'pending' && (
-          <button type="button" className="btn btn--secondary bbtn-44" data-testid={`open-tab-${t.tab}`} onClick={() => navigate(`/b/tab?tab=${t.tab}`)}>Open tab</button>
+          <button type="button" className="btn btn--secondary bbtn-44" data-testid={`open-tab-${t.tab}`} onClick={() => navigate(`/b/tab?tab=${t.tab}`)}>Open {T.bill}</button>
         )}
       </>
     );
@@ -133,7 +133,7 @@ export function B1() {
         </div>
       )}
       {tabs.length === 0 && (
-        <section className="bcard"><p className="body">No open tabs yet.</p></section>
+        <section className="bcard"><p className="body">No open {T.bills} yet.</p></section>
       )}
       <div className="bgrid">
         {tabs.map(({ t, rank }) => <TabCard key={t.tab} t={t} rank={rank} />)}
@@ -143,7 +143,7 @@ export function B1() {
         </button>
       </div>
       <p className="fict">Demo: + New guest adds a sample guest. The live app asks for first name and mobile.</p>
-      <p className="fict"><Chip tone="neutral">Sample data</Chip> Guests, tabs and cars are fictional.</p>
+      <p className="fict"><Chip tone="neutral">Sample data</Chip> Guests, {T.bills} and cars are fictional.</p>
     </main>
   );
 }

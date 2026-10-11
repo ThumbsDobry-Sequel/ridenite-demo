@@ -138,3 +138,14 @@ describe('tab close with a ride pending pickup', () => {
   });
 });
 
+
+describe('venue words and date settings live in venue.config.ts (Maison Cheryl values)', () => {
+  it('bars only: tab and bartender; heading; 6:00 AM cutoff; 24 h hold', async () => {
+    const { venue: v, T } = await import('../../src/venue.config');
+    expect(T).toMatchObject({ bill: 'tab', Bill: 'Tab', staff: 'bartender' });
+    expect(v.nightHeading).toBe('Your night, in one place');
+    expect(v.nightCutoffHour).toBe(6);
+    expect(v.holdHours).toBe(24);
+    expect(HOLD_WINDOW_MS).toBe(24 * 3600_000);
+  });
+});

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { navigate, type Route } from '../../router';
 import { useDemoState, useStore } from '../../store';
 import { useNow } from '../../hooks';
-import { venue } from '../../venue.config';
+import { T, venue } from '../../venue.config';
 import { fmt } from '../../lib/money';
 import { capFor } from '../../lib/fare';
 import { handoffUrl, type EntryPoint, type Handoff } from '../../lib/handoff';
@@ -34,10 +34,10 @@ export function B2() {
       </div>
       <p className="foot">We record only which one. No reason, notes or drink counts.</p>
       <div className="bpanel">
-        <p className="callout"><b>Can I get you a car home? It goes on your tab.</b></p>
+        <p className="callout"><b>Can I get you a car home? It goes on your {T.bill}.</b></p>
         <p className="foot">A car never replaces stopping service.</p>
       </div>
-      <h2 className="bsection" id="whose">Whose tab?</h2>
+      <h2 className="bsection" id="whose">Whose {T.bill}?</h2>
       {!ep && <p className="foot" data-testid="b2-need-ep">Pick Guest asked or I offered first.</p>}
       <div className="blist" role="list" aria-labelledby="whose">
         {open.map((t) => (
@@ -48,7 +48,7 @@ export function B2() {
         ))}
         <button type="button" role="listitem" className="brow" data-testid="b2-new" disabled={!ep} aria-disabled={!ep}
           onClick={() => { if (!ep) return; const tab = store.barNewGuest(); startBooking(store, tab, ep); }}>
-          <span className="grow">+ New guest: sample guest, opens a tab</span><Icon name="person" />
+          <span className="grow">+ New guest: sample guest, opens a {T.bill}</span><Icon name="person" />
         </button>
       </div>
     </main>
@@ -92,7 +92,7 @@ export function B3({ route }: { route: Route }) {
   const back = () => { store.barCancelDraft(); navigate('/b/tonight'); };
   return (
     <main className="bsheet bsheet--b3" data-screen="b3" id="main">
-      <SheetHead title={<>{seatTitle(t.seat)} · tab #{t.tab}</>} onBack={back}
+      <SheetHead title={<>{seatTitle(t.seat)} · {T.bill} #{t.tab}</>} onBack={back}
         right={<Chip tone="neutral" testId="b3-ep">{EP_LABEL[d.ep]}</Chip>} />
       <p className="foot" data-testid="b3-guest">{t.guest} ...{t.phoneLast4} · pickup: {pickup}</p>
       <h2 className="bsection" id="dropoff">Drop-off</h2>
@@ -139,7 +139,7 @@ export function B3({ route }: { route: Route }) {
             <p className="bnote" role="status" data-testid="b3-price-changed"><Icon name="alert" />Price changed from {fmt(d.prevQuoteCents)}. Show the guest again.</p>
           )}
           <p className="bquote__price num" data-testid="b3-quote">{fmt(q)}</p>
-          <p className="callout">Quote, goes on tab #{t.tab}.</p>
+          <p className="callout">Quote, goes on {T.bill} #{t.tab}.</p>
           <p className="callout" data-testid="b3-cap">Final fare may differ by up to {fmt(capFor(q))}.</p>
           {perk && <p className="callout" data-testid="b3-perk">Venue perk: {venue.name} covers the first {fmt(venue.perkCents)}. Guest pays {fmt(Math.max(0, q - venue.perkCents))}.</p>}
         </section>
@@ -195,7 +195,7 @@ export function Booked({ route }: { route: Route }) {
       <StatusLine tone={st.tone} icon={st.icon} testId="booked-status">{st.label}</StatusLine>
       <section className="bcard">
         <h2 className="bcard__title">{ride.seat} · {ride.guest}</h2>
-        <p className="callout">Quoted fare {fmt(ride.quoteCents)}. Posts to tab #{ride.tab} at pickup.</p>
+        <p className="callout">Quoted fare {fmt(ride.quoteCents)}. Posts to {T.bill} #{ride.tab} at pickup.</p>
         <p className="foot">Entry point: {EP_LABEL[ride.entryPoint]}</p>
         {rec && <p className="foot" data-testid="booked-record">{rec.text}</p>}
       </section>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { venue, type Address } from '../venue.config';
+import { T, venue, type Address } from '../venue.config';
 import { navigate, type Route } from '../router';
 import { useDemoState, useStore } from '../store';
 import { suggest } from '../lib/address';
@@ -21,7 +21,7 @@ export function P2() {
       )}
       <ListRow icon="kbd" title="Type it" subtitle="Big keyboard, we'll fix typos" testId="dest-type" onClick={() => navigate('/g/p2t')} />
       <ListRow icon="pin" title="Use my location" subtitle="Sample location (simulated)" testId="dest-location" onClick={() => navigate('/g/p2t?loc=1')} />
-      <ListRow icon="glass" title="Ask the bartender" subtitle="Staff will set it for you" onClick={() => { store.requestStaff(venue.seat); navigate('/g/p3w'); }} />
+      <ListRow icon="glass" title={`Ask the ${T.staff}`} subtitle="Staff will set it for you" onClick={() => { store.requestStaff(venue.seat); navigate('/g/p3w'); }} />
       <div className="spacer" />
       <Fict>Addresses are fictional sample data.</Fict>
     </Screen>
@@ -49,7 +49,7 @@ export function P2t({ route }: { route: Route }) {
       {simulated && <Banner tone="info" icon="pin"><span data-testid="sim-location">Sample location (simulated). Your real location is not used.</span></Banner>}
       {q.trim() && (
         <>
-          <p className="foot" aria-live="polite">{results.length ? 'Did you mean' : 'No match yet. Try the street name, or ask the bartender.'}</p>
+          <p className="foot" aria-live="polite">{results.length ? 'Did you mean' : `No match yet. Try the street name, or ask the ${T.staff}.`}</p>
           <div className="stack">
             {results.map((a, i) => (
               <ListRow key={a.line + a.area} icon="pin" compact title={a.line}

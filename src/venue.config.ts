@@ -20,6 +20,14 @@ export const venue = {
   name: 'Maison Cheryl',
   addressLine: '2900 Wilson Blvd, Suite 104, Arlington, VA 22201',
   neighborhood: 'Clarendon, Arlington',
+  /** Venue words (Nico 22:40): v1 is bars only, so the bill is a tab and staff are bartenders. Screens read these. */
+  terms: { bill: 'tab', Bill: 'Tab', bills: 'tabs', staff: 'bartender', Staff: 'Bartender', staffs: 'bartenders' },
+  /** Night summary heading (SCOPE: night summary, built after M2). */
+  nightHeading: 'Your night, in one place',
+  /** 00:00 to (cutoff - 1):59 counts as the previous night date. */
+  nightCutoffHour: 6,
+  /** Card hold window in hours (Toast-style POS hold). The charge time must land inside it. */
+  holdHours: 24,
   pickupSpot: 'front door, N Fillmore St',
   pickupShort: 'Front door, N Fillmore St.',
   /** Fictional 555-01xx number. */
@@ -146,3 +154,6 @@ export const venue = {
 } as const;
 
 export type Venue = typeof venue;
+
+/** Venue words for copy: `${T.bill}` renders 'tab' for Maison Cheryl. */
+export const T = venue.terms;

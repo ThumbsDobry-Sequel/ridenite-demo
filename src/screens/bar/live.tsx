@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { navigate } from '../../router';
 import { useDemoState, useStore } from '../../store';
 import { useNow } from '../../hooks';
-import { venue } from '../../venue.config';
+import { T, venue } from '../../venue.config';
 import { fmt } from '../../lib/money';
 import { fmtET } from '../../lib/confirmRecord';
 import { DEMO_TIMELINE, type Stage } from '../../lib/rideState';
@@ -73,7 +73,7 @@ export function B4() {
               <div className="bcard__head">
                 <div className="grow">
                   <h2 className="bcard__title">{r.seat} · {r.guest}</h2>
-                  <p className="bcard__sub">tab #{r.tab} · {EP_HISTORY[r.entryPoint]} · booked {fmtET(r.bookedAt)}</p>
+                  <p className="bcard__sub">{T.bill} #{r.tab} · {EP_HISTORY[r.entryPoint]} · booked {fmtET(r.bookedAt)}</p>
                 </div>
               </div>
               <Chip tone={chip.tone} icon={chip.icon} testId={`chip-${r.tab}`}>{chip.label}</Chip>
@@ -82,7 +82,7 @@ export function B4() {
               <p className="foot">{r.carInfo.partner}</p>
               <p className="foot num" data-testid={`fare-${r.tab}`}>Quote {fmt(r.quoteCents)}{fin != null ? ` · Final fare ${fmt(fin)}` : ''}</p>
               <div className="bpair">
-                <button type="button" className="btn btn--secondary bbtn-44" data-testid={`b4-tab-${r.tab}`} onClick={() => navigate(`/b/tab?tab=${r.tab}`)}>Open tab</button>
+                <button type="button" className="btn btn--secondary bbtn-44" data-testid={`b4-tab-${r.tab}`} onClick={() => navigate(`/b/tab?tab=${r.tab}`)}>Open {T.bill}</button>
                 {plateable && <button type="button" className="btn btn--secondary bbtn-44" data-testid={`b4-plate-${r.tab}`} onClick={() => navigate(`/b/plate?tab=${r.tab}`)}>Show plate card</button>}
               </div>
             </section>
@@ -117,7 +117,7 @@ export function B5() {
           const fin = finalFor(r, st);
           return (
             <div key={r.id} className="brow brow--static" data-testid="hist-row">
-              <span className="grow"><b>{fmtET(r.bookedAt)} · tab #{r.tab}</b><span className="foot"> {EP_HISTORY[r.entryPoint]} · {r.carInfo.partner}</span></span>
+              <span className="grow"><b>{fmtET(r.bookedAt)} · {T.bill} #{r.tab}</b><span className="foot"> {EP_HISTORY[r.entryPoint]} · {r.carInfo.partner}</span></span>
               <span className="num">{fmt(fin ?? r.quoteCents)}</span>
               <span className="foot">{barStatus(st, r).label}</span>
             </div>

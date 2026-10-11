@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { venue } from '../venue.config';
+import { T, venue } from '../venue.config';
 import { navigate, type Route } from '../router';
 import { useDemoState, useStore } from '../store';
 import { parseHandoff } from '../lib/handoff';
@@ -16,7 +16,7 @@ export const FAULTS: { id: Fault; label: string; route: string }[] = [
   { id: 'E1', label: 'E1 No car available', route: '/g/e1' },
   { id: 'E2', label: 'E2 Price changed before booking', route: '/g/e2' },
   { id: 'E3', label: 'E3 Car is waiting', route: '/g/e3' },
-  { id: 'E4', label: 'E4 Tab already closed', route: '/g/e4' },
+  { id: 'E4', label: `E4 ${T.Bill} already closed`, route: '/g/e4' },
   { id: 'E5', label: 'E5 No signal', route: '/g/e5' },
   { id: 'E6', label: 'E6 Driver cancelled', route: '/g/e6' },
   { id: 'E7', label: 'E7 Over the cap: your OK', route: '/g/e7' },
@@ -68,9 +68,9 @@ export function DemoPanel() {
           {s.forceStaleQuote ? 'Stale quote: on (new price, new slide)' : 'Force "stale quote" (older than 5 min)'}
         </Button>
       </div>
-      <p className="section-title">Tab link</p>
+      <p className="section-title">{T.Bill} link</p>
       <Card>
-        <p className="callout" data-testid="link-status">{s.linkedTab ? `Linked to ${s.linkedTab.seat}, tab #${s.linkedTab.tab}` : 'Not linked to a tab'}</p>
+        <p className="callout" data-testid="link-status">{s.linkedTab ? `Linked to ${s.linkedTab.seat}, ${T.bill} #${s.linkedTab.tab}` : `Not linked to a ${T.bill}`}</p>
         <div className="gap-s3" />
         {s.linkedTab
           ? <Button variant="secondary" testId="unlink" onClick={() => store.unlinkTab()}>Unlink this phone</Button>

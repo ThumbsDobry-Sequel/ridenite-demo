@@ -1,8 +1,9 @@
+import { venue } from '../venue.config';
 /**
  * Card hold deadline (SCOPE 22:22): the next 11:00 AM ET after the tab opened, which is always within
  * 24 hours of opening (Toast-style 24 h POS hold). Real date, never "today" or "tomorrow".
  */
-export const HOLD_WINDOW_MS = 24 * 60 * 60 * 1000;
+export const HOLD_WINDOW_MS = venue.holdHours * 60 * 60 * 1000;
 const TZ = 'America/New_York';
 
 function etParts(ms: number) {

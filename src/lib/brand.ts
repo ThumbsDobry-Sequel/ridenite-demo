@@ -1,3 +1,4 @@
+import { T } from '../venue.config';
 import { nightLabel } from './night';
 
 /**
@@ -6,5 +7,5 @@ import { nightLabel } from './night';
  * is never used in the app.
  */
 export function nightTagline(pickedUp: boolean, now: number = Date.now()): string | null {
-  return pickedUp ? `${nightLabel(now)}. Tab closed. Ride home on your tab.` : null;
+  return pickedUp ? `${nightLabel(now)}. ${T.Bill} closed. Ride home on your ${T.bill}.` : null;
 }

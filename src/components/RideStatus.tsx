@@ -1,3 +1,4 @@
+import { T } from '../venue.config';
 import { isAcceptedStage, type Stage } from '../lib/rideState';
 import { capFor } from '../lib/fare';
 import { fmt } from '../lib/money';
@@ -11,10 +12,10 @@ export const isAccepted = (stage: Stage | null) => isAcceptedStage(stage) && sta
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function bookedLine(_tabClosed?: boolean): string {
-  return 'Ride booked. Fare goes on your tab at pickup.';
+  return `Ride booked. Fare goes on your ${T.bill} at pickup.`;
 }
 export const requestedLine = (quoteCents: number) =>
-  `${fmt(quoteCents)} goes on your tab when you're picked up. Final fare may differ by up to ${fmt(capFor(quoteCents))}.`;
+  `${fmt(quoteCents)} goes on your ${T.bill} when you're picked up. Final fare may differ by up to ${fmt(capFor(quoteCents))}.`;
 
 export function RideStatus({ stage, quoteCents, tabClosed }: { stage: Stage | null; quoteCents: number; tabClosed: boolean }) {
   if (stage === 'requested') {
@@ -28,9 +29,9 @@ export function RideStatus({ stage, quoteCents, tabClosed }: { stage: Stage | nu
   if (!isAccepted(stage)) return null;
   return (
     <div className="ride-status" role="status" data-testid="ride-status">
-      {/* Vera rev 04: "Ride booked." heading, "Fare goes on your tab at pickup." second line */}
+      {/* Vera rev 04: "Ride booked." heading, `Fare goes on your ${T.bill} at pickup.` second line */}
       <p className="ride-status__head" data-testid="status-booked">Ride booked.</p>
-      <p className="callout" data-testid="status-booked-fare">Fare goes on your tab at pickup.</p>
+      <p className="callout" data-testid="status-booked-fare">Fare goes on your {T.bill} at pickup.</p>
     </div>
   );
 }

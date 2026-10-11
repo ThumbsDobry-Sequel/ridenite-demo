@@ -3,7 +3,7 @@ import qrcode from 'qrcode-generator';
 import { navigate } from '../../router';
 import { useDemoState, useStore } from '../../store';
 import { useNow } from '../../hooks';
-import { venue } from '../../venue.config';
+import { T, venue } from '../../venue.config';
 import { fmtET } from '../../lib/confirmRecord';
 import { Icon, type IconName } from '../../components/Icon';
 import type { Tone } from '../../components/primitives';
@@ -161,8 +161,8 @@ export function toGuest() { navigate('/g/home'); }
 /** Legal-cleared ride status for the bar (Harper memo): "Ride requested" until the driver accepts, then "Ride booked". */
 export function barRideHeadline(stage: Stage, tab: string, closed: boolean): string | null {
   if (stage === 'requested') return 'Ride requested. Finding a driver.';
-  if (stage === 'en_route' || stage === 'near' || stage === 'arrived') return `Ride booked. Fare goes on tab #${tab} at pickup.`;
-  if (stage === 'picked_up') return `Picked up. Fare on tab #${tab}.`;
+  if (stage === 'en_route' || stage === 'near' || stage === 'arrived') return `Ride booked. Fare goes on ${T.bill} #${tab} at pickup.`;
+  if (stage === 'picked_up') return `Picked up. Fare on ${T.bill} #${tab}.`;
   void closed;
   return null;
 }

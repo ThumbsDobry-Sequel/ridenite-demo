@@ -3,7 +3,7 @@ import { navigate, parseHash, useRoute, type Route } from './router';
 import { useDemoState, useStore } from './store';
 import { TRIP_ROUTES, useOnline } from './hooks';
 import { readUrlLink } from './lib/urlLink';
-import { venue } from './venue.config';
+import { T, venue } from './venue.config';
 import { APP_VERSION, BUILD_TIME_ET } from './build-info';
 import { STAGE_ROUTE } from './lib/rideState';
 import { Button, Sheet } from './components/primitives';
@@ -92,7 +92,7 @@ function Menu({ onClose, onReset, bar }: { onClose: () => void; onReset: () => v
       <Button variant="secondary" icon="hand" onClick={() => go('/g/p12')}>Ask staff quietly</Button>
       <Button variant="secondary" icon="gear" onClick={() => go('/g/demo')} testId="menu-demo">Demo controls</Button>
       <Button variant="secondary" icon="list" onClick={() => go('/o')} testId="menu-owner">Owner preview</Button>
-      <Button variant="secondary" icon="glass" onClick={() => go('/b')} testId="menu-bar">Switch to bartender view</Button>
+      <Button variant="secondary" icon="glass" onClick={() => go('/b')} testId="menu-bar">Switch to {T.staff} view</Button>
       <Button variant="bad" testId="menu-reset" onClick={onReset}>Reset demo data</Button>
       <button type="button" className="textlink" onClick={onClose}>Close</button>
       <p className="build-stamp" data-testid="build-stamp">Version {APP_VERSION} · built {BUILD_TIME_ET}</p>
@@ -132,7 +132,7 @@ export function App() {
   }, [online, route.path, store, s.ride]);
 
   useEffect(() => {
-    if (route.query.get('undone') === '1') setToast('Undone. Nothing was booked or added to your tab.');
+    if (route.query.get('undone') === '1') setToast(`Undone. Nothing was booked or added to your ${T.bill}.`);
     if (route.query.get('canceled') === '1') setToast('Cancelled. Nothing was booked.');
   }, [route]);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 5000); return () => clearTimeout(t); }, [toast]);

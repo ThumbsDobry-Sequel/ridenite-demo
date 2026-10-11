@@ -22,6 +22,8 @@ export const LIT = /\blit\b/i;
 export const LEGAL = /\bguarantee\b|\bguaranteed\b|\binsured\b|\bprotection plan\b|\bzero risk\b/i;
 export const APPROVED = [
   'If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment.',
+  // same approved sentence with the venue bill noun read from venue.config.ts (renders identically)
+  'If you feel unsafe or just need to get home, you can put your ride home on your bar {T.bill}. No app, no phone, no separate payment.',
   'Guest says they feel unsafe?',
 ];
 const APPROVED_WHERE = "They won't see where you were before.";

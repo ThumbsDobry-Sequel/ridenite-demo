@@ -3,7 +3,7 @@ import { fmtET } from '../lib/confirmRecord';
 import { RideStatus, requestedLine } from '../components/RideStatus';
 import { useEffect, useRef, useState } from 'react';
 import { TAP_GUARD_MS } from './confirm';
-import { venue } from '../venue.config';
+import { T, venue } from '../venue.config';
 import { navigate } from '../router';
 import { useDemoState, useStore } from '../store';
 import { useLiveRide, useNow, useOnline } from '../hooks';
@@ -41,7 +41,7 @@ function TabCard({ ride }: { ride: Ride | null }) {
   const q = ride?.quoteCents ?? venue.quoteCents;
   return (
     <Card>
-      <div className="row"><span className="callout">On your tab at {venue.name}</span><b className="body num">{fmt(q)}</b></div>
+      <div className="row"><span className="callout">On your {T.bill} at {venue.name}</span><b className="body num">{fmt(q)}</b></div>
       <p className="foot">Final fare may differ by up to {fmt(capFor(q))}.</p>
     </Card>
   );
@@ -142,7 +142,7 @@ export function P4() {
       <div className="spacer" />
       <DemoNext />
       <TextLink onClick={() => { store.cancelRide(); navigate('/g/home'); }}>Cancel ride</TextLink>
-      <p className="foot center">Cancel now and nothing is added to your tab.</p>
+      <p className="foot center">Cancel now and nothing is added to your {T.bill}.</p>
     </Screen>
   );
 }
@@ -214,7 +214,7 @@ export function E3() {
       <Plate plate={d.plate} spoken={d.plateSpoken} />
       <p className="body">{venue.pickupShort} {d.carShort[0].toUpperCase() + d.carShort.slice(1)}.</p>
       <Belongings ride={ride} stage={stage ?? 'arrived'} />
-      <Card><p className="body">The driver waits about <b>3 more min</b>. After that the ride may be canceled and nothing goes on your tab.</p></Card>
+      <Card><p className="body">The driver waits about <b>3 more min</b>. After that the ride may be canceled and nothing goes on your {T.bill}.</p></Card>
       <div className="spacer" />
       <Button size="xl" variant="success" icon="check" testId="coming" onClick={() => { store.releaseHold('picked_up'); navigate('/g/p6'); }}>I'm coming</Button>
       <Button variant="secondary" icon="phone" href={`tel:${d.phoneTel}`}>Call the driver</Button>
@@ -272,7 +272,7 @@ export function P7() {
       <Top left={<span className="brand">RideNite</span>} ctx={fmtET(NT.complete)} />
       <Chip tone="success" icon="check">Dropped off</Chip>
       <h1 className="large-title">You've arrived.</h1>
-      <p className="body muted">Your ride from {venue.name} is on your tab.</p>
+      <p className="body muted">Your ride from {venue.name} is on your {T.bill}.</p>
       <div className="spacer" />
       <Button size="xl" variant="success" icon="chat" href="sms:?&body=I'm%20home" testId="text-friend">Text a friend I'm home</Button>
       <p className="foot center">Opens your own messages app. Optional.</p>

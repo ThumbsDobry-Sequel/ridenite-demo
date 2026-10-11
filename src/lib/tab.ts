@@ -1,3 +1,4 @@
+import { HOLD_WINDOW_MS } from './hold';
 import { venue, type MenuItem } from '../venue.config';
 import { reconcile, type OverCapAnswer, type Reconciliation } from './fare';
 
@@ -93,7 +94,7 @@ const NOT_CHARGED_END = ['canceled_by_driver', 'no_cars', 'canceled_by_guest'];
  * Effective POS close state. A close tapped while a ride was pending pickup stays "pending" until pickup
  * (ride line posts, close completes) or a cancel / no driver (closes clean), all inside the 24 h POS hold.
  */
-export function tabCloseState(t: { close: TabCloseState; closeAt?: number }, rideStage: string | null, now: number, holdMs = 24 * 60 * 60 * 1000): TabCloseState {
+export function tabCloseState(t: { close: TabCloseState; closeAt?: number }, rideStage: string | null, now: number, holdMs = HOLD_WINDOW_MS): TabCloseState {
   if (t.close !== 'pending') return t.close;
   if (rideStage === 'picked_up' || rideStage === 'complete') return 'closed';
   if (!rideStage || NOT_CHARGED_END.includes(rideStage)) return 'closed';

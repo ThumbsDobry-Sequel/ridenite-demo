@@ -1,3 +1,4 @@
+import { venue } from '../venue.config';
 
 /**
  * Night date (SCOPE date rules, 22:27): from the device clock in America/New_York. It is today's date,
@@ -14,7 +15,7 @@ export function etYmdh(ms: number): YMD & { h: number } {
 
 export function nightDate(now: number): YMD {
   const p = etYmdh(now);
-  if (p.h >= 6) return { y: p.y, m: p.m, d: p.d };
+  if (p.h >= venue.nightCutoffHour) return { y: p.y, m: p.m, d: p.d };
   const prev = new Date(Date.UTC(p.y, p.m - 1, p.d - 1));
   return { y: prev.getUTCFullYear(), m: prev.getUTCMonth() + 1, d: prev.getUTCDate() };
 }
