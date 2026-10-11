@@ -1,5 +1,5 @@
 import { T } from '../venue.config';
-import { nightLabel } from './night';
+import { nightName } from './night';
 import { chargeAt } from './hold';
 import { tabCloseState } from './tab';
 import { rideStage } from './rideState';
@@ -22,13 +22,13 @@ export function guestCheckClosed(s: DemoState, now: number = Date.now()): boolea
 
 /**
  * Receipt line, shown right before the ride line and only when the guest was picked up.
- * Before the check closes: "[Night date]. Ride home is on your tab."
- * After it closes: "[Night date]. Tab closed. Ride home included: $27.40." (the amount always follows; the
- * word is never used bare). The bare marketing tagline is never used in the app.
+ * Before the check closes: "Saturday night. Ride home is on your tab."
+ * After it closes: "Saturday night. Tab closed. Ride home added: $27.40." (the amount always follows, from the
+ * ride's final fare; never a free-sounding word or a courtesy label, which reads as a free ride next to a charge: Quinn, Oct 11). The bare marketing tagline is never used in the app.
  */
 /** `night` is any time inside the night being described (pass the tab-open time): a Sunday-morning view still names Saturday. */
 export function nightTagline(pickedUp: boolean, checkClosed: boolean, rideCents: number, night: number = Date.now()): string | null {
   if (!pickedUp) return null;
   const amt = `$${(rideCents / 100).toFixed(2)}`;
-  return checkClosed ? `${nightLabel(night)}. ${T.Bill} closed. Ride home included: ${amt}.` : `${nightLabel(night)}. Ride home is on your ${T.bill}.`;
+  return checkClosed ? `${nightName(night)}. ${T.Bill} closed. Ride home added: ${amt}.` : `${nightName(night)}. Ride home is on your ${T.bill}.`;
 }

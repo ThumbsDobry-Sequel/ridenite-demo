@@ -237,7 +237,7 @@ export function B8({ route }: { route: Route }) {
           options={[{ id: 'fare_on_tab', label: `Fare on ${T.bill}` }, { id: 'venue_perk', label: `Venue perk, first ${fmt(venue.perkCents)}` }]} />
         <p className="foot">Offered to any guest. Never tied to what the guest ordered.</p>
         <Seg label={`${T.Bill} line name`} value={st.tabLineName} onChange={set('tabLineName')} testId="set-line"
-          options={[{ id: 'Courtesy car', label: 'Courtesy car' }, { id: 'RideNite Ride', label: 'RideNite Ride' }]} />
+          options={[{ id: 'RideNite Ride', label: 'RideNite Ride' }]} />
       </Group>
       <Group title="Venue">
         <Seg label="Morning receipt" value={st.receipt} onChange={set('receipt')} testId="set-receipt"

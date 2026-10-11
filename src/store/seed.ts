@@ -27,7 +27,7 @@ export function seedBar(now: number): BarState {
     replies: [{ tab: '4471', dest: venue.addresses[3], quoteCents: venue.quoteCents, at: now - 60_000 }],
     draft: null,
     quiet: { tab: b.quietTab, seat: b.tabs.find((t) => t.tab === b.quietTab)!.seat, at: now - 2 * 60_000, seen: false, sideDoor: false, oneRider: false, booked: false },
-    settings: { priceMode: venue.priceMode, receipt: 'neutral', tabLineName: venue.tabLineName as 'Courtesy car', closeNoticeMin: 2 },
+    settings: { priceMode: venue.priceMode, receipt: 'neutral', tabLineName: venue.tabLineName as 'RideNite Ride', closeNoticeMin: 2 },
     earlierRides: b.earlierRidesTonight,
     // Seeded rides were booked by staff after the guest saw the price (sample records, kept apart from this phone's own).
     seedRecords: rides.map((r) => ({ rideId: r.id, at: r.bookedAt, quoteCents: r.quoteCents, capCents: r.capCents, entryPoint: r.entryPoint, by: 'staff' as const, method: 'staff_saw_price' as const, tab: r.tab })),

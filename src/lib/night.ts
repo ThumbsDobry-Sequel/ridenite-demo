@@ -24,6 +24,9 @@ const LONG = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'long'
 /** "Saturday, Oct 10" */
 export const fmtNightLong = (n: YMD): string => LONG.format(new Date(Date.UTC(n.y, n.m - 1, n.d, 12)));
 export const nightLabel = (now: number): string => fmtNightLong(nightDate(now));
+const WEEKDAY = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'long' });
+/** "Saturday night" (Quinn, Oct 11): the receipt tagline names the night, not a calendar date. */
+export const nightName = (now: number): string => { const n = nightDate(now); return `${WEEKDAY.format(new Date(Date.UTC(n.y, n.m - 1, n.d, 12)))} night`; };
 
 /** Seeding is relative to now (SCOPE 22:28): the tab opened 4 h ago, rounded to the minute. */
 export const TAB_OPEN_AGO_MS = 4 * 60 * 60 * 1000;

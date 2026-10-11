@@ -27,8 +27,10 @@ export const STREET = /\b\d{2,5} (?:[NSEW] )?[A-Z][a-z]+(?: [A-Z][a-z]+)? (?:St|
 export const LIT = /\blit\b/i;
 /** Harper legal items (money-promises memo): whole word or phrase. */
 export const LEGAL = /\bguarantee\b|\bguaranteed\b|\binsured\b|\bprotection plan\b|\bzero risk\b|\bnever hit the bar\b|\bnever reach the bar\b|\boff the bar['\u2019]s account\b|\bcannot dispute\b|\bcan['\u2019]t dispute\b|\bno disputes after\b/i;
-/** "included" only with the dollar amount right after it ("Ride home included: $27.40."); bare use reads as a free ride (Harper 23:11). */
+/** "included" only with the dollar amount right after it; bare use reads as a free ride (Harper 23:11). */
 export const INCLUDED = /\bincluded\b(?!: \$)/i;
+/** Quinn/Nico, Oct 11: next to a charge these read as a free ride. Say "Ride home added: $24.60." and "RideNite Ride". */
+export const FREE_RIDE_PHRASES = /ride home included|courtesy car/i;
 /**
  * Harper payout-return memo (23:11): insurance and guaranty words, banned on bar screens, bar-facing config copy
  * and owner statements (in addition to everything above). Whole words, with common inflections.
@@ -72,6 +74,8 @@ export function lintText(text, file = '<text>') {
     if (/where you were/i.test(line)) problems.push({ file, line: i + 1, match: 'where you were' });
     const inc = line.match(INCLUDED);
     if (inc) problems.push({ file, line: i + 1, match: 'included (without ": $" amount)' });
+    const fr = line.match(FREE_RIDE_PHRASES);
+    if (fr) problems.push({ file, line: i + 1, match: fr[0] });
   });
   return problems;
 }

@@ -62,8 +62,11 @@ describe('date and charge acceptance (mocked clock, America/New_York)', () => {
       expect(holdText(open, t)).not.toMatch(/today|tomorrow/i);
       // heading uses the night date (6:00 AM cutoff)
       expect(nightLabel(t)).toBe(heading);
-      expect(nightTagline(true, true, 2740, t)).toBe(`${heading}. Tab closed. Ride home included: $27.40.`);
-      expect(nightTagline(true, false, 2740, t)).toBe(`${heading}. Ride home is on your tab.`);
+      // tagline names the night only, never a calendar date (Quinn, Oct 11)
+      const nn = `${heading.split(',')[0]} night`;
+      expect(nightTagline(true, true, 2740, t)).toBe(`${nn}. Tab closed. Ride home added: $27.40.`);
+      expect(nightTagline(true, false, 2740, t)).toBe(`${nn}. Ride home is on your tab.`);
+      expect(nightTagline(true, true, 2740, t)).not.toMatch(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b|\d{4}/);
       expect(nightTagline(false, true, 2740, t)).toBeNull();
       expect(nightTagline(false, false, 2740, t)).toBeNull();
     });
@@ -96,7 +99,7 @@ describe('receipt line and copy', () => {
   it('no bare "included" (only "included: $amount", Harper 23:11), "free" or "on us" in guest ride copy strings', () => {
     for (const [f, t] of src) {
       const strings = t.match(/(['"`])(?:(?!\1).)*\1|>[^<>{}]+</g) ?? [];
-      for (const x of strings) expect(/\bon us\b|\bincluded\b(?!: \$)|\bfree ride|\bride (is )?free\b/i.test(x), `${f}: ${x}`).toBe(false);
+      for (const x of strings) expect(/\bon us\b|\bincluded\b(?!: \$)|ride home included|courtesy car|\bfree ride|\bride (is )?free\b/i.test(x), `${f}: ${x}`).toBe(false);
     }
   });
 });
@@ -111,7 +114,7 @@ describe('bar POS tab line', () => {
     const at = ET('2026-10-10T03:52:00Z');
     const name = barRideLineName({ area: 'Clarendon, Arlington, VA 22201' }, at, fmtET);
     expect(name).toBe('RideNite car home, Clarendon area, 11:52 PM');
-    const t = tabTotals({ items: tabItems([['Table snacks', 1]] as [string, number][]), taxRate: venue.taxRate, tabLineName: 'Courtesy car', rideLineName: name, ride: { quoteCents: 2100, finalCents: null } });
+    const t = tabTotals({ items: tabItems([['Table snacks', 1]] as [string, number][]), taxRate: venue.taxRate, tabLineName: 'RideNite Ride', rideLineName: name, ride: { quoteCents: 2100, finalCents: null } });
     const l = t.lines.find((x) => x.type === 'ride_quote')!;
     expect(l.name).toBe(name);
     expect(l.name).not.toMatch(/Confirmed by guest/);
@@ -154,13 +157,16 @@ describe('venue words and date settings live in venue.config.ts (Maison Cheryl v
 
 describe('morning heading "Night of ..." follows the night-date rule (6:00 AM cutoff) on the tab-open time', () => {
   it('viewed Sat 10:52 PM ET and Sun 9:30 AM ET both read "Night of Sat, Oct 10"', async () => {
-    const { nightOfHeading, seededTabOpen } = await import('../../src/lib/night');
+    const { nightName, nightOfHeading, seededTabOpen } = await import('../../src/lib/night');
     const sat1052 = Date.parse('2026-10-11T02:52:00Z'); // tab opened Sat 6:52 PM
     const sun0930 = Date.parse('2026-10-11T13:30:00Z'); // tab opened Sun 5:30 AM, before the 6:00 AM cutoff
     expect(nightOfHeading(seededTabOpen(sat1052))).toBe('Night of Sat, Oct 10');
     expect(nightOfHeading(seededTabOpen(sun0930))).toBe('Night of Sat, Oct 10');
     // the cutoff itself
     expect(nightOfHeading(Date.parse('2026-10-11T09:59:00Z'))).toBe('Night of Sat, Oct 10'); // Sun 5:59 AM
+    // guest night summary heading and receipt tagline: night name only (Quinn, Oct 11)
+    expect(nightName(seededTabOpen(sat1052))).toBe('Saturday night');
+    expect(nightName(seededTabOpen(sun0930))).toBe('Saturday night');
     expect(nightOfHeading(Date.parse('2026-10-11T10:00:00Z'))).toBe('Night of Sun, Oct 11'); // Sun 6:00 AM
   });
 });

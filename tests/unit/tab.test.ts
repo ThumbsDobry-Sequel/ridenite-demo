@@ -5,7 +5,7 @@ import { InMemoryStore } from '../../src/store/InMemoryStore';
 import { barConfirmLine, confirmLine } from '../../src/lib/confirmRecord';
 
 const maya = tabItems(venue.bar.tabs.find((t) => t.tab === '4468')!.items);
-const base = { items: maya, taxRate: venue.taxRate, tabLineName: 'Courtesy car' };
+const base = { items: maya, taxRate: venue.taxRate, tabLineName: 'RideNite Ride' };
 const ride = (sc: keyof typeof venue.finalFareCents, overCapAnswer: 'yes' | 'no' | null = null) =>
   tabTotals({ ...base, ride: { quoteCents: 2100, finalCents: venue.finalFareCents[sc], overCapAnswer } });
 
@@ -26,7 +26,7 @@ describe('B6 tab line math (POS 3a, Maison Cheryl sample)', () => {
   it('quoted fare is its own line before the final fare is in', () => {
     const t = tabTotals({ ...base, ride: { quoteCents: 2100, finalCents: null } });
     const l = t.lines.find((x) => x.type === 'ride_quote')!;
-    expect(l.name).toBe('Courtesy car, quoted fare');
+    expect(l.name).toBe('RideNite Ride, quoted fare');
     expect(l.cents).toBe(2100);
     expect(t.totalBeforeTipCents).toBe(7539);
     expect(t.lines.filter((x) => x.type === 'ride_adjustment' || x.type === 'ride_credit')).toHaveLength(0);
@@ -73,7 +73,7 @@ describe('B6 tab line math (POS 3a, Maison Cheryl sample)', () => {
     expect(t.lines.find((x) => x.type === 'ride_quote')!.name).toBe('RideNite Ride, quoted fare');
   });
   it('groups repeated items with a count', () => {
-    const t = tabTotals({ items: tabItems([['Table snacks', 3]]), taxRate: 0.11, tabLineName: 'Courtesy car' });
+    const t = tabTotals({ items: tabItems([['Table snacks', 3]]), taxRate: 0.11, tabLineName: 'RideNite Ride' });
     expect(t.lines[0]).toMatchObject({ name: 'Table snacks', qty: 3, cents: 2400 });
   });
 });

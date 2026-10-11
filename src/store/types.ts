@@ -125,7 +125,7 @@ export interface QuietRequest { tab: string; seat: string; at: number; seen: boo
 export interface BarSettings {
   priceMode: PriceMode;
   receipt: 'neutral' | 'detailed';
-  tabLineName: 'Courtesy car' | 'RideNite Ride';
+  tabLineName: 'RideNite Ride';
   closeNoticeMin: number;
 }
 

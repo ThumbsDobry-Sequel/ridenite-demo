@@ -1,4 +1,4 @@
-import { nightOfHeading, nightPossessive, nightRelative } from '../lib/night';
+import { nightName, nightOfHeading, nightPossessive, nightRelative } from '../lib/night';
 import { holdText } from '../lib/hold';
 import type { DemoState } from '../store/types';
 import { useState } from 'react';
@@ -20,7 +20,6 @@ import { Icon } from '../components/Icon';
 import { BackButton, Screen, Top, VenueChip } from '../components/layout';
 
 const ETT = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit' });
-const ETD = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 /** Night times formatted in ET, derived from the clock (never hardcoded). */
 function useN(s: DemoState) {
   const t = nightTimes(s);
@@ -32,7 +31,12 @@ const cap = (x: string) => x[0].toUpperCase() + x.slice(1);
 /** Message stamp: weekday and time of the event itself (ET), e.g. "Sat 11:31 PM". */
 const stampAt = (t: number) => ETT.format(new Date(t)).replace(',', '');
 const nowClock = () => ETT.format(new Date(Date.now())).replace(',', '');
-const nowStamp = () => ETD.format(new Date(Date.now())).replace(/, (\d{1,2}:)/, ', $1');
+/** Email header (Quinn, Oct 11): no calendar date, e.g. "Sunday morning, 9:00 AM". */
+const ETW = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'long' });
+const ETH = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', hourCycle: 'h23' });
+const ETC = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' });
+const partOfDay = (h: number) => (h >= 5 && h < 12 ? 'morning' : h >= 12 && h < 17 ? 'afternoon' : h >= 17 && h < 21 ? 'evening' : 'night');
+const nowStamp = () => { const d = new Date(Date.now()); return `${ETW.format(d)} ${partOfDay(Number(ETH.format(d)) % 24)}, ${ETC.format(d)}`; };
 
 /** Money-promises memo (Harper's copy), exact; venue name from config. Bar tab questions still go to the bar. */
 export const rideQuestionCopy = () =>
@@ -165,7 +169,7 @@ export function P9() {
   return (
     <Screen id="P9" tight>
       <Top left={<VenueChip />} ctx={nowClock()} />
-      <h1 className="h2" data-testid="night-heading">{nightOfHeading(s.tabOpenedAt)}</h1>
+      <h1 className="h2" data-testid="night-heading">{nightName(s.tabOpenedAt)}</h1>
       <span className="status-pill" data-testid="ready-total">{s.paid ? 'Paid' : 'Ready to review'}: <span className="num">{fmt(m.totalCents)}</span></span>
       <Card>
         <h2 className="h3">Your night</h2>

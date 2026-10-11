@@ -47,12 +47,12 @@ test('ride times agree: P6 arrive time = P7 drop-off = P9 drop-off; Sunday morni
   await store(page, "s.barCloseTab(s.getState().linkedTab.tab, 'closed')");
   await nav(page, '/g/p9');
   await expect(page.locator('.tl li').filter({ hasText: 'Dropped off' })).toContainText(arrive);
-  await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home included: $24.60.');
+  await expect(page.getByTestId('night-tagline')).toHaveText('Saturday night. Tab closed. Ride home added: $24.60.');
   const px = await page.getByTestId('night-tagline').evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
   expect(px).toBeGreaterThanOrEqual(17);
   await page.clock.fastForward('09:30:00'); // Sun ~9:00 AM ET
   await nav(page, '/g/m1');
-  await expect(page.getByTestId('night-tagline')).toHaveText('Saturday, Oct 10. Tab closed. Ride home included: $24.60.');
+  await expect(page.getByTestId('night-tagline')).toHaveText('Saturday night. Tab closed. Ride home added: $24.60.');
   expect(await page.getByTestId('night-tagline').evaluate((e) => parseFloat(getComputedStyle(e).fontSize))).toBeGreaterThanOrEqual(17);
   await expect(page.locator('main')).toContainText("Here's last night's tab");
   await nav(page, '/g/home');

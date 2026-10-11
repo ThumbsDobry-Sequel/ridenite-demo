@@ -19,8 +19,8 @@ describe('night date in copy (Quinn/Nico, Oct 11)', () => {
     expect(receiptTitle(tabOpen, ET('2026-10-13T13:00:00Z'))).toBe('Receipt, Sat Oct 10');
   });
   it('tagline names Saturday when viewed Sunday morning (pass the tab-open time)', () => {
-    expect(nightTagline(true, true, 2460, tabOpen)).toBe('Saturday, Oct 10. Tab closed. Ride home included: $24.60.');
-    expect(nightTagline(true, false, 2460, tabOpen)).toBe('Saturday, Oct 10. Ride home is on your tab.');
+    expect(nightTagline(true, true, 2460, tabOpen)).toBe('Saturday night. Tab closed. Ride home added: $24.60.');
+    expect(nightTagline(true, false, 2460, tabOpen)).toBe('Saturday night. Ride home is on your tab.');
   });
 });
 

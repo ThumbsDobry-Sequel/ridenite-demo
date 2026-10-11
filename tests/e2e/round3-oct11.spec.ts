@@ -110,6 +110,16 @@ for (const vp of [{ width: 390, height: 844 }, { width: 375, height: 667 }]) {
       expect(b.y + b.height, id).toBeLessThanOrEqual(top);
     }
     await expect(page.getByTestId('pickup-line')).toHaveText('Front door, Maison Cheryl');
+    if (vp.width <= 380) {
+      // SE g02 (Riley): ETA folded into the pickup line, no separate car card, cap lines clear of the slider
+      await expect(page.getByTestId('eta-fold')).toBeVisible();
+      await expect(page.getByTestId('eta-fold')).toHaveText(', about 6 min');
+      await expect(page.getByTestId('pickup-card')).toBeHidden();
+      for (const id of ['cap-line', 'max-line']) { const b = (await page.getByTestId(id).boundingBox())!; expect(b.y + b.height, id).toBeLessThanOrEqual(top); }
+    } else {
+      await expect(page.getByTestId('eta-fold')).toBeHidden();
+      await expect(page.getByTestId('car-line')).toHaveText('Car: Partner car, about 6 min');
+    }
   });
 }
 

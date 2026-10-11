@@ -61,7 +61,7 @@ describe('bar vs RideNite split (SCOPE 23:01)', () => {
   });
 
   it('bar tab lines (B6) carry kind bar or ride; ride lines carry the ride ID; evidence pack can filter ride lines', () => {
-    const t = tabTotals({ items: tabItems([['Table snacks', 1]]), taxRate: venue.taxRate, tabLineName: 'Courtesy car', ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123' } });
+    const t = tabTotals({ items: tabItems([['Table snacks', 1]]), taxRate: venue.taxRate, tabLineName: 'RideNite Ride', ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123' } });
     expect(t.lines.filter((l) => l.kind === 'bar').map((l) => l.type)).toEqual(['item', 'tax']);
     const ride = t.lines.filter((l) => l.kind === 'ride');
     expect(ride.map((l) => l.type)).toEqual(['ride_quote', 'ride_adjustment']);
@@ -150,7 +150,7 @@ describe('payout return window: pickup date (ET) + 90 calendar days; dispute not
     expect(businessDaysBetween({ y: 2026, m: 10, d: 9 }, { y: 2026, m: 10, d: 14 })).toBe(3);
   });
   it('bar tab (B6) ride lines carry returnWindowEnds when the pickup time is known; bar lines never do', () => {
-    const t = tabTotals({ items: tabItems([['Table snacks', 1]]), taxRate: venue.taxRate, tabLineName: 'Courtesy car', ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123', pickupMs: et(2026, 10, 9, 23, 15) } });
+    const t = tabTotals({ items: tabItems([['Table snacks', 1]]), taxRate: venue.taxRate, tabLineName: 'RideNite Ride', ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123', pickupMs: et(2026, 10, 9, 23, 15) } });
     expect(t.lines.filter((l) => l.kind === 'ride').every((l) => l.returnWindowEnds === '2027-01-07')).toBe(true);
     expect(t.lines.filter((l) => l.kind === 'bar').some((l) => l.returnWindowEnds)).toBe(false);
   });

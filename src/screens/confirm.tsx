@@ -76,13 +76,15 @@ export function P3() {
       {stale && !updated && <Banner tone="info"><span data-testid="stale-banner">No driver yet, and the price changed. Check the new quote, then slide again. Nothing was added to your {T.bill}.</span></Banner>}
       <Card testId="quote-card">
         {/* Round 3 (Riley g02): Change sits on the label row so the destination gets one line, and the
-            pickup line lives here, fully above the pinned slider at 390 and 375 (it used to sit under it). */}
+            pickup line lives here, fully above the pinned slider at 390 and 375 (it used to sit under it).
+            At 375 and below (Riley, SE g02) the ETA folds into this line and the partner car card is hidden,
+            so the cap lines clear the slider; 390 and up keep the separate car card. */}
         <div className="row dest-row">
           <p className="kv__k">Going to</p>
           <button type="button" className="textlink textlink--inline change-link" data-testid="change-dest" onClick={() => navigate('/g/p2')}>Change</button>
         </div>
         <p className="h3" data-testid="confirm-dest">{isHome ? 'Home, ' : ''}{areaLabel(dest)}</p>
-        <p className="callout pickup-inline"><span className="kv__k">Pickup</span> <span data-testid="pickup-line">{venue.pickupShort.replace(/\.$/, '')}</span></p>
+        <p className="callout pickup-inline"><span className="kv__k">Pickup</span> <span data-testid="pickup-line">{venue.pickupShort.replace(/\.$/, '')}</span><span className="eta-fold" data-testid="eta-fold">, about {venue.etaMinutes} min</span></p>
         <div className="seg seg--2" role="group" aria-label="Who's riding?" data-testid="riders">
           <button type="button" aria-pressed={s.riders === 1} onClick={() => store.setRiders(1)}>Just me</button>
           <button type="button" aria-pressed={s.riders === 2} onClick={() => store.setRiders(2)}>Me + 1 to 3</button>

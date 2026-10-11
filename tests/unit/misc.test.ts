@@ -72,9 +72,9 @@ describe('copy lint', () => {
     for (const t of ['Rides are Guaranteed', 'Every ride is insured', 'Add a Protection Plan', 'Zero risk for the bar', 'A guarantee.']) expect(lintText(t).length, t).toBeGreaterThan(0);
     for (const t of ['uninsuredish', 'zero risky']) expect(lintText(t).filter((p) => /insured|zero risk/i.test(p.match)).length, t).toBe(0);
     expect(lintText('No liability for the bar')).toHaveLength(1);
-    // "included" only with the amount right after it (Harper 23:11)
-    expect(lintText('Tab closed. Ride home included: $27.40.')).toEqual([]);
-    for (const t of ['Ride home included.', 'Ride home included', 'A ride is included with your tab', 'included $5']) expect(lintText(t).length, t).toBeGreaterThan(0);
+    // "included" only with the amount right after it (Harper 23:11); "Ride home included" and "Courtesy car" banned outright (Quinn/Nico, Oct 11)
+    expect(lintText('Tab closed. Ride home added: $27.40.')).toEqual([]);
+    for (const t of ['Ride home included: $27.40.', 'Ride home included.', 'ride home included', 'A ride is included with your tab', 'included $5', 'Courtesy car', 'courtesy car, quoted fare']) expect(lintText(t).length, t).toBeGreaterThan(0);
     // bar screens and statements: insurance and guaranty words, whole words only
     for (const t of ['Dispute coverage', 'File a claim', 'Claims', 'Your loss', 'We indemnify you', 'No deductible', 'Premium tier', 'Dispute plan', 'Return policy', 'We guarantee it', 'We reimburse the fare', 'Reimbursement'])
       expect(lintStatementText(t).length, t).toBeGreaterThan(0);

@@ -42,7 +42,7 @@ export interface TabTotals {
 }
 
 /**
- * B6 tab detail math (POS 3a): items, tax on items only, "Courtesy car, quoted fare" at the quote,
+ * B6 tab detail math (POS 3a): items, tax on items only, "RideNite Ride, quoted fare" at the quote,
  * then the adjustment or credit as its own separate line once the final fare is in.
  */
 export function tabTotals(opts: {

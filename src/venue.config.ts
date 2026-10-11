@@ -58,7 +58,7 @@ export const venue = {
 
   priceMode: 'fare_on_tab' as PriceMode,
   perkCents: 1000,
-  tabLineName: 'Courtesy car',
+  tabLineName: 'RideNite Ride',
   /** M1 has no bartender screens yet, so the guest's Yes books directly (UI 5 P3 venue setting). */
   guestTapBooks: true,
   defaultTipPct: 20,
