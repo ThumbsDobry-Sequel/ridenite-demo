@@ -1,3 +1,5 @@
+import { NO_CALENDAR_DATES } from '../build-info';
+import { PINNED_STORY } from '../pinClock';
 import { seededTabOpen } from '../lib/night';
 import { venue } from '../venue.config';
 import type { BarRide, BarState, DemoState } from './types';
@@ -40,7 +42,7 @@ export const STORE_VERSION = 1;
 export const OWNED_KEY_PREFIX = 'ridenite';
 
 /** Seeded tab open time: 7:42 PM ET on the night date (src/lib/night.ts). Hold deadline = next 11:00 AM after it. */
-export const seedTabOpenedAt = (now: number): number => seededTabOpen(now);
+export const seedTabOpenedAt = (now: number): number => (NO_CALENDAR_DATES ? PINNED_STORY.tabOpened : seededTabOpen(now));
 
 export function seedState(now: number): DemoState {
   const bar = seedBar(now);

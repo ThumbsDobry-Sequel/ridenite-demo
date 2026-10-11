@@ -1,3 +1,5 @@
+import { PINNED_STORY } from '../pinClock';
+import { NO_CALENDAR_DATES } from '../build-info';
 import { venue } from '../venue.config';
 import { displayDateFmt } from './dateFmt';
 
@@ -41,6 +43,7 @@ export function drinkTimes(openedAt: number, now: number, n: number): number[] {
 
 /** Sample night times when this phone has no ride: all between tab open and now. */
 export function sampleNightTimes(openedAt: number, now: number) {
+  if (NO_CALENDAR_DATES) return { ...PINNED_STORY }; // pitch export: fixed story times
   const m = (x: number) => Math.round(x / 60_000) * 60_000;
   // same story shape as a live ride: booked 6 min before pickup, drop-off 14 min after it
   const dropAgo = 6 * 60_000, trip = venue.tripMinutes * 60_000, eta = venue.etaMinutes * 60_000;
