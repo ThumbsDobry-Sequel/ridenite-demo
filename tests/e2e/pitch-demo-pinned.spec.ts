@@ -29,7 +29,7 @@ for (const fake of ['2026-10-11T12:00:00Z', '2026-12-03T20:15:00Z']) { // Sun 8:
 }
 
 /** Team lead (Oct 11): with no stored confirm record (fresh storage), the pitch export's fallback reads the story time, untagged. */
-test('pitch demo: fresh storage, browser clock 8:00 AM ET: g10/g12/g18 and /g/p9 read "Confirmed by guest, 11:26 PM"', async ({ browser, viewport, baseURL }) => {
+test('pitch demo: fresh storage, browser clock 8:00 AM ET: g10/g12/g18 and /g/p9 and /g/p10 read "Confirmed by guest, 11:26 PM"', async ({ browser, viewport, baseURL }) => {
   for (const route of ['/g/p9', '/g/inbox', '/g/m1']) {
     const ctx = await browser.newContext({ viewport, baseURL }); // fresh storage, no confirm record, same width as the project
     const page = await ctx.newPage();
@@ -40,6 +40,12 @@ test('pitch demo: fresh storage, browser clock 8:00 AM ET: g10/g12/g18 and /g/p9
     await page.locator('[data-screen=P9]').waitFor();
     const rec = page.getByTestId('confirm-record');
     await expect(rec).toHaveText('Confirmed by guest, 11:26 PM');
+    await expect(page.locator('main')).not.toContainText('(sample data)');
+    await expect(page.locator('main')).not.toContainText('10:04');
+    // P10 (Something's wrong) reaches the same fallback
+    await page.goto('/pitch/demo/#/g/p10');
+    await page.locator('[data-screen=P10]').waitFor();
+    await expect(page.getByTestId('confirm-record')).toHaveText('Confirmed by guest, 11:26 PM');
     await expect(page.locator('main')).not.toContainText('(sample data)');
     await expect(page.locator('main')).not.toContainText('10:04');
     await ctx.close();
