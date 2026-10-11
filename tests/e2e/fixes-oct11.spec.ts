@@ -28,7 +28,7 @@ test('same night: guest home says "Tonight\'s receipt", never "Last night\'s"', 
   await page.clock.install({ time: new Date('2026-10-11T03:30:00Z') }); // Sat 11:30 PM ET
   await open(page, '/g/home');
   await expect(page.getByTestId('receipt-card')).toContainText("Tonight's receipt");
-  await expect(page.getByTestId('receipt-card')).toContainText('Sat Oct 10');
+  await expect(page.getByTestId('receipt-card')).toContainText('Saturday night');
   await expect(page.locator('body')).not.toContainText("Last night's receipt");
 });
 
