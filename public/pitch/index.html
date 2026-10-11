@@ -10,7 +10,7 @@
 <meta property="og:description" content="The ride home goes on the venue bill.">
 <meta property="og:type" content="video.other">
 <meta property="og:image" content="/pitch/poster.jpg?v=64d164da">
-<meta property="og:video" content="/pitch/ridenite-pitch-40s.mp4?v=76cf1ada">
+<meta property="og:video" content="/pitch/ridenite-pitch-40s.mp4?v=6b1794a9">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.png">
 <style>
@@ -56,7 +56,7 @@ footer p+p{margin-top:4px}
 <main>
   <div class="player">
     <video id="v" playsinline muted autoplay preload="auto" poster="/pitch/poster.jpg?v=64d164da" controlslist="nodownload">
-      <source id="src" src="/pitch/ridenite-pitch-40s.mp4?v=76cf1ada" type="video/mp4">
+      <source id="src" src="/pitch/ridenite-pitch-40s.mp4?v=6b1794a9" type="video/mp4">
     </video>
     <button class="sound" id="snd" type="button" aria-label="Play with sound">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
@@ -71,7 +71,7 @@ footer p+p{margin-top:4px}
   </section>
   <nav class="actions" aria-label="Links">
     <a class="btn primary" href="/pitch/demo/">Open the live demo</a>
-    <a class="btn" id="dl" href="/pitch/ridenite-pitch-40s.mp4?v=76cf1ada" download>Download the video (MP4)</a>
+    <a class="btn" id="dl" href="/pitch/ridenite-pitch-40s.mp4?v=6b1794a9" download>Download the video (MP4)</a>
     <span class="btn ghost" aria-disabled="true">Deck (PDF) coming soon</span>
   </nav>
   <p class="note">The live demo runs on sample data. No real rides or charges.</p>
@@ -84,7 +84,7 @@ footer p+p{margin-top:4px}
 (function(){
   var v=document.getElementById('v'),s=document.getElementById('src'),b=document.getElementById('snd'),dl=document.getElementById('dl');
   var vert=window.matchMedia('(max-width:700px) and (orientation:portrait)');
-  if(vert.matches){s.src='/pitch/ridenite-pitch-40s-vertical.mp4?v=f536ae88';v.poster='/pitch/poster-vertical.jpg?v=e0456302';dl.href='/pitch/ridenite-pitch-40s-vertical.mp4?v=f536ae88';v.load();}
+  if(vert.matches){s.src='/pitch/ridenite-pitch-40s-vertical.mp4?v=a57c406a';v.poster='/pitch/poster-vertical.jpg?v=e0456302';dl.href='/pitch/ridenite-pitch-40s-vertical.mp4?v=a57c406a';v.load();}
   v.muted=true;var p=v.play();if(p&&p.catch)p.catch(function(){v.controls=true;});
   b.addEventListener('click',function(){v.muted=false;v.currentTime=0;v.controls=true;v.play();b.hidden=true;});
   v.addEventListener('volumechange',function(){if(!v.muted)b.hidden=true;});
