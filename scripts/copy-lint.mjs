@@ -31,6 +31,8 @@ export const LEGAL = /\bguarantee\b|\bguaranteed\b|\binsured\b|\bprotection plan
 export const INCLUDED = /\bincluded\b(?!: \$)/i;
 /** Quinn/Nico, Oct 11: next to a charge these read as a free ride. Say "Ride home added: $24.60." and "RideNite Ride". */
 export const FREE_RIDE_PHRASES = /ride home included|courtesy car/i;
+/** Statement wording (Nico, Oct 11): RideNite credits its fee; never 'fee returns', 'payout returned' or 'return window' (reads like a securities word on a public page). */
+export const RETURN_PHRASES = /fee returns?\b|payout returned|return window/i;
 /**
  * Harper payout-return memo (23:11): insurance and guaranty words, banned on bar screens, bar-facing config copy
  * and owner statements (in addition to everything above). Whole words, with common inflections.
@@ -76,6 +78,8 @@ export function lintText(text, file = '<text>') {
     if (inc) problems.push({ file, line: i + 1, match: 'included (without ": $" amount)' });
     const fr = line.match(FREE_RIDE_PHRASES);
     if (fr) problems.push({ file, line: i + 1, match: fr[0] });
+    const rp = line.match(RETURN_PHRASES);
+    if (rp) problems.push({ file, line: i + 1, match: rp[0] });
   });
   return problems;
 }
