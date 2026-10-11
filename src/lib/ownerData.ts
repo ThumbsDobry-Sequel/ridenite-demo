@@ -9,7 +9,10 @@ import { checkLines, rideLinesOnly, splitSubtotals, type CheckLine } from './che
 import { morningFor } from './morning';
 import { confirmLine } from './confirmRecord';
 import type { DemoState } from '../store/types';
-import { payoutReturnCents, payoutReturnLine, returnWindowEnds, returnWindowStatus, statementFootnote, ymdIso, FORWARDING_COPY, EVIDENCE_COPY } from './payouts';
+import { payoutReturnCents, payoutReturnLine, quoteAdjustmentCredits, quoteCreditLine, returnWindowEnds, returnWindowStatus, statementFootnote, ymdIso, FORWARDING_COPY, EVIDENCE_COPY, QUOTE_CREDIT_FOOTNOTE, type QuoteCreditResult } from './payouts';
+import { capFor, reconcile, type Reconciliation } from './fare';
+import { tabItems } from './tab';
+import type { MenuItem } from '../venue.config';
 import { venue } from '../venue.config';
 import { rideRef } from './checkLines';
 
@@ -70,7 +73,8 @@ const DAY = 86_400_000;
  * ("Payout final") and some recent ("Return window open until Jan 8"). Fictional amounts reuse spec fares.
  */
 export function sampleOwnerRides(now: number): SampleOwnerRide[] {
-  const seeds: [number, number][] = [[120, 2100], [95, 2460], [40, 1890], [1, 2460], [2, 2740]]; // [days ago, ride cents]
+  // [days ago, ride cents]. Ride 4823 (index 5): final fare $28.30 over the $25.20 approved cap, guest declined; charged $25.20.
+  const seeds: [number, number][] = [[120, 2100], [95, 2460], [40, 1890], [1, 2460], [2, 2740], [1, 2520]];
   return seeds.map(([ago, cents], i) => {
     const pickupMs = now - ago * DAY;
     const end = returnWindowEnds(pickupMs);
@@ -89,8 +93,45 @@ export function sampleFeeReturns(now: number): FeeReturn[] {
   const pick = (no: string) => rides.find((r) => r.rideNo === no)!;
   return ([['4821', 'dispute_lost'], ['4820', 'refunded_under_rule']] as const).map(([no, outcome]) => {
     const r = pick(no);
-    return { rideNo: no, rideId: r.rideId, outcome, cents: payoutReturnCents(r.feeChargedCents), line: payoutReturnLine(no, r.pickupMs, outcome, r.feeChargedCents), label: SAMPLE_LABEL };
+    // Statement lines use the RideNite ride ID (RN-xxxxxx), the same format as guest receipts.
+    return { rideNo: no, rideId: r.rideId, outcome, cents: payoutReturnCents(r.feeChargedCents), line: payoutReturnLine(r.rideId, r.pickupMs, outcome, r.feeChargedCents), label: SAMPLE_LABEL };
   });
+}
+
+export interface QuoteCredit extends QuoteCreditResult { line: string | null; label: typeof SAMPLE_LABEL }
+
+/**
+ * Separate sample ride (team decision Oct 11): its own tab (#4479), its own total, Sample data. The fare ran over the
+ * cap because of traffic on the driver's route (no guest change) and the guest declined the difference on their own
+ * phone. Quote $21.00, approved maximum $25.20, final fare $28.30, declined $3.10 (credit to the bar, <= $10).
+ * Same ride ID (RN-xxxxxx) on the guest receipt and the owner statement.
+ */
+export interface SampleTrafficRide {
+  tab: string; seat: string; guest: string; rideId: string; pickupMs: number;
+  items: MenuItem[]; itemsCents: number; taxCents: number; tipCents: number; barCents: number;
+  quoteCents: number; capCents: number; finalCents: number; recon: Reconciliation; rideCents: number; totalCents: number;
+  label: typeof SAMPLE_LABEL;
+}
+export function sampleTrafficRide(now: number): SampleTrafficRide {
+  const r = sampleOwnerRides(now).find((x) => x.rideNo === '4823')!;
+  const q = venue.quoteCents;
+  const finalCents = 2830;
+  const recon = reconcile(q, finalCents, 'no');
+  const items = tabItems([['Table snacks', 1], ['Madeleines', 1]]);
+  const itemsCents = items.reduce((a, i) => a + i.cents, 0);
+  const taxCents = Math.round(itemsCents * venue.taxRate);
+  const tipCents = Math.round((itemsCents * venue.defaultTipPct) / 100);
+  const barCents = itemsCents + taxCents + tipCents;
+  const rideCents = q + recon.postedAdjCents;
+  return { tab: '4479', seat: 'Bar 6', guest: 'Chris P.', rideId: r.rideId, pickupMs: r.pickupMs, items, itemsCents, taxCents, tipCents, barCents,
+    quoteCents: q, capCents: capFor(q), finalCents, recon, rideCents, totalCents: barCents + rideCents, label: SAMPLE_LABEL };
+}
+
+/** The statement's quote adjustment credit for the sample traffic ride (declined overage, capped $10 per ride). */
+export function sampleQuoteCredits(now: number): QuoteCredit[] {
+  const t = sampleTrafficRide(now);
+  return quoteAdjustmentCredits([{ rideId: t.rideId, pickupMs: t.pickupMs, quoteCents: t.quoteCents, capCents: t.capCents, finalCents: t.finalCents, bookedAtRideNiteQuote: true, declinedOnGuestPhone: true, guestCausedOverage: false }])
+    .map((c) => ({ ...c, line: c.creditedCents > 0 ? quoteCreditLine(c.rideId, c.pickupMs, c.creditedCents) : null, label: SAMPLE_LABEL }));
 }
 
 export interface OwnerStatementSample {
@@ -98,6 +139,9 @@ export interface OwnerStatementSample {
   rides: SampleOwnerRide[];
   feeReturns: FeeReturn[];
   feeReturnsCents: number;
+  quoteCredits: QuoteCredit[];
+  quoteCreditsCents: number;
+  quoteCreditFootnote: string;
   footnote: string;
   forwarding: string;
   evidence: string;
@@ -105,9 +149,11 @@ export interface OwnerStatementSample {
 /** Everything the owner statement preview needs, Sample data only. */
 export function sampleOwnerStatement(now: number): OwnerStatementSample {
   const feeReturns = sampleFeeReturns(now);
+  const quoteCredits = sampleQuoteCredits(now);
   return {
     label: SAMPLE_LABEL, rides: sampleOwnerRides(now), feeReturns,
     feeReturnsCents: feeReturns.reduce((a, f) => a + f.cents, 0),
+    quoteCredits, quoteCreditsCents: -quoteCredits.reduce((a, c) => a + c.creditedCents, 0), quoteCreditFootnote: QUOTE_CREDIT_FOOTNOTE,
     footnote: statementFootnote(), forwarding: FORWARDING_COPY, evidence: EVIDENCE_COPY,
   };
 }

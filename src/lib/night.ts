@@ -52,3 +52,25 @@ export const nightOfHeading = (t: number): string => {
 };
 /** "Sat" */
 export const nightWeekday = (now: number): string => nightShort(now).split(' ')[0];
+
+/**
+ * How copy names a night relative to the viewing time (simulated clock): "tonight" while it is still that
+ * night (before the cutoff hour), "last night" on the next day, otherwise null (use the date).
+ * Pass the tab-open time as `nightAt`. Guest home never says "Last night's receipt" on the same night.
+ */
+export function nightRelative(nightAt: number, now: number): 'tonight' | 'last night' | null {
+  const a = nightDate(nightAt);
+  const b = nightDate(now);
+  const diff = Math.round((Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d)) / 86_400_000);
+  return diff === 0 ? 'tonight' : diff === 1 ? 'last night' : null;
+}
+/** "Tonight's receipt" / "Last night's receipt" / "Receipt, Sat Oct 10" */
+export function receiptTitle(nightAt: number, now: number): string {
+  const r = nightRelative(nightAt, now);
+  return r === 'tonight' ? "Tonight's receipt" : r === 'last night' ? "Last night's receipt" : `Receipt, ${nightShort(nightAt)}`;
+}
+/** "tonight's" / "last night's" / "the Sat Oct 10" possessive phrase for a bill noun. */
+export function nightPossessive(nightAt: number, now: number): string {
+  const r = nightRelative(nightAt, now);
+  return r === 'tonight' ? "tonight's" : r === 'last night' ? "last night's" : `the ${nightShort(nightAt)}`;
+}

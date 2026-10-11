@@ -218,6 +218,12 @@ export class InMemoryStore implements DemoStore {
 
   setTip(pct: number) { this.set({ tipPct: pct }); }
   setOverCapAnswer(a: OverCapAnswer) { this.set({ overCapAnswer: a }); }
+  approveStop(newQuoteCents: number) {
+    const r = this.state.ride;
+    if (!r || r.pending || r.terminal) return;
+    const orig = r.originalQuoteCents ?? r.quoteCents;
+    this.set({ ride: { ...r, quoteCents: newQuoteCents, capCents: capFor(newQuoteCents), originalQuoteCents: orig, stopDeltaCents: newQuoteCents - orig }, quoteCents: newQuoteCents, overCapAnswer: null });
+  }
   setFareScenario(s: FareScenario) {
     this.set({ fareScenario: s, overCapAnswer: null, ride: this.state.ride ? { ...this.state.ride, scenario: s } : null });
   }
@@ -243,7 +249,8 @@ export class InMemoryStore implements DemoStore {
       case 'E4': this.set({ ...base, fault: f, tabClosed: true }); break;
       case 'E5': this.set({ ...base, fault: f, forceOffline: true, ride: booked('en_route', { hold: 'en_route' }) }); break;
       case 'E6': this.set({ ...base, fault: f, ride: booked('en_route', { terminal: 'canceled_by_driver' }) }); break;
-      case 'E7': this.set({ ...base, fault: f, fareScenario: 'over', ride: booked('complete', { scenario: 'over' as FareScenario }) }); break;
+      case 'E7': this.set({ ...base, fault: f, ride: booked('en_route', { hold: 'en_route' }) }); break;
+      case 'E8': this.set({ ...base, fault: f, fareScenario: 'over', ride: booked('complete', { scenario: 'over' as FareScenario }) }); break;
     }
   }
   clearFault() { this.set({ fault: null, forceOffline: false }); }

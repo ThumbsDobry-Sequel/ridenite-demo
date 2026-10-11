@@ -11,7 +11,7 @@ const ride = (sc: keyof typeof venue.finalFareCents, overCapAnswer: 'yes' | 'no'
 
 describe('B6 tab line math (POS 3a, Maison Cheryl sample)', () => {
   it('seeded tab totals match the B1 sample amounts', () => {
-    const want: Record<string, number> = { '4468': 4900, '4471': 3600, '4474': 2800, '4475': 11200, '4476': 2200, '4473': 5800 };
+    const want: Record<string, number> = { '4468': 4900, '4471': 2800, '4472': 7000, '4474': 1600, '4475': 9800, '4476': 2000, '4473': 4500 };
     for (const [tab, cents] of Object.entries(want)) {
       expect(tabItems(venue.bar.tabs.find((t) => t.tab === tab)!.items).reduce((a, i) => a + i.cents, 0)).toBe(cents);
     }
@@ -64,7 +64,7 @@ describe('B6 tab line math (POS 3a, Maison Cheryl sample)', () => {
     expect(t.lines.some((x) => x.type === 'ride_held')).toBe(false);
     expect(t.totalBeforeTipCents).toBe(7959);
   });
-  it('tip base is drinks and food only ($49.00), in every scenario', () => {
+  it('tip base is items only, never the ride ($49.00), in every scenario', () => {
     for (const sc of ['higher', 'lower', 'equal', 'over'] as const) expect(ride(sc).tipBaseCents).toBe(4900);
     expect(tabTotals(base).tipBaseCents).toBe(4900);
   });
@@ -73,8 +73,8 @@ describe('B6 tab line math (POS 3a, Maison Cheryl sample)', () => {
     expect(t.lines.find((x) => x.type === 'ride_quote')!.name).toBe('RideNite Ride, quoted fare');
   });
   it('groups repeated items with a count', () => {
-    const t = tabTotals({ items: tabItems([['Old Fashioned', 3]]), taxRate: 0.11, tabLineName: 'Courtesy car' });
-    expect(t.lines[0]).toMatchObject({ name: 'Old Fashioned', qty: 3, cents: 4500 });
+    const t = tabTotals({ items: tabItems([['Table snacks', 3]]), taxRate: 0.11, tabLineName: 'Courtesy car' });
+    expect(t.lines[0]).toMatchObject({ name: 'Table snacks', qty: 3, cents: 2400 });
   });
 });
 

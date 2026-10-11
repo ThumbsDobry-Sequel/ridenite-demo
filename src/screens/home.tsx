@@ -1,4 +1,5 @@
-import { nightShort } from '../lib/night';
+import { areaLabel } from '../lib/tab';
+import { nightShort, receiptTitle } from '../lib/night';
 import { bookedLine, isAccepted } from '../components/RideStatus';
 import { useState } from 'react';
 import { T, venue } from '../venue.config';
@@ -66,7 +67,7 @@ export function Home() {
             <span className="stack">
               <Chip tone={STAGE_TONE[stage]} icon="car">{STAGE_LABEL[stage]}</Chip>
               {isAccepted(stage) && <span className="callout" data-testid="home-booked">{bookedLine(s.tabClosed)}</span>}
-              <span className="callout">to {ride.dest.line}</span>
+              <span className="callout">to {areaLabel(ride.dest)}</span>
               {stage !== 'pending' && stage !== 'requested' && (
                 <>
                   <span className="callout muted">{venue.driver.car}, {venue.driver.first}</span>
@@ -82,16 +83,16 @@ export function Home() {
       ) : linked ? (
         <>
           <h1 className="large-title">Ride home,<br />on your {T.bill}.</h1>
-          <p className="callout muted">One tap, then confirm the price.</p>
+          <p className="callout muted">Ask staff, then confirm the price.</p>
           <p className="section-title">More</p>
           <MoreRow icon="pin" title="Somewhere else" sub="Type an address" testId="somewhere-else" onClick={() => navigate('/g/p2')} />
-          {ride && stage && <MoreRow icon="car" title="Last ride" sub={`${STAGE_LABEL[stage]}, to ${ride.dest.line}`} testId="last-ride-card" onClick={() => navigate(STAGE_ROUTE[stage])} />}
-          <MoreRow icon="receipt" title="Last night's receipt" sub={`${nightShort(Date.now())} · ${fmt(m.totalCents)}`} testId="receipt-card" onClick={() => navigate('/g/inbox')} />
+          {ride && stage && <MoreRow icon="car" title="Last ride" sub={`${STAGE_LABEL[stage]}, to ${areaLabel(ride.dest)}`} testId="last-ride-card" onClick={() => navigate(STAGE_ROUTE[stage])} />}
+          <MoreRow icon="receipt" title={receiptTitle(s.tabOpenedAt, Date.now())} sub={`${nightShort(s.tabOpenedAt)} · ${fmt(m.totalCents)}`} testId="receipt-card" onClick={() => navigate('/g/inbox')} />
           <p className="fict">Fictional sample data</p>
           <p className="fict">No real cars or charges.</p>
           <div className="sticky-actions sticky-actions--hero" data-testid="hero-dock">
             <Button size="hero" icon="car" testId="ride-home" onClick={rideHome}
-              sub={home ? `To ${home.line}` : 'Pick where you are going'}>
+              sub={home ? `To ${areaLabel(home)}` : 'Pick where you are going'}>
               Ride home
             </Button>
           </div>
@@ -102,7 +103,7 @@ export function Home() {
           <p className="callout muted">Scan the QR code on your table to link your {T.bill}.</p>
           <MoreRow icon="grid" title="Scan table QR" sub={`Links this phone to your ${T.bill}`} testId="scan-qr" onClick={() => setScan(true)} />
           <div className="card card--quiet" data-testid="not-linked"><p className="foot">Booked from a table QR? Open it in Safari to see your ride.</p></div>
-          <MoreRow icon="receipt" title="Last night's receipt" sub={`${nightShort(Date.now())} · ${fmt(m.totalCents)}`} testId="receipt-card" onClick={() => navigate('/g/inbox')} />
+          <MoreRow icon="receipt" title={receiptTitle(s.tabOpenedAt, Date.now())} sub={`${nightShort(s.tabOpenedAt)} · ${fmt(m.totalCents)}`} testId="receipt-card" onClick={() => navigate('/g/inbox')} />
           <p className="fict">Fictional sample data</p>
           <p className="fict">No real cars or charges.</p>
           <div className="sticky-actions sticky-actions--hero" data-testid="hero-dock">

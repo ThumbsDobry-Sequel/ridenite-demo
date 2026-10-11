@@ -61,7 +61,7 @@ describe('bar vs RideNite split (SCOPE 23:01)', () => {
   });
 
   it('bar tab lines (B6) carry kind bar or ride; ride lines carry the ride ID; evidence pack can filter ride lines', () => {
-    const t = tabTotals({ items: tabItems([['Old Fashioned', 1]]), taxRate: venue.taxRate, tabLineName: 'Courtesy car', ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123' } });
+    const t = tabTotals({ items: tabItems([['Table snacks', 1]]), taxRate: venue.taxRate, tabLineName: 'Courtesy car', ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123' } });
     expect(t.lines.filter((l) => l.kind === 'bar').map((l) => l.type)).toEqual(['item', 'tax']);
     const ride = t.lines.filter((l) => l.kind === 'ride');
     expect(ride.map((l) => l.type)).toEqual(['ride_quote', 'ride_adjustment']);
@@ -150,7 +150,7 @@ describe('payout return window: pickup date (ET) + 90 calendar days; dispute not
     expect(businessDaysBetween({ y: 2026, m: 10, d: 9 }, { y: 2026, m: 10, d: 14 })).toBe(3);
   });
   it('bar tab (B6) ride lines carry returnWindowEnds when the pickup time is known; bar lines never do', () => {
-    const t = tabTotals({ items: tabItems([['Old Fashioned', 1]]), taxRate: venue.taxRate, tabLineName: 'Courtesy car', ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123', pickupMs: et(2026, 10, 9, 23, 15) } });
+    const t = tabTotals({ items: tabItems([['Table snacks', 1]]), taxRate: venue.taxRate, tabLineName: 'Courtesy car', ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123', pickupMs: et(2026, 10, 9, 23, 15) } });
     expect(t.lines.filter((l) => l.kind === 'ride').every((l) => l.returnWindowEnds === '2027-01-07')).toBe(true);
     expect(t.lines.filter((l) => l.kind === 'bar').some((l) => l.returnWindowEnds)).toBe(false);
   });
@@ -232,11 +232,14 @@ describe('Payout Return: RideNite fee only, eligibility on the dispute notice da
   });
   it('bar forwarded within 2 business days but the deadline left no time: condition met', () =>
     expect(payoutReturnEligible({ pickupMs, outcome: 'dispute_lost', noticeMs: et(2026, 11, 2, 9, 0), forwardedMs: et(2026, 11, 4, 9, 0), evidenceSentMs: et(2026, 11, 4, 12, 0), evidenceFiledMs: null, processorDeadlineMs: et(2026, 11, 4, 23, 0) })).toBe(true));
-  it('sample statement: ride 4821 "Oct 9, dispute lost" and a refund-rule return, each -$1.00, Sample data; owner copy uses the agreed timing words', async () => {
+  it('sample statement: ride 4821 (shown by its RN- ride ID) "Oct 9, dispute lost" and a refund-rule return, each -$1.00, Sample data; owner copy uses the agreed timing words', async () => {
     const { sampleOwnerStatement } = await import('../../src/lib/ownerData');
     const st = sampleOwnerStatement(T0); // Sat Oct 10, 10:30 PM ET
     expect(st.label).toBe('Sample data');
-    expect(st.feeReturns.map((f) => f.line)).toContain('Ride Payout returned (RideNite fee), ride 4821, Oct 9, dispute lost: -$1.00');
+    const r4821 = st.rides.find((r) => r.rideNo === '4821')!;
+    expect(st.feeReturns.map((f) => f.line)).toContain(`Ride Payout returned (RideNite fee), ride ${r4821.rideId}, Oct 9, dispute lost: -$1.00`);
+    // one ride ID format on statements, the same as guest receipts (RN-xxxxxx); never the bare 4-digit number
+    for (const l of [...st.feeReturns.map((f) => f.line), ...st.quoteCredits.map((c) => c.line!)]) { expect(l).toMatch(/ride RN-[A-Z0-9]{6},/); expect(l).not.toMatch(/ride \d{4}\b/); }
     expect(st.feeReturns.some((f) => f.outcome === 'refunded_under_rule')).toBe(true);
     for (const f of st.feeReturns) { expect(f.cents).toBe(-100); expect(f.label).toBe('Sample data'); }
     expect(st.feeReturnsCents).toBe(-100 * st.feeReturns.length);
@@ -299,5 +302,42 @@ describe('per-ride fee stored at booking (Harper payout-return.md section 7)', (
     expect(() => payoutReturnCents(100, 2740)).toThrow(PayoutReturnError); // fare-sized
     expect(() => payoutReturnCents(-1)).toThrow(PayoutReturnError);
     expect(() => payoutReturnCents(100, 1.5)).toThrow(PayoutReturnError);
+  });
+});
+
+describe('quote adjustment credit (legal memo over-cap-credit.md, Oct 11)', async () => {
+  const { quoteAdjustmentCredits, quoteCreditLine, QUOTE_CREDIT_FOOTNOTE } = await import('../../src/lib/payouts');
+  const base = { rideId: 'RN-ABC123', pickupMs: Date.parse('2026-10-10T03:00:00Z'), quoteCents: 2100, capCents: 420, bookedAtRideNiteQuote: true, declinedOnGuestPhone: true, guestCausedOverage: false };
+  it('credits the amount over the approved cap, as a negative statement line with the RN- ride ID', () => {
+    const [c] = quoteAdjustmentCredits([{ ...base, finalCents: 2830 }]);
+    expect(c).toMatchObject({ overCents: 310, creditedCents: 310, manualReviewCents: 0, state: 'credited' });
+    expect(quoteCreditLine(c.rideId, c.pickupMs, c.creditedCents)).toBe('Quote adjustment credit, ride RN-ABC123, Oct 9: -$3.10');
+  });
+  it('caps at $10 per ride; the rest goes to manual review', () => {
+    const [c] = quoteAdjustmentCredits([{ ...base, finalCents: 2520 + 1350 }]);
+    expect(c).toMatchObject({ overCents: 1350, creditedCents: 1000, manualReviewCents: 350, state: 'manual_review' });
+  });
+  it('caps at $280 per venue per month; over that is manual review, not auto-credited', () => {
+    const rides = Array.from({ length: 30 }, (_, i) => ({ ...base, rideId: `RN-R${String(i).padStart(5, '0')}`, pickupMs: base.pickupMs + i * 60_000, finalCents: 2520 + 1000 }));
+    const out = quoteAdjustmentCredits(rides);
+    expect(out.reduce((a, c) => a + c.creditedCents, 0)).toBe(28000);
+    expect(out.slice(0, 28).every((c) => c.state === 'credited')).toBe(true);
+    expect(out.slice(28).every((c) => c.state === 'manual_review' && c.creditedCents === 0 && c.manualReviewCents === 1000)).toBe(true);
+    expect(quoteAdjustmentCredits([{ ...base, finalCents: 2830 }], 27900)[0]).toMatchObject({ creditedCents: 100, manualReviewCents: 210, state: 'manual_review' });
+  });
+  it('only rides at our quote and cap, declined by the guest on their own phone, not caused by a guest change', () => {
+    for (const k of [{ bookedAtRideNiteQuote: false }, { declinedOnGuestPhone: false }, { guestCausedOverage: true }])
+      expect(quoteAdjustmentCredits([{ ...base, ...k, finalCents: 2830 }])[0]).toMatchObject({ state: 'not_eligible', creditedCents: 0 });
+    expect(quoteAdjustmentCredits([{ ...base, finalCents: 2460 }])[0].state).toBe('not_eligible'); // within the cap: no credit
+  });
+  it('sample statement shows the credit with Sample data and the footnote', async () => {
+    const { sampleOwnerStatement } = await import('../../src/lib/ownerData');
+    const st = sampleOwnerStatement(Date.parse('2026-10-11T02:30:00Z'));
+    expect(st.quoteCredits).toHaveLength(1);
+    expect(st.quoteCredits[0].line).toMatch(/^Quote adjustment credit, ride RN-[A-Z0-9]{6}, Oct 9: -\$3\.10$/);
+    expect(st.quoteCredits[0].label).toBe('Sample data');
+    expect(st.quoteCreditsCents).toBe(-310);
+    expect(st.quoteCreditFootnote).toBe(QUOTE_CREDIT_FOOTNOTE);
+    expect(QUOTE_CREDIT_FOOTNOTE).toBe("When a ride's final fare is above the guest's approved cap and the guest declines the difference, we credit the difference against our fees, up to $10 per ride. Credits apply to future invoices and aren't paid in cash.");
   });
 });

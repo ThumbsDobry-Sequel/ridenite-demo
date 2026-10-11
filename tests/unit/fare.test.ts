@@ -47,10 +47,10 @@ const totals = (quote: number, final: number, answer: 'yes' | 'no' | null = null
   morningTotals({ items: venue.menu, taxRate: venue.taxRate, tipPct, quoteCents: quote, finalCents: final, overCapAnswer: answer });
 
 describe('P9 totals for the configured venue (POS build-spec 3b)', () => {
-  it('base: drinks $37 + food $12 = $49, tax 11% = $5.39, tip 20% = $9.80', () => {
+  it('base: food and neutral items $49 (no drinks on the demo tab), tax 11% = $5.39, tip 20% = $9.80', () => {
     const t = totals(2100, 2460);
-    expect(t.drinksCents).toBe(3700);
-    expect(t.foodCents).toBe(1200);
+    expect(t.drinksCents).toBe(0);
+    expect(t.foodCents).toBe(4900);
     expect(t.tipBaseCents).toBe(4900);
     expect(t.taxCents).toBe(539);
     expect(t.tipCents).toBe(980);

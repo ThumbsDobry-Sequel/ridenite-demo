@@ -18,7 +18,8 @@ export function morningFor(state: DemoState, now: number = Date.now()): MorningT
   const noRide = committed ? !charged : guestActivity(state);
   const quoteCents = committed?.quoteCents ?? venue.quoteCents;
   const scenario = committed?.scenario ?? state.fareScenario;
-  const finalCents = venue.finalFareCents[scenario];
+  // an approved stop raises the simulated final fare by the same amount it raised the quote
+  const finalCents = venue.finalFareCents[scenario] + (committed?.stopDeltaCents ?? 0);
   const t = morningTotals({
     items: venue.menu, taxRate: venue.taxRate, tipPct: state.tipPct,
     quoteCents: noRide ? null : quoteCents, finalCents: noRide ? null : finalCents, overCapAnswer: state.overCapAnswer,

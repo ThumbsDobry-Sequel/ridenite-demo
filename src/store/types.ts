@@ -4,7 +4,7 @@ import type { LiveStage, Stage, TerminalStage } from '../lib/rideState';
 import type { OverCapAnswer } from '../lib/fare';
 
 export type FareScenario = 'higher' | 'lower' | 'equal' | 'over';
-export type Fault = 'E1' | 'E2' | 'E3' | 'E4' | 'E5' | 'E6' | 'E7';
+export type Fault = 'E1' | 'E2' | 'E3' | 'E4' | 'E5' | 'E6' | 'E7' | 'E8';
 
 export interface Ride {
   id: string;
@@ -28,6 +28,11 @@ export interface Ride {
   confirmedAt?: number;
   confirmedBy?: 'guest' | 'staff';
   scenario: FareScenario;
+  /** Guest-added stop, approved on the guest's own phone as a new quote (E7). The ride's quoteCents and capCents are the
+   *  new quote and its cap; stopDeltaCents (new quote - original quote) is added to the simulated final fare. */
+  stopDeltaCents?: number;
+  /** Original quote before an approved stop (for the record line). */
+  originalQuoteCents?: number;
   /** Frozen at this stage (fault panel) until the guest acts. */
   hold?: LiveStage;
   terminal?: TerminalStage;
@@ -230,6 +235,8 @@ export interface DemoStore {
   // morning after
   setTip(pct: number): void;
   setOverCapAnswer(a: OverCapAnswer): void;
+  /** E7: the guest approved a new quote for an added stop. Never produces a declined amount or a credit. */
+  approveStop(newQuoteCents: number): void;
   setFareScenario(s: FareScenario): void;
   pay(): void;
   sendDispute(reason: string): void;

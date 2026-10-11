@@ -19,13 +19,14 @@ export const FAULTS: { id: Fault; label: string; route: string }[] = [
   { id: 'E4', label: `E4 ${T.Bill} already closed`, route: '/g/e4' },
   { id: 'E5', label: 'E5 No signal', route: '/g/e5' },
   { id: 'E6', label: 'E6 Driver cancelled', route: '/g/e6' },
-  { id: 'E7', label: 'E7 Over the cap: your OK', route: '/g/e7' },
+  { id: 'E7', label: 'E7 Add a stop: new quote', route: '/g/e7' },
+  { id: 'E8', label: "E8 Over the cap (traffic): your OK", route: '/g/e8' },
 ];
 
 export const ALL_GUEST_ROUTES = [
   '/g/home', '/g/p1', '/g/p1h', '/g/p3w', '/g/p12', '/g/p12s', '/g/p2', '/g/p2t', '/g/p3',
   '/g/p4', '/g/p5', '/g/p5w', '/g/e3', '/g/p6', '/g/p7', '/g/p8', '/g/p13', '/g/p13f',
-  '/g/e1', '/g/e2', '/g/e4', '/g/e5', '/g/e6', '/g/e7', '/g/inbox', '/g/m1', '/g/m2', '/g/p9', '/g/p10', '/g/p11', '/g/demo', '/o', '/o/summary', '/o/limits', '/o/bar',
+  '/g/e1', '/g/e2', '/g/e4', '/g/e5', '/g/e6', '/g/e7', '/g/e8', '/g/sample-traffic', '/g/inbox', '/g/m1', '/g/m2', '/g/p9', '/g/p10', '/g/p11', '/g/demo', '/o', '/o/summary', '/o/limits', '/o/bar',
 ];
 
 /** Demo panel: faults (each starts from a fresh ride state), fare scenarios, tab link, reset. */
@@ -49,6 +50,7 @@ export function DemoPanel() {
         {FAULTS.map((f) => (
           <Button key={f.id} variant="secondary" testId={`fault-${f.id}`} onClick={() => { store.applyFault(f.id); navigate(f.route); }}>{f.label}</Button>
         ))}
+        <Button variant="secondary" testId="sample-traffic" onClick={() => navigate('/g/sample-traffic')}>Sample: over-cap ride (traffic), separate tab</Button>
       </div>
       <p className="section-title">Driver search</p>
       <div className="stack">

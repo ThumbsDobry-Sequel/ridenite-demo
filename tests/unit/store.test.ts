@@ -105,7 +105,7 @@ describe('InMemoryStore', () => {
     store.applyFault('E2');
     expect(store.getState().ride).toBeNull();
     expect(store.getState()).toMatchObject({ prevQuoteCents: 2100, quoteCents: 2350 });
-    store.applyFault('E7');
+    store.applyFault('E8');
     expect(store.getState()).toMatchObject({ prevQuoteCents: null, quoteCents: 2100, fareScenario: 'over' });
     store.applyFault('E1');
     expect(store.getState()).toMatchObject({ ride: null, fault: 'E1', fareScenario: 'higher', forceOffline: false });

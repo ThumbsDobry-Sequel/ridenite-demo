@@ -24,7 +24,7 @@ export function E1() {
       <p className="body" data-testid="no-driver-note">Nothing was added to your {T.bill}.</p>
       {s.ride && <p className="foot">Your quote was {fmt(s.ride.quoteCents)}. If it is more than 5 minutes old, you'll see the new price before we look again.</p>}
       <div className="spacer" />
-      <Button icon="glass" testId="ask-staff-car" onClick={() => { store.cancelRide(); store.requestStaff(venue.seat); navigate('/g/p3w'); }}>Ask staff for a car</Button>
+      <Button icon="venue" testId="ask-staff-car" onClick={() => { store.cancelRide(); store.requestStaff(venue.seat); navigate('/g/p3w'); }}>Ask staff for a car</Button>
       <Button variant="secondary" icon="clock" testId="keep-looking" onClick={keep}>Keep looking</Button>
       <p className="foot">Staff can see this too.</p>
     </Screen>
@@ -38,7 +38,7 @@ export function E4() {
       <Top ctx={venue.name} />
       <Banner tone="info" icon="receipt">Your {T.bill} here is already closed. Nothing was added to it.</Banner>
       <h1 className="h2">You can still get a car</h1>
-      <Button icon="glass" onClick={() => { store.clearFault(); store.requestStaff(venue.seat); navigate('/g/p3w'); }}>Ask staff to add it</Button>
+      <Button icon="venue" onClick={() => { store.clearFault(); store.requestStaff(venue.seat); navigate('/g/p3w'); }}>Ask staff to add it</Button>
       <div className="spacer" />
       <p className="foot">Staff can open a ride-only check for you.</p>
     </Screen>

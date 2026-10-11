@@ -123,7 +123,7 @@ export function payoutReturnCents(feeChargedCents: number, returnCents: number =
 }
 
 const MD = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
-/** "Ride Payout returned (RideNite fee), ride 4821, Oct 9, dispute lost: -$1.00" */
+/** "Ride Payout returned (RideNite fee), ride RN-7Q4K2M, Oct 9, dispute lost: -$1.00" (ride ID as on guest receipts) */
 export function payoutReturnLine(rideNo: string, pickupMs: number, outcome: 'dispute_lost' | 'refunded_under_rule', feeChargedCents: number): string {
   const why = outcome === 'dispute_lost' ? 'dispute lost' : 'refunded under the refund rule';
   const c = -payoutReturnCents(feeChargedCents);
@@ -132,3 +132,43 @@ export function payoutReturnLine(rideNo: string, pickupMs: number, outcome: 'dis
 /** Once per statement. */
 export const statementFootnote = (): string =>
   `When a guest wins a dispute on a RideNite ride line (notice dated within ${venue.payoutReturnWindowDays} days of the ride) and you filed our evidence on time, or you refund the ride under our refund rule, we return our fee for that ride as a credit. Your dispute fee and the ride fare stay with you.`;
+
+/**
+ * Quote adjustment credit (legal memo over-cap-credit.md, Oct 11). When a ride's final fare is above the guest's
+ * approved cap (quote + capped adjustment) and the guest declines the difference on their own phone, RideNite credits
+ * the bar that difference against RideNite's own fees. Credit only, never cash, never interest. It is an adjustment for
+ * the accuracy of RideNite's quote. Eligible only for rides booked at RideNite's quote and cap, declined by the guest on
+ * their own phone, where the overage was not caused by a guest-requested change (added stop, requested wait) and is not a
+ * cleaning, damage or no-show fee. Caps: $10 per ride and $280 per venue per month; anything over goes to manual review.
+ */
+export const QUOTE_CREDIT_PER_RIDE_CENTS = 1000;
+export const QUOTE_CREDIT_PER_MONTH_CENTS = 28000;
+export interface QuoteCreditCase {
+  rideId: string; pickupMs: number; quoteCents: number; capCents: number; finalCents: number;
+  bookedAtRideNiteQuote: boolean; declinedOnGuestPhone: boolean; guestCausedOverage: boolean;
+}
+export interface QuoteCreditResult {
+  rideId: string; pickupMs: number; overCents: number; creditedCents: number; manualReviewCents: number;
+  state: 'credited' | 'manual_review' | 'not_eligible';
+}
+/** Applies the per-ride and per-month caps in pickup order. creditedCents is positive (shown as a negative line). */
+export function quoteAdjustmentCredits(cases: readonly QuoteCreditCase[], alreadyCreditedThisMonthCents = 0): QuoteCreditResult[] {
+  let used = alreadyCreditedThisMonthCents;
+  return [...cases].sort((a, b) => a.pickupMs - b.pickupMs).map((c) => {
+    const overCents = Math.max(0, c.finalCents - (c.quoteCents + c.capCents));
+    const eligible = overCents > 0 && c.bookedAtRideNiteQuote && c.declinedOnGuestPhone && !c.guestCausedOverage;
+    if (!eligible) return { rideId: c.rideId, pickupMs: c.pickupMs, overCents, creditedCents: 0, manualReviewCents: 0, state: 'not_eligible' as const };
+    const perRide = Math.min(overCents, QUOTE_CREDIT_PER_RIDE_CENTS);
+    const creditedCents = Math.max(0, Math.min(perRide, QUOTE_CREDIT_PER_MONTH_CENTS - used));
+    used += creditedCents;
+    const manualReviewCents = overCents - creditedCents;
+    return { rideId: c.rideId, pickupMs: c.pickupMs, overCents, creditedCents, manualReviewCents, state: manualReviewCents > 0 ? 'manual_review' as const : 'credited' as const };
+  });
+}
+/** "Quote adjustment credit, ride RN-7Q4K2M, Oct 9: -$3.10" */
+export function quoteCreditLine(rideId: string, pickupMs: number, creditedCents: number): string {
+  return `Quote adjustment credit, ride ${rideId}, ${MD.format(new Date(pickupMs))}: -$${(creditedCents / 100).toFixed(2)}`;
+}
+/** Once per statement, when a quote adjustment credit appears. */
+export const QUOTE_CREDIT_FOOTNOTE =
+  "When a ride's final fare is above the guest's approved cap and the guest declines the difference, we credit the difference against our fees, up to $10 per ride. Credits apply to future invoices and aren't paid in cash.";

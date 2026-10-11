@@ -45,7 +45,7 @@ export function B6({ route }: { route: Route }) {
   const tot = tabTotals({
     items: tabItems(t.items), taxRate: venue.taxRate, tabLineName: s.bar.settings.tabLineName,
     rideLineName: ride ? barRideLineName(ride.dest, pickupAt(ride), fmtET) : undefined,
-    ride: ride && charged ? { quoteCents: ride.quoteCents, finalCents: done ? venue.finalFareCents[ride.scenario] : null, overCapAnswer: isGuestRide ? s.overCapAnswer : null, rideId: rideRef(ride.id), pickupMs: pickupAt(ride), feeChargedCents: ride.feeChargedCents } : null,
+    ride: ride && charged ? { quoteCents: ride.quoteCents, finalCents: done ? venue.finalFareCents[ride.scenario] + (ride.stopDeltaCents ?? 0) : null, overCapAnswer: isGuestRide ? s.overCapAnswer : null, rideId: rideRef(ride.id), pickupMs: pickupAt(ride), feeChargedCents: ride.feeChargedCents } : null,
   });
   const rec = ride ? barConfirmLine(s, ride) : null;
   const st = ride && stage ? barStatus(stage, ride) : null;

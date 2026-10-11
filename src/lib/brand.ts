@@ -26,8 +26,9 @@ export function guestCheckClosed(s: DemoState, now: number = Date.now()): boolea
  * After it closes: "[Night date]. Tab closed. Ride home included: $27.40." (the amount always follows; the
  * word is never used bare). The bare marketing tagline is never used in the app.
  */
-export function nightTagline(pickedUp: boolean, checkClosed: boolean, rideCents: number, now: number = Date.now()): string | null {
+/** `night` is any time inside the night being described (pass the tab-open time): a Sunday-morning view still names Saturday. */
+export function nightTagline(pickedUp: boolean, checkClosed: boolean, rideCents: number, night: number = Date.now()): string | null {
   if (!pickedUp) return null;
   const amt = `$${(rideCents / 100).toFixed(2)}`;
-  return checkClosed ? `${nightLabel(now)}. ${T.Bill} closed. Ride home included: ${amt}.` : `${nightLabel(now)}. Ride home is on your ${T.bill}.`;
+  return checkClosed ? `${nightLabel(night)}. ${T.Bill} closed. Ride home included: ${amt}.` : `${nightLabel(night)}. Ride home is on your ${T.bill}.`;
 }

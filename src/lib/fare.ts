@@ -16,7 +16,7 @@ export const NEVER_ON_GUEST_RIDE_LINE = ['cleaning_fee', 'damage_fee', 'no_show_
 /**
  * Most the guest can pay without a new tap on their own phone: the all-in quote (taxes, fees, tolls, wait
  * time and tip are all inside it) plus the cap. Anything above it that the guest did not approve is never added to
- * the tab (see reconcile: held, then declined and absorbed).
+ * the tab (see reconcile: held, then declined and not charged).
  */
 export const maxChargeCents = (allInQuoteCents: number): number => allInQuoteCents + capFor(allInQuoteCents);
 
@@ -31,7 +31,7 @@ export interface Reconciliation {
   postedAdjCents: number;
   /** Over the cap and waiting for the guest's OK (E7). Not charged. */
   heldCents: number;
-  /** Guest said no: absorbed by RideNite, never the guest or the bar. */
+  /** Guest said no: not charged to the guest. Venue-side handling is the quote adjustment credit in payouts.ts. */
   declinedCents: number;
   outcome: 'none' | 'adjustment_posted' | 'credit_posted' | 'held_over_cap' | 'approved' | 'declined';
 }

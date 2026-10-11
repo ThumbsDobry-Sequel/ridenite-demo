@@ -67,7 +67,7 @@ test.describe('home @sizes', () => {
     expect((await inViewport(page, 'undo')).inside).toBe(true);
     // Vera rev 03 undo copy
     await expect(page.getByTestId('status-requesting')).toHaveText('Requesting your ride...');
-    await expect(page.getByTestId('undo-quote')).toHaveText('$21.00 quote to 655 N Harrison St.');
+    await expect(page.getByTestId('undo-quote')).toHaveText('$21.00 quote to Westover area.');
     await expect(page.getByTestId('undo-line-1')).toHaveText('Nothing is requested yet.');
     await expect(page.getByTestId('undo-line-2')).toHaveText('We request your ride when the timer ends.');
     await expect(page.getByText('Requesting in a moment.')).toHaveCount(0);

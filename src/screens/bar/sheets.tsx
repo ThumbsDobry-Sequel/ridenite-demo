@@ -141,7 +141,7 @@ export function B3({ route }: { route: Route }) {
           <p className="bquote__price num" data-testid="b3-quote">{fmt(q)}</p>
           <p className="callout">Quote, goes on {T.bill} #{t.tab}.</p>
           <p className="callout" data-testid="b3-cap">Final fare may differ by up to {fmt(capFor(q))}.</p>
-          {perk && <p className="callout" data-testid="b3-perk">Venue perk: {venue.name} covers the first {fmt(venue.perkCents)}. Guest pays {fmt(Math.max(0, q - venue.perkCents))}.</p>}
+          {perk && <p className="callout" data-testid="b3-perk">Venue perk: {venue.name} takes the first {fmt(venue.perkCents)} off. Guest's share {fmt(Math.max(0, q - venue.perkCents))}.</p>}
         </section>
       )}
       <button type="button" role="checkbox" aria-checked={d.sawPrice} aria-disabled={q == null} className="bcheck" data-testid="b3-saw"
@@ -149,7 +149,7 @@ export function B3({ route }: { route: Route }) {
         <span className="bcheck__box" aria-hidden="true">{d.sawPrice && <Icon name="check" />}</span>
         <span className="grow">Guest saw the price{d.sawBy === 'guest' && <span className="foot"> {first} said yes on their phone.</span>}</span>
       </button>
-      <button type="button" className="textlink bbtn-44" data-testid="b3-help" onClick={() => navigate('/b/sheet/help')}>Guest says they feel unsafe?</button>
+      <button type="button" className="textlink bbtn-44" data-testid="b3-help" onClick={() => navigate('/b/sheet/help')}>Venue procedure</button>
       <div className="bsticky">
         <button type="button" className="btn btn--primary bbtn-64" data-testid="b3-book" disabled={!ready} aria-describedby="b3-helper" onClick={book}>
           <Icon name="car" /><span>Book</span>
@@ -212,7 +212,7 @@ export function Booked({ route }: { route: Route }) {
 export function B3h() {
   return (
     <main className="bsheet" data-screen="b3h" id="main">
-      <SheetHead title="Guest says they feel unsafe?" onBack={() => navigate('/b/sheet')} />
+      <SheetHead title="Venue procedure" onBack={() => navigate('/b/sheet')} />
       <p className="body">Follow your venue's procedure first: manager, security, or 911 if needed. A car is one option. If the guest wants one, book it and keep pickup details on their phone only.</p>
       <section className="bpanel" data-testid="b3h-procedure">
         <h2 className="bsection">{venue.name} procedure</h2>

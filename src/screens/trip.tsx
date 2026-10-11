@@ -1,3 +1,4 @@
+import { areaLabel } from '../lib/tab';
 import { nightTimes } from '../lib/morning';
 import { fmtET } from '../lib/confirmRecord';
 import { RideStatus, requestedLine } from '../components/RideStatus';
@@ -9,6 +10,8 @@ import { useDemoState, useStore } from '../store';
 import { useLiveRide, useNow, useOnline } from '../hooks';
 import { fmt } from '../lib/money';
 import { capFor } from '../lib/fare';
+import { SlideToConfirm } from '../components/SlideToConfirm';
+import { isAcceptedStage } from '../lib/rideState';
 import { STAGE_ROUTE, type LiveStage, type Stage } from '../lib/rideState';
 import { Banner, Button, Card, Chip, Fict, ListRow, Plate, Sheet, Spinner, TextLink } from '../components/primitives';
 import { Icon } from '../components/Icon';
@@ -117,7 +120,7 @@ export function P4() {
         <div className="topbar"><VenueChip /></div>
         <h1 className="large-title" data-testid="status-requesting">Requesting your ride...</h1>
         {/* Vera rev 03 undo copy. Nothing is requested (or charged) during the countdown. */}
-        <p className="callout" data-testid="undo-quote">{fmt(ride.quoteCents)} quote to {ride.dest.line.replace(/\.$/, '')}.</p>
+        <p className="callout" data-testid="undo-quote">{fmt(ride.quoteCents)} quote to {areaLabel(ride.dest)}.</p>
         <p className="callout" data-testid="undo-line-1">Nothing is requested yet.</p>
         <Card className="center">
           <p className="countdown num" data-testid="undo-countdown" aria-live="polite" aria-atomic="true">{left}</p>
@@ -173,6 +176,7 @@ export function P5() {
       <Belongings ride={ride} stage={stage ?? 'en_route'} />
       <DriverRow />
       <TabCard ride={ride} />
+      <AddStop />
       <DemoNext />
       <Fict>Driver, car and plate are fictional.</Fict>
     </Screen>
@@ -222,6 +226,9 @@ export function E3() {
   );
 }
 
+/** Whole minutes until the simulated drop-off, at least 1 while the trip is under way. */
+export const tripEtaMinutes = (dropOffAt: number, now: number): number => Math.max(1, Math.ceil((dropOffAt - now) / 60_000));
+
 function MapCard({ label }: { label: string }) {
   return (
     <div className="map" role="img" aria-label={label}>
@@ -239,23 +246,27 @@ function MapCard({ label }: { label: string }) {
 export function P6() {
   const s = useDemoState();
   const { ride } = useLiveRide('/g/p6');
-  const dest = ride?.dest.line ?? venue.guest.home.line;
+  const dest = areaLabel(ride?.dest ?? venue.guest.home);
   const NT = nightTimes(s);
+  // ETA from the simulated ride (never hardcoded): drop-off is the same time P7, P9 and the receipt show.
+  const now = Date.now();
+  const etaMin = now < NT.complete ? tripEtaMinutes(NT.complete, now) : tripEtaMinutes(NT.complete, NT.pickedUp);
   return (
     <Screen id="P6" tight>
       <Top left={<Chip tone="info" icon="home">Picked up</Chip>} ctx={fmtET(NT.pickedUp)} />
-      <MapCard label={`Illustrative map: about 11 minutes to ${dest}`} />
-      <div className="row"><span className="eta">11 min</span><span className="callout muted">arrive about 11:43 PM</span></div>
+      <MapCard label={`Illustrative map: about ${etaMin} min to ${dest}`} />
+      <div className="row"><span className="eta" data-testid="p6-eta">{etaMin} min</span><span className="callout muted" data-testid="p6-arrive">arrive about {fmtET(NT.complete)}</span></div>
       <ul className="steps" aria-label="Trip progress">
         <li><span className="dot dot--done" />Picked up {fmtET(NT.pickedUp)}</li>
         <li><span className="dot dot--now" />On the way</li>
-        <li><span className="dot" />Arrive near {dest}</li>
+        <li><span className="dot" />Arrive in the {dest}</li>
       </ul>
       <div className="spacer" />
       <div className="btn-row">
         <Button variant="secondary" icon="share" onClick={() => navigate('/g/p13')}>Share</Button>
         <Button variant="secondary" icon="help" onClick={() => navigate('/g/p8')}>Help</Button>
       </div>
+      <AddStop />
       {s.dismissedNudges.includes('shared') && <p className="foot center">Trip shared with {venue.friend.name} until drop-off (simulated, nothing sent).</p>}
       <DemoNext />
       <Fict>Map is illustrative. No map tiles are loaded.</Fict>
@@ -294,7 +305,7 @@ export function P8() {
       <Sheet title="Help" onClose={() => navigate(closeTo)} testId="help-sheet">
         <Button variant="bad" icon="phone" onClick={() => setNote('Demo: in the live app this opens your phone app to call 911. Nothing was dialed.')}>Call 911</Button>
         <Button variant="secondary" icon="phone" href={`tel:${d.phoneTel}`}>Call the driver</Button>
-        <Button variant="secondary" icon="glass" href={`tel:${venue.phoneTel}`}>Call the bar</Button>
+        <Button variant="secondary" icon="venue" href={`tel:${venue.phoneTel}`}>Call the bar</Button>
         <Button variant="secondary" icon="car" onClick={() => { store.cancelRide(); navigate('/g/p2'); }}>Cancel or change ride</Button>
         <p className="foot" aria-live="polite">{note}</p>
         <TextLink onClick={() => navigate(closeTo)}>Close</TextLink>
@@ -371,4 +382,35 @@ export function E5() {
       <p className="foot">Phone dying? Staff can see your ride and show you the plate.</p>
     </Screen>
   );
+}
+
+/**
+ * E7 Add a stop (team decision Oct 11): a guest-added stop is a new quote the guest approves on their own phone,
+ * before pickup or during the trip. Cap and maximum come from fare.ts. "Keep my original trip" keeps the original
+ * destination and cap and adds nothing. A guest-added stop never produces a declined amount or a credit.
+ */
+export function E7() {
+  const store = useStore();
+  const { ride, stage } = useLiveRide('/g/e7', false);
+  const x = venue.stopQuoteCents;
+  const a = capFor(x);
+  const live = !!ride && !!stage && isAcceptedStage(stage) && stage !== 'complete';
+  const back = () => navigate(ride && stage ? STAGE_ROUTE[stage] : '/g/home');
+  return (
+    <Screen id="E7">
+      <Top left={<VenueChip />} ctx={venue.name} />
+      <h1 className="h2">Add this stop?</h1>
+      <p className="body" data-testid="e7-quote">New quote: {fmt(x)}. Final fare may differ by up to {fmt(a)}. Never more than {fmt(x + a)} unless you approve a change.</p>
+      <p className="callout muted">It goes on your {T.bill} at pickup, the same as before.</p>
+      <div className="spacer" />
+      <SlideToConfirm testId="e7-approve" label="Slide to approve" a11yLabel={`Approve the new quote, ${fmt(x)}`} hint={false}
+        onComplete={() => { if (live) store.approveStop(x); back(); }} />
+      <button type="button" className="textlink" data-testid="e7-keep" onClick={back}>Keep my original trip</button>
+      <Fict>Sample stop and quote. Fictional amounts.</Fict>
+    </Screen>
+  );
+}
+
+function AddStop() {
+  return <button type="button" className="textlink" data-testid="add-stop" onClick={() => navigate('/g/e7')}>Add a stop</button>;
 }

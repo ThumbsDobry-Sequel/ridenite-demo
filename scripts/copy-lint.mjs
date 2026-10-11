@@ -16,6 +16,8 @@ const ROOT = join(fileURLToPath(import.meta.url), '..', '..');
 
 export const BANNED = /safe ride|get home safe|home safe|leave the light on|every guest home|guarantee|ensure your safety|protect|certified|date rape|assault|spiking|drugged|predator|danger|free ride with|included with drinks|liability|dram shop|angela|angel shot|nightcap|secret code|had too much|over-served|overserved|overdone it|crawl|bar hop|next bar|next stop|came from|previous venue|comes with your tab|every guest gets a ride|automatic ride|your limit|legal amount|offered, declined|coverage|covered if|just in case|ride insurance|peace of mind|worry-free|legal protection|drunk|intoxicat|\u2014|\u2013/i;
 export const SAFE = /\bsafe\b|unsafe/i;
+/** Drink names (Quinn/Nico, Oct 11): the demo tab carries food and neutral items only, nothing that reads as a drinking cue. */
+export const DRINK_NAMES = /\b(old fashioned|house beer|pear necessities|beers?|wines?|cocktails?|martinis?|whiske?y|vodka|tequila|bourbon|margaritas?|sangria|ipa)\b/i;
 /** Standalone 'lit' reads as alcohol related (founder, Oct 10). Whole word only: little, split, literally pass. */
 export const LIT = /\blit\b/i;
 /** Harper legal items (money-promises memo): whole word or phrase. */
@@ -27,14 +29,17 @@ export const INCLUDED = /\bincluded\b(?!: \$)/i;
  * and owner statements (in addition to everything above). Whole words, with common inflections.
  */
 export const STATEMENT_LEGAL = /\b(coverage|claims?|claimed|loss|losses|indemnif(?:y|ies|ied|ication)|deductibles?|premiums?|plans?|polic(?:y|ies)|guarantee[sd]?|reimburse[sd]?|reimbursements?|reimbursing)\b/i;
+/**
+ * Over-cap credit memo (Oct 11): on fare, statement and receipt surfaces (copy and comments) nothing may say RideNite
+ * pays, covers, absorbs, settles or reimburses a fare, or sounds like insurance. Whole words, common inflections.
+ */
+export const MONEY_WORDS = /\b(absorb(?:s|ed|ing)?|cover(?:s|ed|ing)?|pays|settles?|settled|reimburs\w*|protection|guarantee[sd]?|insured)\b/i;
+/** Fare, statement and receipt files (guest receipts, confirm, status, bar screens, owner statement and their libs). */
+export const MONEY_FILES = [/^src\/lib\/(fare|payouts|ownerData|checkLines|confirmRecord|brand|morning|tab)\.ts$/, /^src\/screens\/(morning|confirm|trip|owner|edges)\.tsx$/, /^src\/screens\/bar\//, /^src\/components\/RideStatus\.tsx$/];
 /** Files that hold bar-facing or statement copy. */
 export const STATEMENT_FILES = [/^src\/screens\/bar\//, /^src\/screens\/owner\.tsx$/, /^src\/lib\/ownerData\.ts$/, /^src\/lib\/payouts\.ts$/, /^src\/venue\.config\.ts$/];
-export const APPROVED = [
-  'If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment.',
-  // same approved sentence with the venue bill noun read from venue.config.ts (renders identically)
-  'If you feel unsafe or just need to get home, you can put your ride home on your bar {T.bill}. No app, no phone, no separate payment.',
-  'Guest says they feel unsafe?',
-];
+/** No approved exceptions for 'safe'/'unsafe' (Quinn, Oct 11): any use in user copy fails lint. */
+export const APPROVED = [];
 const APPROVED_WHERE = "They won't see where you were before.";
 const TECH_ALLOW = [/safe-area-inset(-[a-z]+)?/gi];
 
@@ -49,6 +54,8 @@ export function lintText(text, file = '<text>') {
     if (m) problems.push({ file, line: i + 1, match: m[0] === '\u2014' ? 'em dash' : m[0] === '\u2013' ? 'en dash' : m[0] });
     const s = line.match(SAFE);
     if (s) problems.push({ file, line: i + 1, match: s[0] });
+    const dn = line.match(DRINK_NAMES);
+    if (dn) problems.push({ file, line: i + 1, match: dn[0] });
     const l = line.match(LIT);
     if (l) problems.push({ file, line: i + 1, match: l[0] });
     const g = line.match(LEGAL);
@@ -56,6 +63,16 @@ export function lintText(text, file = '<text>') {
     if (/where you were/i.test(line)) problems.push({ file, line: i + 1, match: 'where you were' });
     const inc = line.match(INCLUDED);
     if (inc) problems.push({ file, line: i + 1, match: 'included (without ": $" amount)' });
+  });
+  return problems;
+}
+
+/** Fare, statement and receipt copy: everything in lintText plus MONEY_WORDS. */
+export function lintMoneyText(text, file = '<text>') {
+  const problems = [];
+  text.split(/\r?\n/).forEach((line, i) => {
+    const m = line.match(MONEY_WORDS);
+    if (m) problems.push({ file, line: i + 1, match: m[0] });
   });
   return problems;
 }
@@ -98,6 +115,7 @@ if (isMain) {
     if (extname(f) === '.css') text = cssContentStrings(text);
     const rel = relative(ROOT, f).split('\\').join('/');
     problems = problems.concat(STATEMENT_FILES.some((re) => re.test(rel)) ? lintStatementText(text, rel) : lintText(text, rel));
+    if (MONEY_FILES.some((re) => re.test(rel))) problems = problems.concat(lintMoneyText(text, rel));
   }
   if (problems.length) {
     for (const p of problems) console.error(`copy-lint: ${p.file}:${p.line} banned "${p.match}"`);

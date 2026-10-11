@@ -113,3 +113,14 @@ export function tabCloseState(t: { close: TabCloseState; closeAt?: number }, rid
   if (t.closeAt != null && now - t.closeAt >= holdMs) return 'closed';
   return 'pending';
 }
+
+/**
+ * Guest-facing ride location, area only (team decision Oct 11): "Westover area". Never a street address on
+ * guest status screens, SMS or receipts. Falls back to the seeded list for a line-only drop-off from a staff link.
+ */
+export function areaLabel(a: { line?: string; area: string }): string {
+  let area = a.area;
+  if (!area && a.line) area = venue.addresses.find((x) => x.line === a.line)?.area ?? '';
+  const n = neighborhood(area);
+  return n ? `${n} area` : 'your drop-off';
+}

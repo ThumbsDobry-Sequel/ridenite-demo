@@ -511,7 +511,7 @@ test.describe('Tab close with a ride pending pickup (SCOPE 22:22)', () => {
     await page.getByTestId('b6-driver-cancel').tap();
     await expect(page.getByTestId('b6-closed')).toHaveText('Tab closed.');
     await expect(page.getByTestId('b6-ride_quote')).toHaveCount(0);
-    await expect(page.getByTestId('b6-total')).toContainText('$39.96');
+    await expect(page.getByTestId('b6-total')).toContainText('$31.08');
   });
 });
 
@@ -526,7 +526,7 @@ test.describe('M2 settings and reset (Piper E)', () => {
     await nav(page, '/g/m1');
     await expect(page.getByTestId('m1-subject')).toHaveText('Your receipt from Maison Cheryl: tab and RideNite Ride ride');
     await nav(page, '/g/p3');
-    await expect(page.getByTestId('perk-line')).toContainText('Maison Cheryl covers the first $10.00');
+    await expect(page.getByTestId('perk-line')).toContainText('Maison Cheryl takes the first $10.00 off');
     await nav(page, '/b/settings');
     await page.getByTestId('set-receipt-neutral').tap();
     await page.getByTestId('set-price-fare_on_tab').tap();

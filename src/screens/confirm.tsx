@@ -1,3 +1,4 @@
+import { areaLabel } from '../lib/tab';
 import { QUOTE_VALID_MS } from '../lib/rideState';
 import { useState } from 'react';
 import { T, venue } from '../venue.config';
@@ -15,7 +16,7 @@ import { Screen, Top } from '../components/layout';
 export const fareNote = (q: number) =>
   `${fmt(q)} on your ${T.bill} at ${venue.name}. Final fare may differ by up to ${fmt(capFor(q))}. ${maxLine(q)}`;
 
-/** Money-promises memo (Harper): the most the guest pays, from the live quote and cap. Never hardcoded. */
+/** Money-promises memo (Harper): the most the guest is charged, from the live quote and cap. Never hardcoded. */
 export const maxLine = (q: number) => `You pay the final fare, never more than ${fmt(maxChargeCents(q))} unless you approve a change.`;
 
 /** Quote valid for 5 minutes (demo constant, SCOPE "Ride status and charge timing"). */
@@ -44,7 +45,7 @@ export function P3() {
       <Screen id="P3">
         <Top back="/g/home" ctx={venue.guest.name} />
         <h1 className="h2">You already have a ride</h1>
-        <p className="body">Only one ride at a time. Your ride to {ride.dest.line} is still going.</p>
+        <p className="body">Only one ride at a time. Your ride to {areaLabel(ride.dest)} is still going.</p>
         <div className="spacer" />
         <Button variant="secondary" icon="car" onClick={() => navigate(STAGE_ROUTE[store.stageOf(ride)])}>See your ride</Button>
       </Screen>
@@ -77,7 +78,7 @@ export function P3() {
         <div className="row row--top">
           <div className="grow">
             <p className="kv__k">Going to</p>
-            <p className="h3" data-testid="confirm-dest">{isHome ? 'Home, ' : ''}{dest.line}</p>
+            <p className="h3" data-testid="confirm-dest">{isHome ? 'Home, ' : ''}{areaLabel(dest)}</p>
           </div>
           <button type="button" className="textlink textlink--inline change-link" data-testid="change-dest" onClick={() => navigate('/g/p2')}>Change</button>
         </div>
@@ -89,7 +90,7 @@ export function P3() {
         {/* Design rev 04 / 04.1 (locked): one full-strength paragraph, then the over-cap line. */}
         <p className="callout quote-para"><span data-testid="tab-line">{fmt(q)} goes on your tab when you're picked up.</span>{' '}<span data-testid="cap-line">Final fare may differ by up to {fmt(cap)}.</span></p>
         <p className="foot cap-more" data-testid="max-line">More than that and we'll ask you first. {maxLine(q)}</p>
-        {perk && <p className="callout" data-testid="perk-line">Venue perk: {venue.name} covers the first {fmt(venue.perkCents)}. You pay {fmt(Math.max(0, q - venue.perkCents))} on your {T.bill}.</p>}
+        {perk && <p className="callout" data-testid="perk-line">Venue perk: {venue.name} takes the first {fmt(venue.perkCents)} off. You pay {fmt(Math.max(0, q - venue.perkCents))} on your {T.bill}.</p>}
       </Card>
       <Card testId="pickup-card" className="pickup-card">
         <div className="kvrow"><span className="kvrow__icon"><Icon name="pin" /></span><div><p className="kv__k">Pickup</p><p className="h3" data-testid="pickup-line">{venue.pickupShort.replace(/\.$/, '')}</p></div></div>

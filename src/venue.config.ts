@@ -36,8 +36,8 @@ export const venue = {
   /** Owner data only. Payout Return window: calendar days after the ride's pickup date (ET) by which the
    *  processor's dispute notice must be dated. Harper recommends 150; Jason has not approved it yet. One-line change. */
   payoutReturnWindowDays: 90,
-  pickupSpot: 'front door, N Fillmore St',
-  pickupShort: 'Front door, N Fillmore St.',
+  pickupSpot: 'front door, Maison Cheryl',
+  pickupShort: 'Front door, Maison Cheryl.',
   /** Fictional 555-01xx number. */
   phone: '(703) 555-0142',
   phoneTel: '+17035550142',
@@ -63,10 +63,11 @@ export const venue = {
   defaultTipPct: 20,
   tipOptions: [18, 20, 22, 0],
 
+  // Food and neutral items only (Quinn/Nico, Oct 11): nothing on the demo tab reads as a drinking cue.
+  // Sum stays $49.00 so the standard night is $64.19 bar sales + $24.60 ride = $88.79.
   menu: [
-    { name: 'The Pear Necessities', cents: 1400, kind: 'drink' },
-    { name: 'Old Fashioned', cents: 1500, kind: 'drink' },
-    { name: 'House Beer', cents: 800, kind: 'drink' },
+    { name: 'Dinner for two', cents: 2900, kind: 'food' },
+    { name: 'Table snacks', cents: 800, kind: 'food' },
     { name: 'Madeleines', cents: 1200, kind: 'food' },
   ] as MenuItem[],
 
@@ -79,7 +80,10 @@ export const venue = {
   finalFareCents: { higher: 2460, lower: 1890, equal: 2100, over: 2740 },
   /** Fictional RideNite ride ID for the seeded sample ride (shown on the receipt ride line detail). */
   sampleRideId: 'RN-7Q4K2M',
-  overCapReason: 'You added a stop at 11:28 PM',
+  /** Over the cap without any guest change (traffic or the driver's route). A guest-added stop is a new quote (E7), never this. */
+  overCapReason: "Traffic on the driver's route",
+  /** E7 sample: new all-in quote after the guest adds a stop ($24.00, cap $4.80, never more than $28.80). */
+  stopQuoteCents: 2400,
   etaMinutes: 6,
 
   seat: 'Table 7',
@@ -132,7 +136,7 @@ export const venue = {
   bar: {
     status: 'Full Live',
     earlierRidesTonight: 4, // sample: rides completed before the seeded ones
-    sideDoor: 'side door, Wilson Blvd',
+    sideDoor: 'side door, Maison Cheryl',
     managerOnDuty: 'Theo',
     procedure: [
       'Let the manager on duty know (Theo tonight).',
@@ -140,15 +144,15 @@ export const venue = {
       "If the guest raises a concern, get the manager or security first and follow the venue's procedure. The car is one option.",
     ],
     feeCents: 100,
-    // Item names are Maison Cheryl menu items; prices and guests are sample data.
+    // Food and neutral sample items; prices and guests are sample data.
     tabs: [
-      { tab: '4468', seat: 'Table 7', guest: 'Maya R.', phoneLast4: '0127', items: [['The Pear Necessities', 1], ['Old Fashioned', 1], ['House Beer', 1], ['Madeleines', 1]] },
-      { tab: '4471', seat: 'Bar 3', guest: 'Dev K.', phoneLast4: '0144', items: [['The Pear Necessities', 2], ['House Beer', 1]] },
-      { tab: '4472', seat: 'Table 12', guest: 'Jordan T.', phoneLast4: '0152', items: [['Old Fashioned', 3], ['The Pear Necessities', 1], ['Madeleines', 1]] },
-      { tab: '4474', seat: 'Bar 5', guest: 'Ana G.', phoneLast4: '0163', items: [['The Pear Necessities', 2]] },
-      { tab: '4475', seat: 'Table 2', guest: 'Priya S. +2', phoneLast4: '0171', items: [['Old Fashioned', 4], ['The Pear Necessities', 2], ['Madeleines', 2]] },
-      { tab: '4476', seat: 'Bar 9', guest: 'Sam O.', phoneLast4: '0185', items: [['The Pear Necessities', 1], ['House Beer', 1]] },
-      { tab: '4473', seat: 'Table 4', guest: 'Rosa L.', phoneLast4: '0139', items: [['The Pear Necessities', 2], ['Old Fashioned', 2]] },
+      { tab: '4468', seat: 'Table 7', guest: 'Maya R.', phoneLast4: '0127', items: [['Dinner for two', 1], ['Table snacks', 1], ['Madeleines', 1]] },
+      { tab: '4471', seat: 'Bar 3', guest: 'Dev K.', phoneLast4: '0144', items: [['Table snacks', 2], ['Madeleines', 1]] },
+      { tab: '4472', seat: 'Table 12', guest: 'Jordan T.', phoneLast4: '0152', items: [['Dinner for two', 2], ['Madeleines', 1]] },
+      { tab: '4474', seat: 'Bar 5', guest: 'Ana G.', phoneLast4: '0163', items: [['Table snacks', 2]] },
+      { tab: '4475', seat: 'Table 2', guest: 'Priya S. +2', phoneLast4: '0171', items: [['Dinner for two', 2], ['Table snacks', 2], ['Madeleines', 2]] },
+      { tab: '4476', seat: 'Bar 9', guest: 'Sam O.', phoneLast4: '0185', items: [['Table snacks', 1], ['Madeleines', 1]] },
+      { tab: '4473', seat: 'Table 4', guest: 'Rosa L.', phoneLast4: '0139', items: [['Dinner for two', 1], ['Table snacks', 2]] },
     ] as { tab: string; seat: string; guest: string; phoneLast4: string; items: [string, number][] }[],
     /** Sample guests for "+ New guest" (no typing in the demo; live product: first name + mobile). */
     newGuests: [

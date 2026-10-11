@@ -1,7 +1,8 @@
-import { nightOfHeading, nightWeekday } from '../lib/night';
+import { nightOfHeading, nightPossessive, nightRelative } from '../lib/night';
 import { holdText } from '../lib/hold';
 import type { DemoState } from '../store/types';
 import { useState } from 'react';
+import { sampleTrafficRide } from '../lib/ownerData';
 import { T, venue } from '../venue.config';
 import { navigate } from '../router';
 import { useDemoState, useStore } from '../store';
@@ -23,6 +24,11 @@ function useN(s: DemoState) {
   const t = nightTimes(s);
   return { tabOpened: fmtET(t.tabOpened), booked: fmtET(t.booked), pickedUp: fmtET(t.pickedUp), complete: fmtET(t.complete) };
 }
+/** Over-cap, guest declined (legal memo over-cap-credit.md): what the guest paid, never who handles the difference. */
+export const maxApprovedLine = (maxCents: number): string => `Ride home: ${fmt(maxCents)}. That's the most you approved, so the final fare can't add more.`;
+const cap = (x: string) => x[0].toUpperCase() + x.slice(1);
+/** Message stamp: weekday and time of the event itself (ET), e.g. "Sat 11:31 PM". */
+const stampAt = (t: number) => ETT.format(new Date(t)).replace(',', '');
 const nowClock = () => ETT.format(new Date()).replace(',', '');
 const nowStamp = () => ETD.format(new Date()).replace(/, (\d{1,2}:)/, ', $1');
 
@@ -53,11 +59,11 @@ export function Inbox() {
   const m = morningFor(s);
   return (
     <Screen id="inbox">
-      <Top back="/g/home" ctx="Sat 9:00 AM" />
+      <Top back="/g/home" ctx={nowClock()} />
       <h1 className="h2">Morning inbox</h1>
       <p className="foot">Simulated messages on this phone. Nothing was really sent.</p>
       <ListRow icon="chat" title="Messages: RideNite" subtitle={`${receiptSubject(s)} is ready`} testId="open-m2" onClick={() => navigate('/g/m2')} />
-      <ListRow icon="mail" title={`Email: ${receiptSubject(s)}`} subtitle={`Last night's ${T.bill}, ready to review. ${fmt(m.totalCents)}`} testId="open-m1" onClick={() => navigate('/g/m1')} />
+      <ListRow icon="mail" title={`Email: ${receiptSubject(s)}`} subtitle={`${cap(nightPossessive(s.tabOpenedAt, Date.now()))} ${T.bill}, ready to review. ${fmt(m.totalCents)}`} testId="open-m1" onClick={() => navigate('/g/m1')} />
       <Fict>Sample messages. Names, numbers and links are fictional.</Fict>
     </Screen>
   );
@@ -72,8 +78,8 @@ export function M2() {
       <Top back="/g/inbox" ctx={`RideNite ${venue.smsFrom}`} />
       <h1 className="h2">Messages</h1>
       <div className="thread">
-        <p className="stamp">{nightWeekday(Date.now())} {N.booked}</p>
-        <p className="bubble">RideNite: Your car is requested. {venue.driver.first}, {venue.driver.carShort}, plate {venue.driver.plate}, about {venue.etaMinutes} min. It goes on your {T.bill} at {venue.name} ({fmt(venue.quoteCents)}). Before you get in, check the plate.</p>
+        <p className="stamp">{stampAt(nightTimes(s).booked)}</p>
+        <p className="bubble">RideNite: Your car is requested. {venue.driver.first}, {venue.driver.carShort}, plate {venue.driver.plate}, about {venue.etaMinutes} min. Quote {fmt(s.ride?.quoteCents ?? venue.quoteCents)}. It will go on your {T.bill} at {venue.name} at pickup. Before you get in, check the plate.</p>
         <p className="bubble">RideNite: Your car is about 2 min away. You can wait inside. We'll text you when it's at the door.</p>
         <p className="stamp">{N.complete}</p>
         <p className="bubble">RideNite: You've arrived. Your ride from {venue.name} is on your {T.bill}.</p>
@@ -90,7 +96,7 @@ export function M1() {
   const s = useDemoState();
   const m = morningFor(s);
   const N = useN(s);
-  const tag = nightTagline(m.hasRide, guestCheckClosed(s), m.rideCents);
+  const tag = nightTagline(m.hasRide, guestCheckClosed(s), m.rideCents, s.tabOpenedAt);
   const split = splitSubtotals(checkLines(s, m));
   return (
     <Screen id="M1">
@@ -103,12 +109,12 @@ export function M1() {
           <div className="muted">{nowStamp()}</div>
         </div>
       </Card>
-      <h1 className="h3">Good morning, {venue.guest.first}.</h1>
-      <p className="callout">Here's last night's tab from {venue.name}, including your ride home: {N.pickedUp}, {fmt(m.rideCents)}, on your {T.bill}.</p>
+      <h1 className="h3">{nightRelative(s.tabOpenedAt, Date.now()) === 'tonight' ? 'Hi' : 'Good morning'}, {venue.guest.first}.</h1>
+      <p className="callout">Here's {nightPossessive(s.tabOpenedAt, Date.now())} {T.bill} from {venue.name}, including your ride home: {N.pickedUp}, {fmt(m.rideCents)}, on your {T.bill}.</p>
       <table className="inv" data-testid="invoice">
         <tbody data-testid="bar-section">
           <tr className="sec"><th colSpan={2} scope="colgroup">Bar sales</th></tr>
-          <tr><th scope="row">Drinks and food</th><td className="amt">{fmt(m.tipBaseCents)}</td></tr>
+          <tr><th scope="row">{venue.menu.some((i) => i.kind === 'drink') ? 'Drinks and food' : 'Food'}</th><td className="amt">{fmt(m.tipBaseCents)}</td></tr>
           <tr><th scope="row">{venue.taxLabel}</th><td className="amt">{fmt(m.taxCents)}</td></tr>
           <tr><th scope="row">Staff tip ({s.tipPct}%)</th><td className="amt">{fmt(m.tipCents)}</td></tr>
           <tr className="subtotal"><th scope="row">Bar sales subtotal</th><td className="amt" data-testid="bar-subtotal">{fmt(split.barCents)}</td></tr>
@@ -120,6 +126,7 @@ export function M1() {
           {m.hasRide
             ? <tr data-testid="ride-item"><th scope="row">{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note" data-testid="ride-id">Ride ID {receiptRideId(s)}. {s.bar.settings.tabLineName}, {venue.driver.partner}, {venue.driver.plate}</span></th><td className="amt">{fmt(m.rideCents)}</td></tr>
             : <tr data-testid="no-ride-line"><th scope="row">No ride on this {T.bill}</th><td className="amt">{fmt(0)}</td></tr>}
+          {m.recon?.outcome === 'declined' && <tr data-testid="max-approved"><th scope="row" colSpan={2}>{maxApprovedLine(m.recon.quoteCents + m.recon.capCents)}</th></tr>}
           <tr className="subtotal"><th scope="row">RideNite rides subtotal</th><td className="amt" data-testid="ride-subtotal">{fmt(split.rideCents)}</td></tr>
           <tr><td colSpan={2} className="sec-foot"><RideQuestion /></td></tr>
         </tbody>
@@ -145,7 +152,7 @@ export function P9() {
   const r = m.recon ?? { postedAdjCents: 0, heldCents: 0, declinedCents: 0, finalCents: 0, quoteCents: 0, capCents: 0, diffCents: 0, outcome: 'none' as const };
   const adjName = r.postedAdjCents < 0 ? 'Ride fare credit' : 'Ride fare adjustment';
   const N = useN(s);
-  const tag = nightTagline(m.hasRide, guestCheckClosed(s), m.rideCents);
+  const tag = nightTagline(m.hasRide, guestCheckClosed(s), m.rideCents, s.tabOpenedAt);
   const lines = checkLines(s, m);
   const split = splitSubtotals(lines);
   const rideId = receiptRideId(s);
@@ -163,14 +170,14 @@ export function P9() {
           {m.hasRide && <>
           <li><b className="num">{N.booked}</b><span>Ride home booked (you confirmed)</span></li>
           <li><b className="num">{N.pickedUp}</b><span>Picked up. {venue.driver.name}, {venue.driver.carShort}, {venue.driver.plate}</span></li>
-          <li><b className="num">{N.complete}</b><span>Dropped off near {s.ride?.dest.line ?? venue.guest.home.line}. Final fare {fmt(m.finalCents)}</span></li>
+          <li><b className="num">{N.complete}</b><span>Dropped off. Fare on your {T.bill}. Final fare {fmt(m.finalCents)}</span></li>
           </>}
         </ul>
       </Card>
       <table className="inv" aria-label="Itemized bill" data-testid="invoice">
         <tbody data-testid="bar-section">
           <tr className="sec"><th colSpan={2} scope="colgroup">Bar sales</th></tr>
-          <tr className="sec sec--sub"><th colSpan={2} scope="colgroup">Drinks</th></tr>
+          {venue.menu.some((i) => i.kind === 'drink') && <tr className="sec sec--sub"><th colSpan={2} scope="colgroup">Drinks</th></tr>}
           {venue.menu.filter((i) => i.kind === 'drink').map((i) => <tr key={i.name} data-kind="bar"><th scope="row">{i.name}</th><td className="amt">{fmt(i.cents)}</td></tr>)}
           <tr className="sec sec--sub"><th colSpan={2} scope="colgroup">Food</th></tr>
           {venue.menu.filter((i) => i.kind === 'food').map((i) => <tr key={i.name} data-kind="bar"><th scope="row">{i.name}</th><td className="amt">{fmt(i.cents)}</td></tr>)}
@@ -203,13 +210,13 @@ export function P9() {
             <tr data-testid="adj-line" data-kind="ride"><th scope="row">{adjName} (final fare {fmt(r.finalCents)}, quoted {fmt(r.quoteCents)})<span className="note">{adj.cents > 0 ? `Within the ${fmt(r.capCents)} you saw before booking.` : 'The fare came in lower than the quote, so this credit lowers your total.'}</span></th><td className="amt">{fmtSigned(adj.cents)}</td></tr>
           )}
           {stop && (
-            <tr data-testid="stop-line" data-kind="ride"><th scope="row">Added stop, approved by you<span className="note">{venue.overCapReason}. You said yes to the extra {fmt(stop.cents)}.</span></th><td className="amt">{fmtSigned(stop.cents)}</td></tr>
+            <tr data-testid="stop-line" data-kind="ride"><th scope="row">Over the cap, approved by you<span className="note">{venue.overCapReason}. You said yes to the extra {fmt(stop.cents)}.</span></th><td className="amt">{fmtSigned(stop.cents)}</td></tr>
           )}
           {r.heldCents > 0 && (
             <tr data-testid="held-line" className="needs-ok-row"><th scope="row"><span className="needs-ok__l"><Icon name="help" /><b>Needs your OK</b></span><span className="note">{fmt(r.heldCents)} over the {fmt(r.capCents)} cap. {venue.overCapReason}. Not charged unless you OK it.</span>
-              <button type="button" className="textlink textlink--inline" onClick={() => navigate('/g/e7')}>Review</button></th><td className="amt">{fmt(0)}</td></tr>
+              <button type="button" className="textlink textlink--inline" onClick={() => navigate('/g/e8')}>Review</button></th><td className="amt">{fmt(0)}</td></tr>
           )}
-          {r.declinedCents > 0 && <tr><th scope="row">Not charged<span className="note">You said no to the extra {fmt(r.declinedCents)}</span></th><td className="amt">{fmt(0)}</td></tr>}
+          {r.outcome === 'declined' && <tr data-testid="max-approved"><th scope="row" colSpan={2}>{maxApprovedLine(r.quoteCents + r.capCents)}</th></tr>}
           <tr className="subtotal"><th scope="row">RideNite rides subtotal</th><td className="amt" data-testid="ride-subtotal">{fmt(split.rideCents)}</td></tr>
           <tr><td colSpan={2} className="sec-foot"><RideQuestion /></td></tr>
         </tbody>
@@ -225,27 +232,27 @@ export function P9() {
   );
 }
 
-/** E7 over the cap: the guest's OK (POS 2 E7). */
-export function E7() {
+/** E8 over the cap because of traffic or the driver's route (no guest change): the guest's OK on their own phone. */
+export function E8() {
   const store = useStore();
   const s = useDemoState();
   const m = morningFor({ ...s, ride: s.ride ? { ...s.ride, scenario: 'over' } : null, fareScenario: 'over', overCapAnswer: null });
   const r = m.recon!;
   const over = r.diffCents - Math.min(r.diffCents, r.capCents);
   return (
-    <Screen id="E7">
+    <Screen id="E8">
       <Top left={<VenueChip />} ctx={nowClock()} />
       <h1 className="h2">Your ride came to {fmt(r.finalCents)}.</h1>
       <Card>
         <div className="row callout"><span>Quote you OK'd</span><span className="num">{fmt(r.quoteCents)}</span></div>
-        <div className="row callout"><span>Added, as shown before booking (up to {fmt(r.capCents)})</span><span className="num" data-testid="e7-added">{fmtSigned(Math.min(r.diffCents, r.capCents))}</span></div>
-        <div className="row body needs-ok" data-testid="needs-ok"><span className="needs-ok__l"><Icon name="help" /><b>Needs your OK</b></span><b className="num" data-testid="e7-over">{fmt(over)}</b></div>
+        <div className="row callout"><span>Added, as shown before booking (up to {fmt(r.capCents)})</span><span className="num" data-testid="e8-added">{fmtSigned(Math.min(r.diffCents, r.capCents))}</span></div>
+        <div className="row body needs-ok" data-testid="needs-ok"><span className="needs-ok__l"><Icon name="help" /><b>Needs your OK</b></span><b className="num" data-testid="e8-over">{fmt(over)}</b></div>
       </Card>
       <p className="body">{venue.overCapReason}, so the trip came in higher than quoted. The extra {fmt(over)} is not charged unless you say yes.</p>
       <div className="spacer" />
-      <Button testId="e7-yes" onClick={() => { store.setOverCapAnswer('yes'); navigate('/g/p9'); }}>Yes, add {fmt(over)}</Button>
-      <Button variant="secondary" testId="e7-no" onClick={() => { store.setOverCapAnswer('no'); navigate('/g/p9'); }}>No, don't add it</Button>
-      <p className="foot">If you say no, it is not charged. RideNite settles the rest with the car service; {venue.name} pays nothing extra.</p>
+      <Button testId="e8-yes" onClick={() => { store.setOverCapAnswer('yes'); navigate('/g/p9'); }}>Yes, add {fmt(over)}</Button>
+      <Button variant="secondary" testId="e8-no" onClick={() => { store.setOverCapAnswer('no'); navigate('/g/p9'); }}>No, don't add it</Button>
+      <p className="foot">If you say no, it is not charged.</p>
       <Fict>Fictional sample amounts.</Fict>
     </Screen>
   );
@@ -285,7 +292,7 @@ export function P11() {
   const [note, setNote] = useState('');
   return (
     <Screen id="P11">
-      <Top left={<VenueChip />} ctx="Sat 9:06 AM" />
+      <Top left={<VenueChip />} ctx={nowClock()} />
       <div className="success-badge"><Icon name="check" /></div>
       <Chip tone="success" icon="check">{s.dispute ? 'Sent' : 'Paid'}</Chip>
       <h1 className="h2">All set</h1>
@@ -299,6 +306,39 @@ export function P11() {
       <Button variant="secondary" icon="home" onClick={() => { store.saveHome(s.ride?.dest ?? venue.guest.home); setNote('Home address saved on this phone.'); }}>Save my home address for next time</Button>
       <Button variant="secondary" onClick={() => navigate('/g/home')}>Done</Button>
       <Fict>SAMPLE: no real charge.</Fict>
+    </Screen>
+  );
+}
+
+/** Separate sample ride on its own tab: over the cap because of traffic, guest declined on their own phone. */
+export function SampleTrafficReceipt() {
+  const t = sampleTrafficRide(Date.now());
+  return (
+    <Screen id="sample-traffic">
+      <Top back="/g/demo" ctx="Sample receipt" />
+      <h1 className="h2">{nightOfHeading(t.pickupMs)}</h1>
+      <p className="callout" data-testid="sample-traffic-tab">{t.seat} · {t.guest} · {T.bill} #{t.tab} <span className="sample-tag">Sample data</span></p>
+      <p className="foot">A separate sample {T.bill}, not part of tonight's demo night.</p>
+      <table className="inv" aria-label="Sample itemized bill" data-testid="invoice">
+        <tbody>
+          <tr className="sec"><th colSpan={2} scope="colgroup">Bar sales</th></tr>
+          {t.items.map((i) => <tr key={i.name}><th scope="row">{i.name}</th><td className="amt">{fmt(i.cents)}</td></tr>)}
+          <tr><th scope="row">{venue.taxLabel}</th><td className="amt">{fmt(t.taxCents)}</td></tr>
+          <tr><th scope="row">Staff tip ({venue.defaultTipPct}%)</th><td className="amt">{fmt(t.tipCents)}</td></tr>
+          <tr className="subtotal"><th scope="row">Bar sales subtotal</th><td className="amt" data-testid="bar-subtotal">{fmt(t.barCents)}</td></tr>
+        </tbody>
+        <tbody>
+          <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
+          <tr><th scope="row">{venue.tabLineName}, quoted fare<span className="note" data-testid="ride-id">Ride ID {t.rideId}</span></th><td className="amt">{fmt(t.quoteCents)}</td></tr>
+          <tr><th scope="row">Ride fare adjustment<span className="note">Within the {fmt(t.capCents)} you saw before booking.</span></th><td className="amt">{fmtSigned(t.recon.postedAdjCents)}</td></tr>
+          <tr data-testid="max-approved"><th scope="row" colSpan={2}>{maxApprovedLine(t.quoteCents + t.capCents)}</th></tr>
+          <tr className="subtotal"><th scope="row">RideNite rides subtotal</th><td className="amt" data-testid="ride-subtotal">{fmt(t.rideCents)}</td></tr>
+        </tbody>
+        <tbody>
+          <tr className="total"><th scope="row">Total</th><td className="amt" data-testid="total">{fmt(t.totalCents)}</td></tr>
+        </tbody>
+      </table>
+      <Fict>Sample receipt. Fictional guest, ride and amounts. SAMPLE: no real charge.</Fict>
     </Screen>
   );
 }

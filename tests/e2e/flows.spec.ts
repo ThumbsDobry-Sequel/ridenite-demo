@@ -84,7 +84,7 @@ test('first-time guest: Where to, suggestions from first keystroke, Confirm, boo
   await page.getByTestId('addr-input').pressSequentially('55 harison');
   await expect(page.getByTestId('suggest-0')).toContainText('655 N Harrison St');
   await page.getByTestId('suggest-0').tap();
-  await expect(page.getByTestId('confirm-dest')).toContainText('655 N Harrison St');
+  await expect(page.getByTestId('confirm-dest')).toContainText('Westover area');
   await slide(page);
   await page.clock.runFor(10_500);
   expect((await state(page)).bookings).toHaveLength(1);
@@ -144,7 +144,7 @@ test('belongings card sits below plate and Help on P5 and never covers them @siz
   expect((await inViewport(page, 'belongings-card')).box).toBeTruthy();
 });
 
-test('E1 to E7 reachable from the fault panel; each starts fresh', async ({ page }) => {
+test('E1 to E8 reachable from the fault panel; each starts fresh', async ({ page }) => {
   const expectText: Record<string, RegExp> = {
     E1: /No driver found yet\.[\s\S]*Nothing was added to your tab\./,
     E2: /The price changed before your car was booked\. Nothing was added to your tab\./,
@@ -152,7 +152,8 @@ test('E1 to E7 reachable from the fault panel; each starts fresh', async ({ page
     E4: /Your tab here is already closed\. Nothing was added to it\./,
     E5: /Your ride is still booked/,
     E6: /Your driver cancelled\. Nothing was added to your tab\./,
-    E7: /Your ride came to \$27\.40\./,
+    E7: /Add this stop\?[\s\S]*New quote: \$24\.00\. Final fare may differ by up to \$4\.80\. Never more than \$28\.80 unless you approve a change\./,
+    E8: /Your ride came to \$27\.40\./,
   };
   await open(page, '/g/demo');
   for (const id of Object.keys(expectText)) {
@@ -163,9 +164,9 @@ test('E1 to E7 reachable from the fault panel; each starts fresh', async ({ page
     await expect(page.getByTestId('sim-banner')).toBeInViewport();
   }
   await nav(page, '/g/demo');
-  await page.getByTestId('fault-E7').tap();
-  await expect(page.getByTestId('e7-added')).toHaveText('+$4.20');
-  await expect(page.getByTestId('e7-over')).toHaveText('$2.20');
+  await page.getByTestId('fault-E8').tap();
+  await expect(page.getByTestId('e8-added')).toHaveText('+$4.20');
+  await expect(page.getByTestId('e8-over')).toHaveText('$2.20');
   // needs-OK line is neutral, not amber/warning
   const bg = await page.getByTestId('needs-ok').evaluate((e) => getComputedStyle(e).backgroundColor);
   const warn = await page.evaluate(() => { const d = document.createElement('div'); d.style.background = 'var(--warning)'; document.body.append(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; });
@@ -194,11 +195,11 @@ test('P9 totals for every fare scenario, instant tip recompute, tip excludes rid
   }
   await nav(page, '/g/demo');
   await page.getByTestId('scen-over').tap();
-  await nav(page, '/g/e7');
-  await page.getByTestId('e7-yes').tap();
+  await nav(page, '/g/e8');
+  await page.getByTestId('e8-yes').tap();
   await expect(total).toHaveText('$91.59'); // confirmed by the product lead; POS 3b row corrected
-  await nav(page, '/g/e7');
-  await page.getByTestId('e7-no').tap();
+  await nav(page, '/g/e8');
+  await page.getByTestId('e8-no').tap();
   await expect(total).toHaveText('$89.39');
 });
 

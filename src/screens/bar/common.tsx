@@ -85,7 +85,7 @@ export function BarHeader() {
 }
 
 const TABS: { to: string; label: string; icon: IconName; match: string[] }[] = [
-  { to: '/b/tonight', label: 'Tonight', icon: 'glass', match: ['/b/tonight', '/b'] },
+  { to: '/b/tonight', label: 'Tonight', icon: 'venue', match: ['/b/tonight', '/b'] },
   { to: '/b/live', label: 'Live', icon: 'car', match: ['/b/live'] },
   { to: '/b/history', label: 'History', icon: 'list', match: ['/b/history'] },
   { to: '/b/more', label: 'More', icon: 'menu', match: ['/b/more', '/b/settings', '/b/tabs', '/b/tab', '/b/plate'] },

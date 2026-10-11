@@ -1,3 +1,4 @@
+import { areaLabel } from '../lib/tab';
 import { useState } from 'react';
 import { T, venue, type Address } from '../venue.config';
 import { navigate, type Route } from '../router';
@@ -17,11 +18,11 @@ export function P2() {
       {s.handoff && <p className="foot">Link from {venue.name} staff</p>}
       <h1 className="h2">Where to?</h1>
       {s.savedHome && (
-        <ListRow icon="home" title="Home" subtitle={`${s.savedHome.line}, ${s.savedHome.area}`} selected testId="dest-home" onClick={() => pick(s.savedHome!)} />
+        <ListRow icon="home" title="Home" subtitle={areaLabel(s.savedHome)} selected testId="dest-home" onClick={() => pick(s.savedHome!)} />
       )}
       <ListRow icon="kbd" title="Type it" subtitle="Big keyboard, we'll fix typos" testId="dest-type" onClick={() => navigate('/g/p2t')} />
       <ListRow icon="pin" title="Use my location" subtitle="Sample location (simulated)" testId="dest-location" onClick={() => navigate('/g/p2t?loc=1')} />
-      <ListRow icon="glass" title={`Ask the ${T.staff}`} subtitle="Staff will set it for you" onClick={() => { store.requestStaff(venue.seat); navigate('/g/p3w'); }} />
+      <ListRow icon="venue" title={`Ask the ${T.staff}`} subtitle="Staff will set it for you" onClick={() => { store.requestStaff(venue.seat); navigate('/g/p3w'); }} />
       <div className="spacer" />
       <Fict>Addresses are fictional sample data.</Fict>
     </Screen>

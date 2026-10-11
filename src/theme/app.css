@@ -371,6 +371,7 @@ select.input:disabled { opacity: 1; color: var(--text-2); }
 .sr-only-focusable:focus { position: static; width: auto; height: auto; clip: auto; white-space: normal; min-height: var(--tap-guest); }
 @media (prefers-reduced-motion: reduce) { .slide { box-shadow: none; } }
 @media (max-height: 700px) { .slide__hint { display: none; } }
-.night-tagline { margin: 0; font-size: var(--t-caption); color: var(--text-2); text-align: right; }
+/* Piper gate: readable across a table, 17pt minimum (20 here). Plain text color, no glow behind it. */
+.night-tagline { margin: 0; font-size: var(--t-callout); line-height: 1.3; font-weight: var(--w-bold); color: var(--text); text-align: left; }
 .ride-status { display: flex; flex-direction: column; gap: var(--s1); }
 .ride-status__head { margin: 0; font-size: var(--t-title-2); font-weight: var(--w-bold); }

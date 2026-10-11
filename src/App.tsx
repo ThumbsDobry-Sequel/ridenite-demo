@@ -13,11 +13,11 @@ import { Home } from './screens/home';
 import { P1, P1h, P3w, P12, P12s } from './screens/entry';
 import { P2, P2t } from './screens/where';
 import { E2, P3 } from './screens/confirm';
-import { E3, E5, P13, P13f, P4, P5, P5w, P6, P7, P8 } from './screens/trip';
+import { E7, E3, E5, P13, P13f, P4, P5, P5w, P6, P7, P8 } from './screens/trip';
 import { E1, E4, E6 } from './screens/edges';
-import { E7, Inbox, M1, M2, P10, P11, P9 } from './screens/morning';
+import { E8, Inbox, M1, M2, P10, P11, P9, SampleTrafficReceipt } from './screens/morning';
 import { DemoPanel, HandoffRoute, TableQrRoute } from './screens/demo';
-import { OwnerBar, OwnerIndex, OwnerLimits, OwnerSummary } from './screens/owner';
+import { OwnerBar, OwnerStatement, OwnerIndex, OwnerLimits, OwnerSummary } from './screens/owner';
 import { BarApp, BAR_PATHS } from './screens/bar/BarApp';
 
 const ROUTES: Record<string, (r: Route) => ReactNode> = {
@@ -28,11 +28,11 @@ const ROUTES: Record<string, (r: Route) => ReactNode> = {
   '/g/p7': () => <P7 />, '/g/p8': () => <P8 />, '/g/p13': () => <P13 />, '/g/p13f': () => <P13f />, '/g/e5': () => <E5 />,
   '/g/e1': () => <E1 />, '/g/e4': () => <E4 />, '/g/e6': () => <E6 />,
   '/g/inbox': () => <Inbox />, '/g/m1': () => <M1 />, '/g/m2': () => <M2 />, '/g/p9': () => <P9 />, '/g/p10': () => <P10 />,
-  '/g/p11': () => <P11 />, '/g/e7': () => <E7 />, '/g/demo': () => <DemoPanel />,
+  '/g/p11': () => <P11 />, '/g/e7': () => <E7 />, '/g/e8': () => <E8 />, '/g/sample-traffic': () => <SampleTrafficReceipt />, '/g/demo': () => <DemoPanel />,
   '/h': (r) => <HandoffRoute route={r} />, '/v': (r) => <TableQrRoute route={r} />,
-  '/o': () => <OwnerIndex />, '/o/summary': () => <OwnerSummary />, '/o/limits': () => <OwnerLimits />, '/o/bar': () => <OwnerBar />,
+  '/o': () => <OwnerIndex />, '/o/summary': () => <OwnerSummary />, '/o/limits': () => <OwnerLimits />, '/o/bar': () => <OwnerBar />, '/o/statement': () => <OwnerStatement />,
 };
-const DAY = ['/g/inbox', '/g/m1', '/g/m2', '/g/p9', '/g/p10', '/g/p11', '/g/e7'];
+const DAY = ['/g/inbox', '/g/m1', '/g/m2', '/g/p9', '/g/p10', '/g/p11', '/g/e8', '/g/sample-traffic'];
 
 function NotFound() {
   return (
@@ -72,7 +72,7 @@ function Menu({ onClose, onReset, bar }: { onClose: () => void; onReset: () => v
   if (bar) {
     return (
       <Sheet title="Menu" onClose={onClose} testId="menu-sheet" detent="large">
-        <Button variant="secondary" icon="glass" onClick={() => go('/b/tonight')}>Tonight</Button>
+        <Button variant="secondary" icon="venue" onClick={() => go('/b/tonight')}>Tonight</Button>
         <Button variant="secondary" icon="car" onClick={() => go('/b/live')}>Live rides</Button>
         <Button variant="secondary" icon="gear" onClick={() => go('/b/settings')}>Settings</Button>
         <Button variant="secondary" icon="person" onClick={() => go('/g/home')} testId="menu-guest">Switch to guest view</Button>
@@ -87,12 +87,12 @@ function Menu({ onClose, onReset, bar }: { onClose: () => void; onReset: () => v
       {ride && <Button variant="secondary" icon="car" onClick={() => go(STAGE_ROUTE[store.stageOf(ride)])}>Ride status</Button>}
       <Button variant="secondary" icon="home" onClick={() => go('/g/home')}>Home</Button>
       <Button variant="secondary" icon="receipt" onClick={() => go('/g/inbox')}>Receipts</Button>
-      <Button variant="secondary" icon="glass" onClick={() => go('/g/p1')}>Table QR page</Button>
+      <Button variant="secondary" icon="venue" onClick={() => go('/g/p1')}>Table QR page</Button>
       <Button variant="secondary" icon="help" onClick={() => go('/g/p1h')}>How it works</Button>
       <Button variant="secondary" icon="hand" onClick={() => go('/g/p12')}>Ask staff quietly</Button>
       <Button variant="secondary" icon="gear" onClick={() => go('/g/demo')} testId="menu-demo">Demo controls</Button>
       <Button variant="secondary" icon="list" onClick={() => go('/o')} testId="menu-owner">Owner preview</Button>
-      <Button variant="secondary" icon="glass" onClick={() => go('/b')} testId="menu-bar">Switch to {T.staff} view</Button>
+      <Button variant="secondary" icon="venue" onClick={() => go('/b')} testId="menu-bar">Switch to {T.staff} view</Button>
       <Button variant="bad" testId="menu-reset" onClick={onReset}>Reset demo data</Button>
       <button type="button" className="textlink" onClick={onClose}>Close</button>
       <p className="build-stamp" data-testid="build-stamp">Version {APP_VERSION} · built {BUILD_TIME_ET}</p>

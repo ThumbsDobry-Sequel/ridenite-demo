@@ -7,7 +7,7 @@ import { Button, Card, Fict, ListRow, Spinner, TextLink } from '../components/pr
 import { Icon } from '../components/Icon';
 import { Screen, Top } from '../components/layout';
 
-/** P1 Table QR page (UI 5 P1). Shows the approved founder line once. */
+/** P1 Table QR page (UI 5 P1). Neutral founder line (no safety words, Quinn/Nico Oct 11). */
 export function P1() {
   const store = useStore();
   return (
@@ -15,7 +15,7 @@ export function P1() {
       <Top ctx={venue.seat} />
       <h1 className="large-title">Your ride home, on your {T.bill}.</h1>
       <p className="body">Need to head out? Ask your {T.staff}, or tap below and staff will come over. You'll see the price before anything is booked.</p>
-      <p className="foot">If you feel unsafe or just need to get home, you can put your ride home on your bar {T.bill}. No app, no phone, no separate payment.</p>
+      <p className="foot">Need to get home? Ask staff for a car. It goes on your bar {T.bill}. No app, no phone, no separate payment.</p>
       <div className="spacer" />
       <Button size="xl" icon="hand" testId="ask-staff" onClick={() => { store.requestStaff(venue.seat); navigate('/g/p3w'); }}>
         Ask staff for a car

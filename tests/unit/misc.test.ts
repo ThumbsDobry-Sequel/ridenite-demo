@@ -4,7 +4,7 @@ import { encodeHandoff, parseHandoff } from '../../src/lib/handoff';
 import { readUrlLink } from '../../src/lib/urlLink';
 import { venue } from '../../src/venue.config';
 // @ts-expect-error plain JS module
-import { lintStatementText, lintText } from '../../scripts/copy-lint.mjs';
+import { APPROVED, MONEY_FILES, lintMoneyText, lintStatementText, lintText } from '../../scripts/copy-lint.mjs';
 
 describe('forgiving address match (UI 9b)', () => {
   it('suggests from the first keystroke', () => {
@@ -80,10 +80,33 @@ describe('copy lint', () => {
     // bar vs RideNite split (SCOPE 23:01): no claims that ride disputes stay off the bar
     for (const t of ['Ride disputes Never Hit The Bar.', 'Chargebacks never reach the bar', "Disputes stay off the bar's account", 'Kept off the bar\u2019s account', 'You cannot dispute this', "You can't dispute it later", 'You can\u2019t dispute', 'No disputes after Friday']) expect(lintText(t).length, t).toBeGreaterThan(0);
   });
-  it('allows the two approved unsafe strings only', () => {
-    expect(lintText('If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment.')).toHaveLength(0);
-    expect(lintText('Guest says they feel unsafe?')).toHaveLength(0);
+  it('has no approved exceptions: any safe or unsafe in user copy fails (Quinn, Oct 11)', () => {
+    expect(lintText('If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment.')).toHaveLength(1);
+    expect(lintText('If you feel unsafe or just need to get home, you can put your ride home on your bar {T.bill}. No app, no phone, no separate payment.')).toHaveLength(1);
+    expect(lintText('Guest says they feel unsafe?')).toHaveLength(1);
     expect(lintText('Feeling unsafe?')).toHaveLength(1);
+    expect(lintText('Get there safe.')).toHaveLength(1);
+    expect(lintText('SAFE')).toHaveLength(1);
+    expect(APPROVED).toEqual([]);
+    // technical CSS token is not copy
+    expect(lintText('padding: env(safe-area-inset-bottom)')).toEqual([]);
+    // the neutral replacement passes
+    expect(lintText('Need to get home? Ask staff for a car. It goes on your bar tab. No app, no phone, no separate payment.')).toEqual([]);
+    expect(lintText('Venue procedure')).toEqual([]);
+  });
+  it('rejects drink names in user copy (Quinn/Nico, Oct 11)', () => {
+    for (const t of ['Old Fashioned x3', 'House Beer', 'The Pear Necessities', 'Two beers', 'Glass of wine', 'Cocktail menu', 'Martini'])
+      expect(lintText(t).length, t).toBeGreaterThan(0);
+    for (const t of ['Table snacks', 'Dinner for two', 'Madeleines', 'Wilson Blvd']) expect(lintText(t), t).toEqual([]);
+  });
+  it('fare, statement and receipt copy: no pays/covers/absorbs/settles/reimburses/protection/guarantee/insured (over-cap memo, Oct 11)', () => {
+    for (const t of ['Absorbed by RideNite', 'RideNite covers the rest', 'Covered by RideNite', 'RideNite pays the driver', 'RideNite settles the rest with the car service', 'We reimburse the fare', 'Reimbursement', 'Fare protection', 'Guaranteed fare', 'Every ride is insured'])
+      expect(lintMoneyText(t).length, t).toBeGreaterThan(0);
+    for (const t of ["Ride home: $25.20. That's the most you approved, so the final fare can't add more.", 'Quote adjustment credit, ride RN-ABC123, Oct 9: -$3.10', 'If you say no, it is not charged.', 'You pay $11.00 on your tab.', 'recovery', 'discover'])
+      expect(lintMoneyText(t), t).toEqual([]);
+    for (const f of ['src/lib/fare.ts', 'src/lib/payouts.ts', 'src/screens/morning.tsx', 'src/screens/owner.tsx', 'src/screens/bar/tab.tsx']) expect(MONEY_FILES.some((re: RegExp) => re.test(f)), f).toBe(true);
+    // safe/unsafe still fails everywhere
+    expect(lintText('Ride home safe').length).toBeGreaterThan(0);
   });
   it('passes the belongings copy', () => {
     expect(lintText("Card, keys, phone, jacket, bag. Check with staff if they're holding your card.")).toHaveLength(0);

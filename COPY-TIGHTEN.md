@@ -1,6 +1,6 @@
 # Copy tightening proposal (not applied)
 
-Jason: "the app reads a bit wordy." This lists every string in the golden copy snapshot (`tests/golden/copy-snapshot.json`, 48 guest, bar, owner and demo screens, rendered at Sat Oct 10, 10:30 PM ET), with a shorter version where one helps. **Proposal only: nothing in the app was changed.**
+Jason: "the app reads a bit wordy." This lists every string in the golden copy snapshot (`tests/golden/copy-snapshot.json`, 48 guest, bar, owner and demo screens, rendered at Sat Oct 10, 10:30 PM ET), with a shorter version where one helps. **Proposal only: nothing in the app was changed**, except the Oct 11 team decisions marked "applied Oct 11" (no safety words, food-only demo tab, area-only ride locations, pickup at the venue's front door, bar-of-record E7 line).
 
 Rules kept: no em or en dashes; no safety or liability claims; the quote plus cap disclosure stays whole; "Fare goes on your tab at pickup" timing stays (one SMS proposal adds "at pickup" where the current text implies otherwise). Harper-approved legal lines (the morning ride-question line, the confirm "never more than" line, the approved entry sentence) are marked **needs Harper** and left as is. Required labels (SIMULATED DEMO, Sample data, fictional notices, SMS STOP/HELP), prices, names, times and record lines are kept.
 
@@ -20,16 +20,16 @@ Counts are per unique string. A string that appears on several screens counts on
 
 ## Needs Harper (unchanged)
 
-- If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment.
+- Need to get home? Ask staff for a car. It goes on your bar tab. No app, no phone, no separate payment. (applied Oct 11, replaces the old entry sentence; no safety words)
 - More than that and we'll ask you first. You pay the final fare, never more than $25.20 unless you approve a change.
-- If you say no, it is not charged. RideNite settles the rest with the car service; Maison Cheryl pays nothing extra.
+- If you say no, it is not charged. (applied Oct 11: the settles-the-rest clause was removed; launch model is bar of record, the venue's ride account is billed and RideNite invoices only its fees)
 - Ride charge look wrong? Tap here. We'll start on it with Maison Cheryl today. If it's wrong, Maison Cheryl refunds it to your card, and we'll text you when that's done. Your bank may take a few business days to show it.
 
 ## Strings with 6 or more words
 
 | Current | Proposed | Words now | Words proposed | Screens | Note |
 |---|---|---|---|---|---|
-| One tap, then confirm the price. | Tap, then confirm the price. | 6 | 5 | /g/home |  |
+| Ask staff, then confirm the price. | KEEP (applied Oct 11) | 6 | 5 | /g/home |  |
 | Your ride home, on your tab. | KEEP | 6 | 6 | /g/p1 |  |
 | Need to head out? Ask your bartender, or tap below and staff will come over. You'll see the price before anything is booked. | Heading out? Ask your bartender or tap below. You'll see the price before booking. | 23 | 14 | /g/p1 |  |
 | If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment. | needs Harper | 27 | 27 | /g/p1 |  |
@@ -41,22 +41,22 @@ Counts are per unique string. A string that appears on several screens counts on
 | You'll get a text to pick where you're going and see the price. | You'll get a text to pick a drop-off and see the price. | 13 | 12 | /g/p3w |  |
 | Send it quietly, or show this screen to any staff member. | Send it quietly, or show this screen to staff. | 11 | 9 | /g/p12 |  |
 | Thanks. A staff member will find you. | Thanks. Staff will find you. | 7 | 5 | /g/p12s |  |
-| 655 N Harrison St, Westover, Arlington, VA 22205 | KEEP | 8 | 8 | /g/p2 |  |
+| Westover area | KEEP (applied Oct 11: area only) | 8 | 8 | /g/p2 |  |
 | Staff will set it for you | Staff will set it | 6 | 4 | /g/p2 |  |
 | $21.00 goes on your tab when you're picked up. Final fare may differ by up to $4.20. | KEEP (quote and cap disclosure, design rev 04 lock) | 17 | 17 | /g/p3, /g/p4 |  |
 | More than that and we'll ask you first. You pay the final fare, never more than $25.20 unless you approve a change. | needs Harper | 22 | 22 | /g/p3 |  |
 | Slide to confirm. You can undo for 10 seconds. | Slide to confirm. Undo within 10 seconds. | 9 | 7 | /g/p3 |  |
 | Card, keys, phone, jacket, bag. Check with staff if they're holding your card. | Card, keys, phone, jacket, bag. Ask staff if they have your card. | 13 | 12 | /g/e3, /g/p4, /g/p5 +1 |  |
 | Cancel now and nothing is added to your tab. | Cancel now and nothing goes on your tab. | 9 | 8 | /g/p4 |  |
-| Pickup at front door, N Fillmore St | KEEP | 7 | 7 | /g/p5 |  |
+| Pickup at front door, Maison Cheryl | KEEP (applied Oct 11) | 7 | 7 | /g/p5 |  |
 | Before you get in, check the plate. Your driver will say your first name. | Check the plate first. Your driver will say your first name. | 14 | 11 | /g/p5 |  |
 | On your tab at Maison Cheryl | KEEP | 6 | 6 | /g/p5, /g/p5w |  |
 | Final fare may differ by up to $4.20. | KEEP (cap disclosure) | 8 | 8 | /g/p5, /g/p5w, bar:B3 |  |
 | Driver, car and plate are fictional. | KEEP | 6 | 6 | /g/p5 |  |
 | You can wait inside. We'll text you when it's at the door. | Wait inside. We'll text you when it's at the door. | 12 | 10 | /g/p5w |  |
-| Front door, N Fillmore St. Gray Camry. | KEEP | 7 | 7 | /g/e3 |  |
+| Front door, Maison Cheryl. Gray Camry. | KEEP (applied Oct 11) | 7 | 7 | /g/e3 |  |
 | The driver waits about 3 more min. After that the ride may be canceled and nothing goes on your tab. | Driver waits about 3 more min. If it's canceled, nothing goes on your tab. | 20 | 14 | /g/e3 |  |
-| Arrive near 655 N Harrison St | KEEP | 6 | 6 | /g/p6 |  |
+| Arrive in the Westover area | KEEP (applied Oct 11) | 6 | 6 | /g/p6 |  |
 | Map is illustrative. No map tiles are loaded. | Illustrative map. No tiles loaded. | 8 | 5 | /g/p6 |  |
 | Your ride from Maison Cheryl is on your tab. | KEEP | 9 | 9 | /g/p7 |  |
 | Opens your own messages app. Optional. | Opens your messages app. Optional. | 6 | 5 | /g/p7 |  |
@@ -80,7 +80,7 @@ Counts are per unique string. A string that appears on several screens counts on
 | Staff were told on their screen and can rebook in one tap, with another service if needed. | Staff were alerted and can rebook in one tap, with another service if needed. | 17 | 14 | /g/e6 |  |
 | Added, as shown before booking (up to $4.20) | Added, within the $4.20 shown before booking | 8 | 7 | /g/e7 |  |
 | You added a stop at 11:28 PM, so the trip came in higher than quoted. The extra $2.20 is not charged unless you say yes. | You added a stop at 11:28 PM, so the fare came in higher. The extra $2.20 is charged only if you say yes. | 25 | 23 | /g/e7 | Keeps the yes-only rule. |
-| If you say no, it is not charged. RideNite settles the rest with the car service; Maison Cheryl pays nothing extra. | needs Harper (says RideNite settles the rest and the venue pays nothing extra; a cost-absorption claim) | 21 | 21 | /g/e7 |  |
+| If you say no, it is not charged. | applied Oct 11 (settles-the-rest clause removed, bar of record) | 7 | 7 | /g/e7 |  |
 | Simulated messages on this phone. Nothing was really sent. | Simulated messages. Nothing was sent. | 9 | 5 | /g/inbox |  |
 | Your receipt from Maison Cheryl is ready | KEEP | 7 | 7 | /g/inbox |  |
 | Email: Your receipt from Maison Cheryl | KEEP | 6 | 6 | /g/inbox |  |
@@ -101,7 +101,7 @@ Counts are per unique string. A string that appears on several screens counts on
 | RideNite: Your receipt from Maison Cheryl is ready: rdnt.example/m/abc123 Reply STOP to opt out, HELP for help. | KEEP (STOP and HELP wording required for SMS) | 17 | 17 | /g/m2 |  |
 | SAMPLE: no real charge. Messages are simulated. | KEEP | 7 | 7 | /g/m2 |  |
 | Picked up. Luis M., gray Camry, XLT-5012 | KEEP | 7 | 7 | /g/p9 |  |
-| Dropped off near 655 N Harrison St. Final fare $24.60 | KEEP | 10 | 10 | /g/p9 |  |
+| Dropped off. Fare on your tab. Final fare $24.60 | KEEP (applied Oct 11) | 10 | 10 | /g/p9 |  |
 | VA sales 6% + Arlington meals 5%, on drinks and food | KEEP | 11 | 11 | /g/p9 |  |
 | Tip is on drinks and food ($49.00), not the ride. | Tip is on drinks and food ($49.00) only. | 10 | 8 | /g/p9 |  |
 | Ride ID RN-7Q4K2M. Made up of the lines below. | Ride ID RN-7Q4K2M. The lines below add up to this. | 9 | 10 | /g/p9 |  |
@@ -164,7 +164,7 @@ Counts are per unique string. A string that appears on several screens counts on
 | Go over in person, low-key. Book the house car without asking why. | Go over in person, low-key. Book the house car; don't ask why. | 12 | 12 | bar:B10, bar:B8 |  |
 | If the guest raises a concern, get the manager or security first and follow the venue's procedure. The car is one option. | KEEP | 22 | 22 | bar:B10, bar:B8 |  |
 | White Toyota Prius · driver Ravi | KEEP | 6 | 6 | bar:B9 |  |
-| Front door, N Fillmore St · $21.00 on your tab | KEEP | 10 | 10 | bar:B9 |  |
+| Front door, Maison Cheryl · $21.00 on your tab | KEEP (applied Oct 11) | 10 | 10 | bar:B9 |  |
 | The driver can call the bar at (703) 555-0142 if needed. | KEEP | 11 | 11 | bar:B9 |  |
 | Car for a guest at Table 4 | KEEP | 7 | 7 | bar:B10 |  |
 | Book the house car (Guest asked) | KEEP | 6 | 6 | bar:B10 |  |
@@ -190,7 +190,7 @@ Labels, buttons, headings, amounts, names and times. Already short; no change pr
 | Fictional sample data | 3 | /g/home |
 | No real cars or charges. | 5 | /g/home |
 | Ride home | 2 | /g/home |
-| To 655 N Harrison St | 5 | /g/home |
+| To Westover area | 5 | /g/home |
 | SIMULATED DEMO. Fictional data only. | 5 | /g/demo, /g/e1, /g/e2 +45 |
 | Table 7 | 2 | /g/p1, /g/p12s |
 | Ask staff for a car | 5 | /g/e1, /g/p1, /g/p12 +1 |
@@ -221,13 +221,13 @@ Labels, buttons, headings, amounts, names and times. Already short; no change pr
 | Suggestions are fictional sample data. | 5 | /g/p2t |
 | Confirm ride | 2 | /g/p3 |
 | Going to | 2 | /g/p3 |
-| Home, 655 N Harrison St | 5 | /g/p3 |
+| Home, Westover area | 5 | /g/p3 |
 | Change | 1 | /g/p3 |
 | Just me | 2 | /g/p3 |
 | Me + 1 to 3 | 5 | /g/p3 |
 | $21.00 | 1 | /g/e2, /g/e7, /g/p3 +5 |
 | Pickup | 1 | /g/p3 |
-| Front door, N Fillmore St | 5 | /g/p3 |
+| Front door, Maison Cheryl | 5 | /g/p3 |
 | Car | 1 | /g/p3 |
 | Partner car, about 6 min | 5 | /g/p3 |
 | Slide to confirm | 3 | /g/p3 |

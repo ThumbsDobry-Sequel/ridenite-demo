@@ -18,7 +18,7 @@ export function B0() {
   const go = () => { store.barWelcome(); navigate('/b/tonight', { replace: true }); };
   return (
     <main className="bpage bpage--center" data-screen="b0" id="main">
-      <Icon name="glass" className="icon icon--hero" />
+      <Icon name="venue" className="icon icon--hero" />
       <h1 className="h1">Welcome, partner.</h1>
       <p className="body">Take the 12-minute RideNite module in the next 14 days. You can book guest requests now.</p>
       <div className="bstack">

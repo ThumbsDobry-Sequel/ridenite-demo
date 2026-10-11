@@ -25,7 +25,7 @@ function Tile({ label, value, sample, testId }: { label: string; value: string; 
 }
 
 export function finalFor(ride: BarRide, stage: Stage): number | null {
-  return stage === 'complete' ? venue.finalFareCents[ride.scenario] : null;
+  return stage === 'complete' ? venue.finalFareCents[ride.scenario] + (ride.stopDeltaCents ?? 0) : null;
 }
 
 export function B4() {

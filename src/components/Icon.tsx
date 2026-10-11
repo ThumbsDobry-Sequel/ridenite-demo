@@ -4,7 +4,8 @@ const P: Record<string, string> = {
   mic: 'M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3',
   kbd: 'M3 7h18v10H3zM7 11h.01M11 11h.01M15 11h.01M7 14h10',
   pin: 'M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12zM12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
-  glass: 'M8 21h8M12 15v6M5 3h14l-7 12z',
+  // storefront (venue). No drink imagery (Vera guardrails).
+  venue: 'M4 4h16l1 5H3zM3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0M5 11.5V20h14v-8.5M10 20v-5h4v5',
   check: 'M4 12.5 9.5 18 20 6',
   share: 'M12 3v12M7 8l5-5 5 5M5 14v6h14v-6',
   help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01',
