@@ -571,8 +571,8 @@ test('morning receipt split: Bar sales $64.19 + RideNite rides $27.40 = $91.59 (
   await expect(bar.getByTestId('tip-amt')).toBeVisible();
   await expect(ride.getByTestId('tax')).toHaveCount(0);
   await expect(ride.getByTestId('tip-amt')).toHaveCount(0);
-  // M1 email: one ride row at the final fare, never the POS quote line
-  await expect(ride.getByTestId('ride-item').locator('.amt')).toHaveText('$27.40');
+  // P9 receipt: one guest ride row at the final fare, never the POS quote line
+  await expect(ride.getByTestId('ride-line-amt')).toHaveText('$27.40');
   await expect(ride).not.toContainText('quoted fare');
   await expect(ride.getByTestId('ride-id')).toContainText(/Ride ID RN-[0-9A-Z]{6}/);
   // each section has its own question path

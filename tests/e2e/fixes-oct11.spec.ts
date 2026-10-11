@@ -171,7 +171,9 @@ test('separate traffic-overage sample ride: own tab and total, $21.00 quote, rec
   await expect(page.getByTestId('ride-subtotal')).toHaveText('$25.20');
   await expect(page.getByTestId('bar-subtotal')).toHaveText('$26.20');
   await expect(page.getByTestId('total')).toHaveText('$51.40');
-  await expect(page.locator('main')).toContainText('$21.00');
+  // guest receipt row: 'RideNite car home' at the amount charged ($25.20, capped), never the $21.00 quote or 'quoted fare'
+  await expect(page.getByTestId('ride-line-amt')).toHaveText('$25.20');
+  await expect(page.locator('main')).not.toContainText('quoted fare');
   const id = (await page.getByTestId('ride-id').innerText()).replace('Ride ID ', '').trim();
   expect(id).toMatch(/^RN-[A-Z0-9]{6}$/);
   await nav(page, '/o/statement');
