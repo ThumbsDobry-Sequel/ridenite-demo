@@ -7,7 +7,7 @@ import { T, venue } from '../venue.config';
 import { navigate } from '../router';
 import { useDemoState, useStore } from '../store';
 import { morningFor, nightTimes } from '../lib/morning';
-import { neighborhood, RIDE_QUOTE_LINE } from '../lib/tab';
+import { neighborhood, RIDE_GUEST_LINE } from '../lib/tab';
 import { checkLines, receiptRideId, splitSubtotals } from '../lib/checkLines';
 import { guestCheckClosed, nightTagline } from '../lib/brand';
 import { noDriverLine, confirmLine, fmtET } from '../lib/confirmRecord';
@@ -158,13 +158,11 @@ export function P9() {
   const cl = confirmLine(s);
   const nd = noDriverLine(s);
   const r = m.recon ?? { postedAdjCents: 0, heldCents: 0, declinedCents: 0, finalCents: 0, quoteCents: 0, capCents: 0, diffCents: 0, outcome: 'none' as const };
-  const adjName = r.postedAdjCents < 0 ? 'Ride fare credit' : 'Ride fare adjustment';
   const N = useN(s);
   const tag = nightTagline(m.hasRide, guestCheckClosed(s), m.rideCents, s.tabOpenedAt);
   const lines = checkLines(s, m);
   const split = splitSubtotals(lines);
   const rideId = receiptRideId(s);
-  const adj = lines.find((l) => l.type === 'ride_adjustment' || l.type === 'ride_credit');
   const stop = lines.find((l) => l.type === 'ride_stop');
   return (
     <Screen id="P9" tight>
@@ -205,20 +203,16 @@ export function P9() {
         <tbody data-testid="ride-section">
           <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
           {tag && <tr data-testid="night-tagline-row"><td colSpan={2} className="night-tagline" data-testid="night-tagline">{tag}</td></tr>}
-          {m.hasRide && <tr data-testid="ride-item" className="ride-item"><th scope="row" colSpan={2}>{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note" data-testid="ride-id">Ride ID <span className="ride-id">{rideId}</span>. Made up of the lines below.</span></th></tr>}
+          {m.hasRide && <tr data-testid="ride-item" className="ride-item"><th scope="row" colSpan={2}>{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note" data-testid="ride-id">Ride ID <span className="ride-id">{rideId}</span>.</span></th></tr>}
           {m.hasRide ? (
-            <tr data-testid="ride-line" data-kind="ride"><th scope="row">{RIDE_QUOTE_LINE}<span className="note">{venue.driver.partner}</span>
-              {cl && <><span className="note confirm-record" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</span><span className="note" data-testid="confirm-record-amounts">{cl.amounts}</span></>}</th><td className="amt">{fmt(m.quoteCents)}</td></tr>
+            <tr data-testid="ride-line" data-kind="ride"><th scope="row">{RIDE_GUEST_LINE}<span className="note">{venue.driver.partner}</span>
+              {stop && <span className="note" data-testid="stop-note">Includes {fmt(stop.cents)} over the cap, approved by you. {venue.overCapReason}.</span>}
+              {cl && <><span className="note confirm-record" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</span><span className="note" data-testid="confirm-record-amounts">{cl.amounts}</span></>}</th><td className="amt" data-testid="ride-line-amt">{fmt(split.rideCents)}</td></tr>
           ) : (
             <tr data-testid="no-ride-line"><th scope="row">No ride on this {T.bill}<span className="note">Nothing was added for a ride.</span>
               {nd && <span className="note" data-testid="no-driver-record">{nd}</span>}</th><td className="amt">{fmt(0)}</td></tr>
           )}
-          {adj && (
-            <tr data-testid="adj-line" data-kind="ride"><th scope="row">{adjName} (final fare {fmt(r.finalCents)}, quoted {fmt(r.quoteCents)})<span className="note">{adj.cents > 0 ? `Within the ${fmt(r.capCents)} you saw before booking.` : 'The fare came in lower than the quote, so this credit lowers your total.'}</span></th><td className="amt">{fmtSigned(adj.cents)}</td></tr>
-          )}
-          {stop && (
-            <tr data-testid="stop-line" data-kind="ride"><th scope="row">Over the cap, approved by you<span className="note">{venue.overCapReason}. You said yes to the extra {fmt(stop.cents)}.</span></th><td className="amt">{fmtSigned(stop.cents)}</td></tr>
-          )}
+          {/* Guest receipt: one ride row at the final fare (Oct 11). Quote, adjustment and approved-stop lines stay on the POS / B6 tab only. */}
           {r.heldCents > 0 && (
             <tr data-testid="held-line" className="needs-ok-row"><th scope="row"><span className="needs-ok__l"><Icon name="help" /><b>Needs your OK</b></span><span className="note">{fmt(r.heldCents)} over the {fmt(r.capCents)} cap. {venue.overCapReason}. Not charged unless you OK it.</span>
               <button type="button" className="textlink textlink--inline" onClick={() => navigate('/g/e8t')}>Review</button></th><td className="amt">{fmt(0)}</td></tr>
@@ -348,8 +342,7 @@ export function SampleTrafficReceipt({ route }: { route?: Route }) {
         </tbody>
         <tbody>
           <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
-          <tr><th scope="row">{RIDE_QUOTE_LINE}<span className="note" data-testid="ride-id">Ride ID <span className="ride-id">{t.rideId}</span></span></th><td className="amt">{fmt(t.quoteCents)}</td></tr>
-          <tr><th scope="row">Ride fare adjustment<span className="note">{ok ? `Includes the ${fmt(t.finalCents - t.quoteCents - t.capCents)} you approved.` : `Within the ${fmt(t.capCents)} you saw before booking.`}</span></th><td className="amt">{fmtSigned(t.recon.postedAdjCents)}</td></tr>
+          <tr data-testid="ride-line"><th scope="row">{RIDE_GUEST_LINE}<span className="note" data-testid="ride-id">Ride ID <span className="ride-id">{t.rideId}</span></span>{ok && <span className="note">Includes the {fmt(t.finalCents - t.quoteCents - t.capCents)} over the cap you approved.</span>}</th><td className="amt" data-testid="ride-line-amt">{fmt(t.rideCents)}</td></tr>
           {!ok && <tr data-testid="max-approved"><th scope="row" colSpan={2}>{maxApprovedLine(t.quoteCents + t.capCents)}</th></tr>}
           <tr className="subtotal"><th scope="row">RideNite rides subtotal</th><td className="amt" data-testid="ride-subtotal">{fmt(t.rideCents)}</td></tr>
         </tbody>

@@ -525,10 +525,10 @@ test('morning receipt itemized ride line: areas, pickup time and the final ride 
   const want = 'RideNite car home, Clarendon area to Westover area, picked up 10:10 PM, $27.40';
   await expect(page.getByTestId('ride-item')).toContainText(want);
   await expect(page.getByTestId('total')).toHaveText('$91.59');
-  // the itemized fare equals the ride lines on the tab: quote + adjustment
-  const amts = await page.locator('[data-testid=ride-line] .amt, [data-testid=adj-line] .amt, [data-testid=stop-line] .amt').allInnerTexts();
-  const cents = amts.map((t) => Math.round(Math.abs(parseFloat(t.replace(/[^0-9.]/g, ''))) * 100) * (/[-\u2212]/.test(t) ? -1 : 1));
-  expect(cents.reduce((a, b) => a + b, 0)).toBe(2740);
+  // the guest sees one ride row at the final fare (quote + adjustment + approved extra live on the POS line only)
+  await expect(page.getByTestId('ride-line-amt')).toHaveText('$27.40');
+  await expect(page.getByTestId('adj-line')).toHaveCount(0);
+  await expect(page.getByTestId('stop-line')).toHaveCount(0);
   // areas, never full street addresses
   await expect(page.getByTestId('ride-item')).not.toContainText('655 N Harrison');
   await expect(page.getByTestId('ride-item')).not.toContainText('Wilson Blvd');
@@ -571,10 +571,9 @@ test('morning receipt split: Bar sales $64.19 + RideNite rides $27.40 = $91.59 (
   await expect(bar.getByTestId('tip-amt')).toBeVisible();
   await expect(ride.getByTestId('tax')).toHaveCount(0);
   await expect(ride.getByTestId('tip-amt')).toHaveCount(0);
-  // ride lines: quote, adjustment within the cap, approved stop
-  await expect(ride.getByTestId('ride-line').locator('.amt')).toHaveText('$21.00');
-  await expect(ride.getByTestId('adj-line').locator('.amt')).toHaveText('+$4.20');
-  await expect(ride.getByTestId('stop-line').locator('.amt')).toHaveText('+$2.20');
+  // M1 email: one ride row at the final fare, never the POS quote line
+  await expect(ride.getByTestId('ride-item').locator('.amt')).toHaveText('$27.40');
+  await expect(ride).not.toContainText('quoted fare');
   await expect(ride.getByTestId('ride-id')).toContainText(/Ride ID RN-[0-9A-Z]{6}/);
   // each section has its own question path
   await expect(bar.getByTestId('bar-question')).toHaveText('Questions about your bar tab go to Maison Cheryl.');

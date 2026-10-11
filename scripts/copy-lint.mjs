@@ -109,6 +109,18 @@ function cssContentStrings(css) {
   return css.split(/\r?\n/).map((l) => (l.match(/content\s*:\s*(['"])(.*?)\1/g) || []).join(' ')).join('\n');
 }
 
+/**
+ * Guest-facing ride row guard (Quinn, Oct 11): 'quoted fare' is the bartender POS / B6 line only. Guest screens,
+ * the morning receipt and email, and their libs must never contain it or reference the POS constant.
+ */
+export const GUEST_FILES = [/^src\/screens\/(confirm|demo|edges|entry|home|morning|trip|where)\.tsx$/, /^src\/components\/RideStatus\.tsx$/, /^src\/lib\/(morning|brand|night|confirmRecord)\.ts$/];
+export const GUEST_BANNED = /quoted fare|RIDE_POS_LINE|RIDE_QUOTE_LINE/i;
+export function lintGuestText(text, file = '<text>') {
+  const problems = [];
+  text.split(/\r?\n/).forEach((line, i) => { const m = line.match(GUEST_BANNED); if (m) problems.push({ file, line: i + 1, match: `${m[0]} (guest-facing: POS quote line only)` }); });
+  return problems;
+}
+
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
@@ -133,6 +145,7 @@ if (isMain) {
     const rel = relative(ROOT, f).split('\\').join('/');
     problems = problems.concat(STATEMENT_FILES.some((re) => re.test(rel)) ? lintStatementText(text, rel) : lintText(text, rel));
     if (MONEY_FILES.some((re) => re.test(rel))) problems = problems.concat(lintMoneyText(text, rel));
+    if (GUEST_FILES.some((re) => re.test(rel))) problems = problems.concat(lintGuestText(text, rel));
   }
   if (problems.length) {
     for (const p of problems) console.error(`copy-lint: ${p.file}:${p.line} banned "${p.match}"`);

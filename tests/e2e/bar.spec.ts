@@ -526,7 +526,8 @@ test.describe('M2 settings and reset (Piper E)', () => {
     await page.getByTestId('set-receipt-detailed').tap();
     await page.getByTestId('set-price-venue_perk').tap();
     await nav(page, '/g/p9');
-    await expect(page.getByTestId('ride-line')).toContainText('RideNite car home, quoted fare');
+    await expect(page.getByTestId('ride-line')).toContainText('RideNite car home');
+    await expect(page.getByTestId('ride-line')).not.toContainText('quoted');
     await nav(page, '/g/m1');
     await expect(page.getByTestId('m1-subject')).toHaveText('Your receipt from Maison Cheryl: tab and ride home');
     await nav(page, '/g/p3');

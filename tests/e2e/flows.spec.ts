@@ -179,7 +179,9 @@ test('P9 totals for every fare scenario, instant tip recompute, tip excludes rid
   await open(page, '/g/p9');
   const total = page.getByTestId('total');
   await expect(total).toHaveText('$88.79');
-  await expect(page.getByTestId('adj-line')).toContainText('Ride fare adjustment (final fare $24.60, quoted $21.00)');
+  await expect(page.getByTestId('ride-line').locator('th')).toContainText(/^RideNite car home(?!,)/);
+  await expect(page.getByTestId('ride-line-amt')).toHaveText('$24.60');
+  await expect(page.getByTestId('adj-line')).toHaveCount(0);
   await page.getByTestId('tip-18').tap();
   await expect(total).toHaveText('$87.81');
   await expect(page.getByTestId('tip-amt')).toHaveText('$8.82');

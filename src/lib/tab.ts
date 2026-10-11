@@ -46,7 +46,10 @@ export interface TabTotals {
  * then the adjustment or credit as its own separate line once the final fare is in.
  */
 /** The ride's quote line on the receipt and POS (no venue setting; the tab line name option was dropped, Oct 11). */
-export const RIDE_QUOTE_LINE = 'RideNite car home, quoted fare';
+/** Bartender POS / B6 tab line only, at the quote. Never on a guest screen, receipt, summary or email. */
+export const RIDE_POS_LINE = 'RideNite car home, quoted fare';
+/** Guest-facing ride row (receipt, night summary, morning email): exactly this, next to the final fare charged. */
+export const RIDE_GUEST_LINE = 'RideNite car home';
 
 export function tabTotals(opts: {
   items: readonly MenuItem[];
@@ -73,7 +76,7 @@ export function tabTotals(opts: {
     const rideId = opts.ride.rideId;
     const feeChargedCents = opts.ride.feeChargedCents;
     const returnWindowEndsIso = opts.ride.pickupMs != null ? ymdIso(returnWindowEnds(opts.ride.pickupMs)) : undefined;
-    lines.push({ kind: 'ride', type: 'ride_quote', rideId, returnWindowEnds: returnWindowEndsIso, feeChargedCents, name: opts.rideLineName ?? RIDE_QUOTE_LINE, cents: q });
+    lines.push({ kind: 'ride', type: 'ride_quote', rideId, returnWindowEnds: returnWindowEndsIso, feeChargedCents, name: opts.rideLineName ?? RIDE_POS_LINE, cents: q });
     rideCents = q;
     if (opts.ride.finalCents != null) {
       recon = reconcile(q, opts.ride.finalCents, opts.ride.overCapAnswer ?? null);
