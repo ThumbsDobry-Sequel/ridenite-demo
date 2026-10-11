@@ -43,7 +43,7 @@ export function B6({ route }: { route: Route }) {
   const charged = isChargedStage(stage);
   const close = tabCloseState(t, stage, store.now());
   const tot = tabTotals({
-    items: tabItems(t.items), taxRate: venue.taxRate, tabLineName: s.bar.settings.tabLineName,
+    items: tabItems(t.items), taxRate: venue.taxRate,
     rideLineName: ride ? barRideLineName(ride.dest, pickupAt(ride), fmtET) : undefined,
     ride: ride && charged ? { quoteCents: ride.quoteCents, finalCents: done ? venue.finalFareCents[ride.scenario] + (ride.stopDeltaCents ?? 0) : null, overCapAnswer: isGuestRide ? s.overCapAnswer : null, rideId: rideRefFor(ride, s), pickupMs: pickupAt(ride), feeChargedCents: ride.feeChargedCents } : null,
   });
@@ -236,8 +236,6 @@ export function B8({ route }: { route: Route }) {
         <Seg label="Price display" value={st.priceMode} onChange={set('priceMode')} testId="set-price"
           options={[{ id: 'fare_on_tab', label: `Fare on ${T.bill}` }, { id: 'venue_perk', label: `Venue perk, first ${fmt(venue.perkCents)}` }]} />
         <p className="foot">Offered to any guest. Never tied to what the guest ordered.</p>
-        <Seg label={`${T.Bill} line name`} value={st.tabLineName} onChange={set('tabLineName')} testId="set-line"
-          options={[{ id: 'RideNite Ride', label: 'RideNite Ride' }]} />
       </Group>
       <Group title="Venue">
         <Seg label="Morning receipt" value={st.receipt} onChange={set('receipt')} testId="set-receipt"

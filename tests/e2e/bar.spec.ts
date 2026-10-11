@@ -520,15 +520,15 @@ test.describe('Tab close with a ride pending pickup (SCOPE 22:22)', () => {
 });
 
 test.describe('M2 settings and reset (Piper E)', () => {
-  test('E1 price display, receipt and tab line name change what the guest sees @bar', async ({ page }) => {
+  test('E1 price display and receipt change what the guest sees; no tab line name setting @bar', async ({ page }) => {
     await open(page, '/b/settings');
-    await page.getByTestId('set-line-RideNite Ride').tap();
+    await expect(page.getByTestId('set-line')).toHaveCount(0);
     await page.getByTestId('set-receipt-detailed').tap();
     await page.getByTestId('set-price-venue_perk').tap();
     await nav(page, '/g/p9');
-    await expect(page.getByTestId('ride-line')).toContainText('RideNite Ride, quoted fare');
+    await expect(page.getByTestId('ride-line')).toContainText('RideNite car home, quoted fare');
     await nav(page, '/g/m1');
-    await expect(page.getByTestId('m1-subject')).toHaveText('Your receipt from Maison Cheryl: tab and RideNite Ride ride');
+    await expect(page.getByTestId('m1-subject')).toHaveText('Your receipt from Maison Cheryl: tab and ride home');
     await nav(page, '/g/p3');
     await expect(page.getByTestId('perk-line')).toContainText('Maison Cheryl takes the first $10.00 off');
     await nav(page, '/b/settings');

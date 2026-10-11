@@ -8,6 +8,7 @@ import { venue } from '../venue.config';
 import type { DemoState } from '../store/types';
 import { nightTimes, type morningFor } from './morning';
 import { returnWindowEnds, ymdIso } from './payouts';
+import { RIDE_QUOTE_LINE } from './tab';
 
 export type LineKind = 'bar' | 'ride';
 export type CheckLineType = 'item' | 'tax' | 'tip' | 'ride_quote' | 'ride_adjustment' | 'ride_stop' | 'ride_credit';
@@ -60,7 +61,7 @@ export function checkLines(s: DemoState, m: ReturnType<typeof morningFor>): Chec
     const live = s.ride && !s.ride.pending ? s.ride : null;
     const fee = live ? live.feeChargedCents : s.sampleRideFeeChargedCents;
     const r = m.recon;
-    lines.push({ kind: 'ride', type: 'ride_quote', name: `${s.bar.settings.tabLineName}, quoted fare`, cents: m.quoteCents, rideId, returnWindowEnds: win, feeChargedCents: fee });
+    lines.push({ kind: 'ride', type: 'ride_quote', name: RIDE_QUOTE_LINE, cents: m.quoteCents, rideId, returnWindowEnds: win, feeChargedCents: fee });
     if (r && r.postedAdjCents > 0) {
       const within = Math.min(r.postedAdjCents, r.capCents);
       lines.push({ kind: 'ride', type: 'ride_adjustment', name: 'Ride fare adjustment', cents: within, rideId, returnWindowEnds: win, feeChargedCents: fee });

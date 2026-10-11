@@ -15,7 +15,9 @@ const MDW = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', wee
 function DemoLabel() { return <p className="demo-screen-label" data-testid="owner-label">Demo screen, sample data</p>; }
 
 /** Statement line with its amount kept on one line (no break between '-' and '$'). */
-function Amt({ line }: { line: string }) { const i = line.lastIndexOf(': '); return <>{line.slice(0, i + 2)}<span className="nowrap">{line.slice(i + 2)}</span></>; }
+/** Ride IDs ("RN-7Q4K2M") never break at the hyphen: only the ID itself is nowrap, the rest of the line wraps (Riley, Oct 11). */
+function Ids({ text }: { text: string }) { return <>{text.split(/(RN-[A-Z0-9]+)/).map((p, i) => (i % 2 ? <span key={i} className="ride-id">{p}</span> : p))}</>; }
+function Amt({ line }: { line: string }) { const i = line.lastIndexOf(': '); return <><Ids text={line.slice(0, i + 2)} /><span className="nowrap">{line.slice(i + 2)}</span></>; }
 
 function Sample() { return <span className="sample-tag">Sample data</span>; }
 function Stat({ label, value }: { label: string; value: string }) {
@@ -67,7 +69,7 @@ export function OwnerSummary() {
         <Stat label="Over the cap, guest declined" value={`${credits.length}, ${fmt(declined)} not charged`} />
         {credits.map((c) => (
           <div className="kv" key={c.rideId} data-testid="summary-quote-credit">
-            <div className="grow"><p className="kv__k">Quote adjustment credit, ride {c.rideId}</p><p className="kv__v num">{fmtSigned(-c.creditedCents)} <Sample /></p></div>
+            <div className="grow"><p className="kv__k">Quote adjustment credit, ride <span className="ride-id">{c.rideId}</span></p><p className="kv__v num">{fmtSigned(-c.creditedCents)} <Sample /></p></div>
           </div>
         ))}
       </Card>
@@ -111,7 +113,7 @@ export function OwnerBar() {
   );
 }
 
-/** Owner statement preview: RideNite fee credits only (fee returns and quote adjustment credits). Sample data. */
+/** Owner statement preview: RideNite fee credits only (per-ride fee credits and quote adjustment credits). Sample data. */
 export function OwnerStatement() {
   const st = sampleOwnerStatement(Date.now());
   return (
@@ -124,15 +126,15 @@ export function OwnerStatement() {
         <p className="kv__k">Credits against RideNite fees</p>
         {st.feeReturns.map((f) => <p key={f.line} className="callout" data-testid="fee-return-line"><Amt line={f.line} /> <Sample /></p>)}
         {st.quoteCredits.filter((c) => c.line).map((c) => <p key={c.line!} className="callout" data-testid="quote-credit-line"><Amt line={c.line!} /> <Sample /></p>)}
-        {st.quoteCredits.filter((c) => c.state === 'manual_review').map((c) => <p key={`mr-${c.rideId}`} className="foot" data-testid="quote-credit-review">Ride {c.rideId}: {fmtSigned(-c.manualReviewCents)} in manual review, not credited yet. <Sample /></p>)}
-        <div className="row callout"><span>RideNite fee returns</span><span className="num nowrap" data-testid="fee-returns-subtotal">{fmtSigned(st.feeReturnsCents)}</span></div>
+        {st.quoteCredits.filter((c) => c.state === 'manual_review').map((c) => <p key={`mr-${c.rideId}`} className="foot" data-testid="quote-credit-review">Ride <span className="ride-id">{c.rideId}</span>: {fmtSigned(-c.manualReviewCents)} in manual review, not credited yet. <Sample /></p>)}
+        <div className="row callout"><span>RideNite fee credits</span><span className="num nowrap" data-testid="fee-returns-subtotal">{fmtSigned(st.feeReturnsCents)}</span></div>
         <div className="row callout"><span>Quote adjustment credits</span><span className="num nowrap" data-testid="quote-credits-subtotal">{fmtSigned(st.quoteCreditsCents)}</span></div>
         <p className="callout num" data-testid="credits-total">Total credits {fmtSigned(st.feeReturnsCents + st.quoteCreditsCents)} <Sample /></p>
       </Card>
       <Card testId="statement-rides">
         <p className="kv__k">Rides in these lines</p>
         {st.rides.filter((r) => st.feeReturns.some((f) => f.rideId === r.rideId) || st.quoteCredits.some((c) => c.rideId === r.rideId)).map((r) => (
-          <p key={r.rideId} className="foot" data-testid="statement-ride">Ride {r.rideId}, {MDW.format(new Date(r.pickupMs))}, ride line {fmt(r.rideCents)} <Sample /></p>
+          <p key={r.rideId} className="foot" data-testid="statement-ride">Ride <span className="ride-id">{r.rideId}</span>, {MDW.format(new Date(r.pickupMs))}, ride line {fmt(r.rideCents)} <Sample /></p>
         ))}
       </Card>
       <p className="foot" data-testid="statement-footnote">{st.footnote}</p>

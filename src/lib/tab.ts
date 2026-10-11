@@ -42,13 +42,15 @@ export interface TabTotals {
 }
 
 /**
- * B6 tab detail math (POS 3a): items, tax on items only, "RideNite Ride, quoted fare" at the quote,
+ * B6 tab detail math (POS 3a): items, tax on items only, "RideNite car home, quoted fare" at the quote,
  * then the adjustment or credit as its own separate line once the final fare is in.
  */
+/** The ride's quote line on the receipt and POS (no venue setting; the tab line name option was dropped, Oct 11). */
+export const RIDE_QUOTE_LINE = 'RideNite car home, quoted fare';
+
 export function tabTotals(opts: {
   items: readonly MenuItem[];
   taxRate: number;
-  tabLineName: string;
   /** Exact ride line text, e.g. the bar POS line "RideNite car home, Clarendon area, 11:52 PM". */
   rideLineName?: string;
   ride?: { quoteCents: number; finalCents: number | null; overCapAnswer?: OverCapAnswer; rideId?: string; pickupMs?: number; feeChargedCents?: number } | null;
@@ -71,7 +73,7 @@ export function tabTotals(opts: {
     const rideId = opts.ride.rideId;
     const feeChargedCents = opts.ride.feeChargedCents;
     const returnWindowEndsIso = opts.ride.pickupMs != null ? ymdIso(returnWindowEnds(opts.ride.pickupMs)) : undefined;
-    lines.push({ kind: 'ride', type: 'ride_quote', rideId, returnWindowEnds: returnWindowEndsIso, feeChargedCents, name: opts.rideLineName ?? `${opts.tabLineName}, quoted fare`, cents: q });
+    lines.push({ kind: 'ride', type: 'ride_quote', rideId, returnWindowEnds: returnWindowEndsIso, feeChargedCents, name: opts.rideLineName ?? RIDE_QUOTE_LINE, cents: q });
     rideCents = q;
     if (opts.ride.finalCents != null) {
       recon = reconcile(q, opts.ride.finalCents, opts.ride.overCapAnswer ?? null);

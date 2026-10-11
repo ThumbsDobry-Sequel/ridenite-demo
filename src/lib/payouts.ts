@@ -67,9 +67,9 @@ export const fmtWindowDate = (d: YMD): string => SHORT.format(new Date(Date.UTC(
 /** First instant after the window: midnight ET at the start of the next day. */
 export const returnWindowClosesAt = (d: YMD): number => { const n = addDays(d, 1); return etWallToUtc(n.y, n.m, n.d, 0); };
 
-/** Owner statement status chip (muted text, never amber): "Return window open until Jan 8" while open, then "Payout final". */
+/** Owner statement status chip (muted text, never amber): "Credit window open until Jan 8" while open, then "Payout final". */
 export function returnWindowStatus(ends: YMD, now: number): string {
-  return now < returnWindowClosesAt(ends) ? `Return window open until ${fmtWindowDate(ends)}` : 'Payout final';
+  return now < returnWindowClosesAt(ends) ? `Credit window open until ${fmtWindowDate(ends)}` : 'Payout final';
 }
 
 /**
@@ -123,15 +123,15 @@ export function payoutReturnCents(feeChargedCents: number, returnCents: number =
 }
 
 const MD = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
-/** "Ride Payout returned (RideNite fee), ride RN-7Q4K2M, Oct 9, dispute lost: -$1.00" (ride ID as on guest receipts) */
+/** "RideNite fee credited, ride RN-7Q4K2M, Oct 9, dispute lost: -$1.00" (ride ID as on guest receipts) */
 export function payoutReturnLine(rideNo: string, pickupMs: number, outcome: 'dispute_lost' | 'refunded_under_rule', feeChargedCents: number): string {
   const why = outcome === 'dispute_lost' ? 'dispute lost' : 'refunded under the refund rule';
   const c = -payoutReturnCents(feeChargedCents);
-  return `Ride Payout returned (RideNite fee), ride ${rideNo}, ${MD.format(new Date(pickupMs))}, ${why}: -$${(c / 100).toFixed(2)}`;
+  return `RideNite fee credited, ride ${rideNo}, ${MD.format(new Date(pickupMs))}, ${why}: -$${(c / 100).toFixed(2)}`;
 }
 /** Once per statement. */
 export const statementFootnote = (): string =>
-  `When a guest wins a dispute on a RideNite ride line (notice dated within ${venue.payoutReturnWindowDays} days of the ride) and you filed our evidence on time, or you refund the ride under our refund rule, we return our fee for that ride as a credit. Your dispute fee and the ride fare stay with you.`;
+  `When a guest wins a dispute on a RideNite ride line (notice dated within ${venue.payoutReturnWindowDays} days of the ride) and you filed our evidence on time, or you refund the ride under our refund rule, we credit our fee for that ride. Your dispute fee and the ride fare stay with you.`;
 
 /**
  * Quote adjustment credit (legal memo over-cap-credit.md, Oct 11). When a ride's final fare is above the guest's

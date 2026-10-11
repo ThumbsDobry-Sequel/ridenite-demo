@@ -2,8 +2,8 @@
  * Data for the owner preview (SCOPE 23:01 to 23:12). No UI yet: it waits on Riley's mock.
  * - Evidence pack: ride lines only (rideLinesOnly), each with its ride ID, plus the guest record facts.
  * - Monthly statement: split into Bar sales and RideNite rides, every figure labeled Sample data. Each ride
- *   carries a muted status chip ("Return window open until Jan 8", then "Payout final").
- * - Fee returns: RideNite's own per-ride fee only, as an invoice credit per ride (Harper 23:11). Never fare-sized.
+ *   carries a muted status chip ("Credit window open until Jan 8", then "Payout final").
+ * - Fee credits: RideNite's own per-ride fee only, as an invoice credit per ride (Harper 23:11). Never fare-sized.
  */
 import { checkLines, rideLinesOnly, splitSubtotals, type CheckLine } from './checkLines';
 import { morningFor } from './morning';
@@ -72,7 +72,7 @@ export interface SampleOwnerRide { rideId: string; rideNo: string; pickupMs: num
 const DAY = 86_400_000;
 /**
  * Sample owner-statement rides seeded relative to now (SCOPE 23:07): some older than the 90-day window
- * ("Payout final") and some recent ("Return window open until Jan 8"). Fictional amounts reuse spec fares.
+ * ("Payout final") and some recent ("Credit window open until Jan 8"). Fictional amounts reuse spec fares.
  */
 /** Seeds count back from 11 PM ET on the latest demo night (the ET date 18 h ago, so Saturday night and Sunday
  *  morning both anchor on Sat), so "1 day ago" is always the night before (Fri, Oct 9 for the Sat, Oct 10 night). */
@@ -94,7 +94,7 @@ export function sampleOwnerRides(now: number): SampleOwnerRide[] {
 export interface FeeReturn { rideNo: string; rideId: string; outcome: 'dispute_lost' | 'refunded_under_rule'; cents: number; line: string; label: typeof SAMPLE_LABEL }
 
 /**
- * Sample fee returns for the statement, seeded relative to now: ride 4821 (yesterday, guest won the dispute)
+ * Sample fee credits for the statement, seeded relative to now: ride 4821 (yesterday, guest won the dispute)
  * and ride 4820 (refunded by the bar under the refund rule). Each is -$1.00, RideNite's own fee.
  */
 export function sampleFeeReturns(now: number): FeeReturn[] {

@@ -114,7 +114,7 @@ describe('bar POS tab line', () => {
     const at = ET('2026-10-10T03:52:00Z');
     const name = barRideLineName({ area: 'Clarendon, Arlington, VA 22201' }, at, fmtET);
     expect(name).toBe('RideNite car home, Clarendon area, 11:52 PM');
-    const t = tabTotals({ items: tabItems([['Table snacks', 1]] as [string, number][]), taxRate: venue.taxRate, tabLineName: 'RideNite Ride', rideLineName: name, ride: { quoteCents: 2100, finalCents: null } });
+    const t = tabTotals({ items: tabItems([['Table snacks', 1]] as [string, number][]), taxRate: venue.taxRate, rideLineName: name, ride: { quoteCents: 2100, finalCents: null } });
     const l = t.lines.find((x) => x.type === 'ride_quote')!;
     expect(l.name).toBe(name);
     expect(l.name).not.toMatch(/Confirmed by guest/);

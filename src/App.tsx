@@ -4,7 +4,7 @@ import { useDemoState, useStore } from './store';
 import { TRIP_ROUTES, useOnline } from './hooks';
 import { readUrlLink } from './lib/urlLink';
 import { T, venue } from './venue.config';
-import { APP_VERSION, BUILD_TIME_ET } from './build-info';
+import { APP_VERSION, BUILD_TIME_ET, SHOW_BUILD_STAMP } from './build-info';
 import { STAGE_ROUTE } from './lib/rideState';
 import { Button, Sheet } from './components/primitives';
 import { Icon } from './components/Icon';
@@ -78,7 +78,7 @@ function Menu({ onClose, onReset, bar }: { onClose: () => void; onReset: () => v
         <Button variant="secondary" icon="person" onClick={() => go('/g/home')} testId="menu-guest">Switch to guest view</Button>
         <Button variant="bad" testId="menu-reset" onClick={onReset}>Reset demo data</Button>
         <button type="button" className="textlink" onClick={onClose}>Close</button>
-        <p className="build-stamp" data-testid="build-stamp">Version {APP_VERSION} · built {BUILD_TIME_ET}</p>
+        {SHOW_BUILD_STAMP && <p className="build-stamp" data-testid="build-stamp">Version {APP_VERSION} · built {BUILD_TIME_ET}</p>}
       </Sheet>
     );
   }
@@ -95,7 +95,7 @@ function Menu({ onClose, onReset, bar }: { onClose: () => void; onReset: () => v
       <Button variant="secondary" icon="venue" onClick={() => go('/b')} testId="menu-bar">Switch to {T.staff} view</Button>
       <Button variant="bad" testId="menu-reset" onClick={onReset}>Reset demo data</Button>
       <button type="button" className="textlink" onClick={onClose}>Close</button>
-      <p className="build-stamp" data-testid="build-stamp">Version {APP_VERSION} · built {BUILD_TIME_ET}</p>
+      {SHOW_BUILD_STAMP && <p className="build-stamp" data-testid="build-stamp">Version {APP_VERSION} · built {BUILD_TIME_ET}</p>}
     </Sheet>
   );
 }

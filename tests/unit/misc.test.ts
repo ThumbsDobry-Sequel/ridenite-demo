@@ -78,8 +78,9 @@ describe('copy lint', () => {
     // bar screens and statements: insurance and guaranty words, whole words only
     for (const t of ['Dispute coverage', 'File a claim', 'Claims', 'Your loss', 'We indemnify you', 'No deductible', 'Premium tier', 'Dispute plan', 'Return policy', 'We guarantee it', 'We reimburse the fare', 'Reimbursement'])
       expect(lintStatementText(t).length, t).toBeGreaterThan(0);
-    for (const t of ['planned', 'explained', 'reclaimed', 'glossy', 'airplane', 'Ride Payout returned (RideNite fee), ride 4821, Oct 9, dispute lost: -$1.00'])
+    for (const t of ['planned', 'explained', 'reclaimed', 'glossy', 'airplane', 'RideNite fee credited, ride 4821, Oct 9, dispute lost: -$1.00'])
       expect(lintStatementText(t), t).toEqual([]);
+    for (const t of ['RideNite fee returns', 'Fee return', 'Ride Payout returned (RideNite fee)', 'Return window open until Jan 8']) expect(lintText(t).length, t).toBeGreaterThan(0);
     expect(lintStatementText("follow venue policy")).toHaveLength(1);
     expect(lintStatementText("follow the venue's procedure.")).toEqual([]);
     // bar vs RideNite split (SCOPE 23:01): no claims that ride disputes stay off the bar

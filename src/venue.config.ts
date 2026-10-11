@@ -34,7 +34,7 @@ export const venue = {
   /** RideNite's per-ride fee invoiced to the bar (owner data only). Read ONLY at booking: each ride stores the fee
    *  actually charged (feeChargedCents) and any Payout Return is computed from that stored value, never from here. */
   perRideFeeCents: 100,
-  /** Owner data only. Payout Return window: calendar days after the ride's pickup date (ET) by which the
+  /** Owner data only. Fee credit window (Harper: Payout Return): calendar days after the ride's pickup date (ET) by which the
    *  processor's dispute notice must be dated. Harper recommends 150; Jason has not approved it yet. One-line change. */
   payoutReturnWindowDays: 90,
   pickupSpot: 'front door, Maison Cheryl',
@@ -58,7 +58,6 @@ export const venue = {
 
   priceMode: 'fare_on_tab' as PriceMode,
   perkCents: 1000,
-  tabLineName: 'RideNite Ride',
   /** M1 has no bartender screens yet, so the guest's Yes books directly (UI 5 P3 venue setting). */
   guestTapBooks: true,
   defaultTipPct: 20,

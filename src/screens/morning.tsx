@@ -7,7 +7,7 @@ import { T, venue } from '../venue.config';
 import { navigate } from '../router';
 import { useDemoState, useStore } from '../store';
 import { morningFor, nightTimes } from '../lib/morning';
-import { neighborhood } from '../lib/tab';
+import { neighborhood, RIDE_QUOTE_LINE } from '../lib/tab';
 import { checkLines, receiptRideId, splitSubtotals } from '../lib/checkLines';
 import { guestCheckClosed, nightTagline } from '../lib/brand';
 import { noDriverLine, confirmLine, fmtET } from '../lib/confirmRecord';
@@ -55,7 +55,7 @@ function RideQuestion() {
 /** Morning receipt wording follows the venue setting (B8): Neutral (recommended) or Detailed. */
 export function receiptSubject(s: DemoState): string {
   return s.bar.settings.receipt === 'detailed'
-    ? `Your receipt from ${venue.name}: ${T.bill} and ${s.bar.settings.tabLineName} ride`
+    ? `Your receipt from ${venue.name}: ${T.bill} and ride home`
     : `Your receipt from ${venue.name}`;
 }
 
@@ -132,7 +132,7 @@ export function M1() {
           <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
           {tag && <tr data-testid="night-tagline-row"><td colSpan={2} className="night-tagline" data-testid="night-tagline">{tag}</td></tr>}
           {m.hasRide
-            ? <tr data-testid="ride-item"><th scope="row">{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note" data-testid="ride-id">Ride ID {receiptRideId(s)}. {s.bar.settings.tabLineName}, {venue.driver.partner}, {venue.driver.plate}</span></th><td className="amt">{fmt(m.rideCents)}</td></tr>
+            ? <tr data-testid="ride-item"><th scope="row">{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note" data-testid="ride-id">Ride ID <span className="ride-id">{receiptRideId(s)}</span>. {venue.driver.partner}, {venue.driver.plate}</span></th><td className="amt">{fmt(m.rideCents)}</td></tr>
             : <tr data-testid="no-ride-line"><th scope="row">No ride on this {T.bill}</th><td className="amt">{fmt(0)}</td></tr>}
           {m.recon?.outcome === 'declined' && <tr data-testid="max-approved"><th scope="row" colSpan={2}>{maxApprovedLine(m.recon.quoteCents + m.recon.capCents)}</th></tr>}
           <tr className="subtotal"><th scope="row">RideNite rides subtotal</th><td className="amt" data-testid="ride-subtotal">{fmt(split.rideCents)}</td></tr>
@@ -205,9 +205,9 @@ export function P9() {
         <tbody data-testid="ride-section">
           <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
           {tag && <tr data-testid="night-tagline-row"><td colSpan={2} className="night-tagline" data-testid="night-tagline">{tag}</td></tr>}
-          {m.hasRide && <tr data-testid="ride-item" className="ride-item"><th scope="row" colSpan={2}>{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note" data-testid="ride-id">Ride ID {rideId}. Made up of the lines below.</span></th></tr>}
+          {m.hasRide && <tr data-testid="ride-item" className="ride-item"><th scope="row" colSpan={2}>{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note" data-testid="ride-id">Ride ID <span className="ride-id">{rideId}</span>. Made up of the lines below.</span></th></tr>}
           {m.hasRide ? (
-            <tr data-testid="ride-line" data-kind="ride"><th scope="row">{s.bar.settings.tabLineName}, quoted fare<span className="note">{venue.driver.partner}</span>
+            <tr data-testid="ride-line" data-kind="ride"><th scope="row">{RIDE_QUOTE_LINE}<span className="note">{venue.driver.partner}</span>
               {cl && <><span className="note confirm-record" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</span><span className="note" data-testid="confirm-record-amounts">{cl.amounts}</span></>}</th><td className="amt">{fmt(m.quoteCents)}</td></tr>
           ) : (
             <tr data-testid="no-ride-line"><th scope="row">No ride on this {T.bill}<span className="note">Nothing was added for a ride.</span>
@@ -256,7 +256,7 @@ export function E8({ tonight = false }: { tonight?: boolean }) {
     <Screen id="E8">
       <Top left={<VenueChip />} ctx={tonight ? nowClock() : 'Sample ride'} />
       <h1 className="h2">Your ride came to {fmt(r.finalCents)}.</h1>
-      {!tonight && <p className="callout" data-testid="e8-ride">{nightOfHeading(t.pickupMs)} · {T.Bill} #{t.tab} · Ride ID {t.rideId} <span className="sample-tag">Sample data</span></p>}
+      {!tonight && <p className="callout" data-testid="e8-ride">{nightOfHeading(t.pickupMs)} · {T.Bill} #{t.tab} · Ride ID <span className="ride-id">{t.rideId}</span> <span className="sample-tag">Sample data</span></p>}
       <Card>
         <div className="row callout"><span>Quote you OK'd</span><span className="num">{fmt(r.quoteCents)}</span></div>
         <div className="row callout"><span>Added, as shown before booking (up to {fmt(r.capCents)})</span><span className="num" data-testid="e8-added">{fmtSigned(Math.min(r.diffCents, r.capCents))}</span></div>
@@ -348,7 +348,7 @@ export function SampleTrafficReceipt({ route }: { route?: Route }) {
         </tbody>
         <tbody>
           <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
-          <tr><th scope="row">{venue.tabLineName}, quoted fare<span className="note" data-testid="ride-id">Ride ID {t.rideId}</span></th><td className="amt">{fmt(t.quoteCents)}</td></tr>
+          <tr><th scope="row">{RIDE_QUOTE_LINE}<span className="note" data-testid="ride-id">Ride ID <span className="ride-id">{t.rideId}</span></span></th><td className="amt">{fmt(t.quoteCents)}</td></tr>
           <tr><th scope="row">Ride fare adjustment<span className="note">{ok ? `Includes the ${fmt(t.finalCents - t.quoteCents - t.capCents)} you approved.` : `Within the ${fmt(t.capCents)} you saw before booking.`}</span></th><td className="amt">{fmtSigned(t.recon.postedAdjCents)}</td></tr>
           {!ok && <tr data-testid="max-approved"><th scope="row" colSpan={2}>{maxApprovedLine(t.quoteCents + t.capCents)}</th></tr>}
           <tr className="subtotal"><th scope="row">RideNite rides subtotal</th><td className="amt" data-testid="ride-subtotal">{fmt(t.rideCents)}</td></tr>

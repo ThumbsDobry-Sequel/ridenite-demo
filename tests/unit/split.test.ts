@@ -61,7 +61,7 @@ describe('bar vs RideNite split (SCOPE 23:01)', () => {
   });
 
   it('bar tab lines (B6) carry kind bar or ride; ride lines carry the ride ID; evidence pack can filter ride lines', () => {
-    const t = tabTotals({ items: tabItems([['Table snacks', 1]]), taxRate: venue.taxRate, tabLineName: 'RideNite Ride', ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123' } });
+    const t = tabTotals({ items: tabItems([['Table snacks', 1]]), taxRate: venue.taxRate, ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123' } });
     expect(t.lines.filter((l) => l.kind === 'bar').map((l) => l.type)).toEqual(['item', 'tax']);
     const ride = t.lines.filter((l) => l.kind === 'ride');
     expect(ride.map((l) => l.type)).toEqual(['ride_quote', 'ride_adjustment']);
@@ -92,7 +92,7 @@ describe('owner preview data model (no UI yet)', () => {
     const { evidencePack } = await import('../../src/lib/ownerData');
     const pack = evidencePack(stateFor('over', 'yes'), T0);
     expect(pack[0].returnWindowEnds).toBe('2027-01-08'); // sample pickup Sat Oct 10, 10:04 PM ET + 90 days
-    expect(pack[0].status).toBe('Return window open until Jan 8');
+    expect(pack[0].status).toBe('Credit window open until Jan 8');
     expect(pack).toHaveLength(1);
     expect(pack[0].label).toBe('Sample data');
     expect(pack[0].rideId).toBe(venue.sampleRideId);
@@ -124,9 +124,9 @@ describe('payout return window: pickup date (ET) + 90 calendar days; dispute not
     expect('disputeNoticeBusinessDays' in venue).toBe(false);
     expect(venue.perRideFeeCents).toBe(100);
   });
-  it('an Oct 10 ride: chip reads "Return window open until Jan 8"', () => {
+  it('an Oct 10 ride: chip reads "Credit window open until Jan 8"', () => {
     const end = returnWindowEnds(et(2026, 10, 10, 22, 4));
-    expect(returnWindowStatus(end, et(2026, 10, 11, 9, 0))).toBe('Return window open until Jan 8');
+    expect(returnWindowStatus(end, et(2026, 10, 11, 9, 0))).toBe('Credit window open until Jan 8');
   });
   it('sample Saturday ride (Sat Oct 10, 10:04 PM ET) ends Fri Jan 8, 2027', () => expect(ymdIso(returnWindowEnds(et(2026, 10, 10, 22, 4)))).toBe('2027-01-08'));
   it('Saturday-night ride picked up after midnight (Sun Oct 11, 12:40 AM ET) counts from Sunday: Sat Jan 9, 2027', () => expect(ymdIso(returnWindowEnds(et(2026, 10, 11, 0, 40)))).toBe('2027-01-09'));
@@ -137,8 +137,8 @@ describe('payout return window: pickup date (ET) + 90 calendar days; dispute not
   });
   it('status: open through the end day ET, then "Payout final"', () => {
     const end = { y: 2027, m: 1, d: 8 };
-    expect(returnWindowStatus(end, et(2026, 10, 11, 9, 0))).toBe('Return window open until Jan 8');
-    expect(returnWindowStatus(end, et(2027, 1, 8, 23, 59))).toBe('Return window open until Jan 8');
+    expect(returnWindowStatus(end, et(2026, 10, 11, 9, 0))).toBe('Credit window open until Jan 8');
+    expect(returnWindowStatus(end, et(2027, 1, 8, 23, 59))).toBe('Credit window open until Jan 8');
     expect(returnWindowClosesAt(end)).toBe(et(2027, 1, 9, 0, 0));
     expect(returnWindowStatus(end, et(2027, 1, 9, 0, 0))).toBe('Payout final');
   });
@@ -150,7 +150,7 @@ describe('payout return window: pickup date (ET) + 90 calendar days; dispute not
     expect(businessDaysBetween({ y: 2026, m: 10, d: 9 }, { y: 2026, m: 10, d: 14 })).toBe(3);
   });
   it('bar tab (B6) ride lines carry returnWindowEnds when the pickup time is known; bar lines never do', () => {
-    const t = tabTotals({ items: tabItems([['Table snacks', 1]]), taxRate: venue.taxRate, tabLineName: 'RideNite Ride', ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123', pickupMs: et(2026, 10, 9, 23, 15) } });
+    const t = tabTotals({ items: tabItems([['Table snacks', 1]]), taxRate: venue.taxRate, ride: { quoteCents: 2100, finalCents: 2460, rideId: 'RN-ABC123', pickupMs: et(2026, 10, 9, 23, 15) } });
     expect(t.lines.filter((l) => l.kind === 'ride').every((l) => l.returnWindowEnds === '2027-01-07')).toBe(true);
     expect(t.lines.filter((l) => l.kind === 'bar').some((l) => l.returnWindowEnds)).toBe(false);
   });
@@ -173,30 +173,30 @@ describe('payout return eligibility: keyed on the processor dispute notice date 
 });
 
 describe('sample owner-statement rides, seeded relative to now (SCOPE 23:07)', () => {
-  it('at least one older than 90 days ("Payout final") and one recent ("Return window open until Jan 8"), all Sample data, muted', async () => {
+  it('at least one older than 90 days ("Payout final") and one recent ("Credit window open until Jan 8"), all Sample data, muted', async () => {
     const { sampleOwnerRides } = await import('../../src/lib/ownerData');
     const now = T0; // Sat Oct 10, 10:30 PM ET
     const rides = sampleOwnerRides(now);
     const final = rides.filter((r) => r.status === 'Payout final');
-    const open = rides.filter((r) => r.status.startsWith('Return window open until '));
+    const open = rides.filter((r) => r.status.startsWith('Credit window open until '));
     expect(final.length).toBeGreaterThanOrEqual(1);
     expect(open.length).toBeGreaterThanOrEqual(1);
     for (const r of final) expect(now - r.pickupMs).toBeGreaterThan(90 * 86_400_000);
     // seeds count back from 11 PM ET on the demo night: 1 day = Fri Oct 9 (traffic ride RN-NHMCXN), 2 days = Thu Oct 8 -> open until Jan 6
-    expect(rides.find((r) => r.rideNo === '4822')!.status).toBe('Return window open until Jan 6');
+    expect(rides.find((r) => r.rideNo === '4822')!.status).toBe('Credit window open until Jan 6');
     const traffic = rides.find((r) => r.rideNo === '4823')!;
     expect(traffic.rideId).toBe('RN-NHMCXN');
     expect(new Date(traffic.pickupMs).toISOString()).toBe('2026-10-10T03:00:00.000Z'); // Fri Oct 9, 11:00 PM ET
     // same pickup date on Sunday morning
     expect(sampleOwnerRides(Date.parse('2026-10-11T13:00:00Z')).find((r) => r.rideNo === '4823')!.pickupMs).toBe(traffic.pickupMs);
-    for (const r of open) expect(r.status).toMatch(/^Return window open until [A-Z][a-z]{2} \d{1,2}$/);
+    for (const r of open) expect(r.status).toMatch(/^Credit window open until [A-Z][a-z]{2} \d{1,2}$/);
     for (const r of rides) { expect(r.label).toBe('Sample data'); expect(r.tone).toBe('muted'); expect(r.rideId).toMatch(/^RN-[0-9A-Z]{6}$/); }
   });
   it('relative seeding holds on another date (Jun 1, 2027)', async () => {
     const { sampleOwnerRides } = await import('../../src/lib/ownerData');
     const rides = sampleOwnerRides(Date.parse('2027-06-01T16:00:00Z'));
     expect(rides.some((r) => r.status === 'Payout final')).toBe(true);
-    expect(rides.some((r) => r.status.startsWith('Return window open until '))).toBe(true);
+    expect(rides.some((r) => r.status.startsWith('Credit window open until '))).toBe(true);
   });
 });
 
@@ -215,8 +215,8 @@ describe('Payout Return: RideNite fee only, eligibility on the dispute notice da
   const pickupMs = et(2026, 10, 10, 22, 4); // window ends Jan 8, 2027
   const deadline = et(2027, 1, 20, 23, 0);
   it('statement line format, always -$1.00 (never the fare)', () => {
-    expect(payoutReturnLine('4821', et(2026, 10, 9, 23, 0), 'dispute_lost', 100)).toBe('Ride Payout returned (RideNite fee), ride 4821, Oct 9, dispute lost: -$1.00');
-    expect(payoutReturnLine('4820', et(2026, 10, 8, 22, 0), 'refunded_under_rule', 100)).toBe('Ride Payout returned (RideNite fee), ride 4820, Oct 8, refunded under the refund rule: -$1.00');
+    expect(payoutReturnLine('4821', et(2026, 10, 9, 23, 0), 'dispute_lost', 100)).toBe('RideNite fee credited, ride 4821, Oct 9, dispute lost: -$1.00');
+    expect(payoutReturnLine('4820', et(2026, 10, 8, 22, 0), 'refunded_under_rule', 100)).toBe('RideNite fee credited, ride 4820, Oct 8, refunded under the refund rule: -$1.00');
   });
   it('footnote names the 90-day notice window, keeps dispute fee and fare with the bar', () => {
     expect(statementFootnote()).toContain('notice dated within 90 days of the ride');
@@ -242,7 +242,7 @@ describe('Payout Return: RideNite fee only, eligibility on the dispute notice da
     const st = sampleOwnerStatement(T0); // Sat Oct 10, 10:30 PM ET
     expect(st.label).toBe('Sample data');
     const r4821 = st.rides.find((r) => r.rideNo === '4821')!;
-    expect(st.feeReturns.map((f) => f.line)).toContain(`Ride Payout returned (RideNite fee), ride ${r4821.rideId}, Oct 9, dispute lost: -$1.00`);
+    expect(st.feeReturns.map((f) => f.line)).toContain(`RideNite fee credited, ride ${r4821.rideId}, Oct 9, dispute lost: -$1.00`);
     // one ride ID format on statements, the same as guest receipts (RN-xxxxxx); never the bare 4-digit number
     for (const l of [...st.feeReturns.map((f) => f.line), ...st.quoteCredits.map((c) => c.line!)]) { expect(l).toMatch(/ride RN-[A-Z0-9]{6},/); expect(l).not.toMatch(/ride \d{4}\b/); }
     expect(st.feeReturns.some((f) => f.outcome === 'refunded_under_rule')).toBe(true);

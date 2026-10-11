@@ -15,6 +15,7 @@ const h = createHash('sha256');
 for (const f of [...files(join(root, 'src')), ...files(join(root, 'sw')), ...files(join(root, 'public')), join(root, 'index.html')].sort()) h.update(f.replace(root, '')).update(readFileSync(f));
 const BUILD_HASH = h.digest('hex').slice(0, 8);
 const APP_VERSION = `${pkg.version}+${BUILD_HASH}`;
+const HIDE_STAMP = process.env.RIDENITE_HIDE_BUILD_STAMP === '1';
 const BUILD_TIME_ET = new Intl.DateTimeFormat('en-US', {
   timeZone: 'America/New_York', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
 }).format(new Date()) + ' ET';
@@ -37,7 +38,8 @@ function serviceWorker(): Plugin {
 export default defineConfig({
   plugins: [react(), serviceWorker()],
   base: '/',
-  define: { __APP_VERSION__: JSON.stringify(APP_VERSION), __BUILD_TIME_ET__: JSON.stringify(BUILD_TIME_ET) },
+  // RIDENITE_HIDE_BUILD_STAMP=1 (set by the /pitch/demo/ export): no build stamp and no build time in the bundle.
+  define: { __APP_VERSION__: JSON.stringify(APP_VERSION), __BUILD_TIME_ET__: JSON.stringify(HIDE_STAMP ? '' : BUILD_TIME_ET), __SHOW_BUILD_STAMP__: JSON.stringify(!HIDE_STAMP) },
   build: {
     outDir: 'dist',
     sourcemap: false,
