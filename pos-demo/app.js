@@ -1,25 +1,27 @@
 /* RideNite POS integration demo. Plain JS, no dependencies, no network calls.
-   SIMULATED: every name, amount, plate and address is fictional sample data.
+   SIMULATED: every guest, driver, amount, plate and drop-off address is fictional sample data.
+   Venue 1 is Maison Cheryl (real restaurant, 2900 Wilson Blvd, Arlington, VA) shown as an illustrative example, not a live RideNite partner.
    Screen IDs follow ui/ui-spec.md (B4, B6, B7, P5, P7, P9, P11, M1, M2, E2). New IDs added
    by this demo: T1 to T7 (POS mock), P0, P3c, P14, E7 (see build-spec.md section 2). */
 (function(){
 'use strict';
-const V='The Copper Lantern', CAP_PCT=0.20, CAP_MAX=5.00, TAXR=0.08875;
+const V='Maison Cheryl', CAP_PCT=0.20, CAP_MAX=5.00, TAXR=0.11;
 /* Fare policy of record: quote plus capped adjustment. Cap = lesser of 20% of the quote or $5.00 [A]
    (fare-adjustment-cap-analysis.md). Shown to the guest in dollars before booking. */
 const capFor=q=>Math.round(Math.min(CAP_PCT*q,CAP_MAX)*100)/100;
 /* Roaming night pass (optional, post-pilot gated; roaming-network-design.md). Second venue shown in a different POS skin. */
 const V2='Bar Lumen', V2SKIN='square';
 const PASS={first:'Maya',init:'R.',brand:'Visa',last4:'4242',expires:'6:00 AM',code:'K7Q2MX'};
-const B2DRINKS=[['Mezcal Paloma',16],['Club Soda',3]]; // Bar 2 tab items (fictional)
+const B2DRINKS=[['Mezcal Paloma',16],['Club Soda',3]]; // Bar 2 tab items (fictional sample partner bar)
 const NEAR_MIN=2; /* car-close notice, venue setting 1 to 5 [A] */
 const VN=()=>S.venue===2?V2:V, TBL=()=>S.venue===2?'Bar 4':S.discreet?'Table 4':'Table 7', CHK=()=>S.venue===2?'2210':S.discreet?'4473':'4468';
 const FN=()=>S.discreet?'Rosa':'Maya', NAME=()=>S.discreet?'Rosa L.':'Maya R.', L4=()=>S.discreet?'1881':'4242';
 const SKIN=()=>S.venue===2?V2SKIN:ctl.skin, ITEMS=()=>S.venue===2?B2DRINKS:DRINKS.concat(FOOD);
-const OPENED=()=>S.venue===2?'11:50 PM':S.discreet?'10:05 PM':'9:12 PM', SERVER=()=>S.venue===2?'Theo':'Imani', POSTED=()=>S.venue===2?'1:21 AM':'12:41 AM';
+const OPENED=()=>S.venue===2?'10:20 PM':S.discreet?'8:35 PM':'7:42 PM', SERVER=()=>S.venue===2?'Theo':'Imani', POSTED=()=>S.venue===2?'11:51 PM':'11:11 PM';
 const FIN={higher:24.60,lower:18.90,over:27.40};
-const WHY={higher:'Trip ran longer than estimated',lower:'Shorter trip than estimated',over:'Guest added a stop at 12:58 AM'};
-const DRINKS=[['Spicy Margarita',15],['Negroni',15],['House Lager',8]], FOOD=[['Truffle Fries',11]];
+const WHY={higher:'Trip ran longer than estimated',lower:'Shorter trip than estimated',over:'Guest added a stop at 11:28 PM'};
+/* Item names from Maison Cheryl's published menus (maisoncheryl.com, Oct 2026); prices are sample. */
+const DRINKS=[['The Pear Necessities',14],['Old Fashioned',15],['House Beer',8]], FOOD=[['Madeleines',12]];
 const SKINS={toast:'Toast-style POS',square:'Square-style POS',clover:'Clover-style POS',lightspeed:'Lightspeed-style POS',touchbistro:'TouchBistro-style POS'};
 const STATUS=['none','requested','en_route','arrived','picked_up','complete'];
 const r2=n=>Math.round(n*100)/100;
@@ -72,7 +74,7 @@ function adjNote(c){
 }
 
 /* ---------- shared chrome ---------- */
-function posTop(time){return `<div class="ptop"><span class="mk">${SKINS[SKIN()]}</span><span>${VN()} · Bar terminal ${S.venue===2?2:1} · Server: ${SERVER()}</span><span class="sp"></span><span class="sim">SIMULATED POS</span><span class="tm">${time}</span></div>`;}
+function posTop(time){return `<div class="ptop"><span class="mk">${SKINS[SKIN()]}</span><span>${S.venue===2?V2+' (sample partner bar)':VN()} · Bar terminal ${S.venue===2?2:1} · Server: ${SERVER()}</span><span class="sp"></span><span class="sim">SIMULATED POS</span><span class="tm">${time}</span></div>`;}
 function posLines(c){
   let h='';
   ITEMS().forEach(([n,p])=>h+=`<div class="ln"><span class="nm">${n}</span><span>${m(p)}</span></div>`);
@@ -80,28 +82,31 @@ function posLines(c){
     h+=`<div class="ln ride"><span class="nm">${rideLabel()}<small>RideNite · Northside Car Service · posted ${POSTED()}${S.pass==='linked'?' · night pass':''} · no sales tax ${A('counsel')}</small></span><span>${m(c.q)}</span></div>`;
     if(!S.recon) h+=`<div class="ln pend"><span class="nm">Final fare settles when the ride ends<small>Up to ${m(c.cap)} over the quote may post (20%, max $5.00); more needs the guest's OK</small></span><span>pending</span></div>`;
   }
-  if(S.recon&&c.adj!==0) h+=`<div class="ln ${c.adj>0?'adj':'cr'}"><span class="nm">${adjName(c)}<small>${c.why} · posted 1:08 AM · no sales tax ${A()}</small></span><span>${sm(c.adj)}</span></div>`;
+  if(S.recon&&c.adj!==0) h+=`<div class="ln ${c.adj>0?'adj':'cr'}"><span class="nm">${adjName(c)}<small>${c.why} · posted 11:38 PM · no sales tax ${A()}</small></span><span>${sm(c.adj)}</span></div>`;
   if(S.recon&&c.pend>0) h+=`<div class="ln pend"><span class="nm">Over the ${m(c.cap)} cap: ${m(c.pend)}<small>Not on the tab. ${c.why}, so the guest is asked first (E7).</small></span><span>held</span></div>`;
   return h;
 }
 function posTotals(c,showTipNote){
   return `<div class="tot">
    <div class="r"><span>Drinks and food</span><span>${m(c.food)}</span></div>
-   <div class="r"><span>Sales tax 8.875% (drinks and food only)</span><span>${m(c.tax)}</span></div>
+   <div class="r"><span>Tax 11% (drinks and food only)</span><span>${m(c.tax)}</span></div>
    ${c.booked?`<div class="r"><span>Ride lines (no sales tax ${A('counsel')})</span><span>${m(c.rideTotal)}</span></div>`:''}
    <div class="r big"><span>${showTipNote?'Total before tip':'Balance'}</span><span>${m(c.pre)}</span></div>
    ${showTipNote?`<div class="r" style="font-size:13px"><span>Tip base ${m(c.food)}: drinks and food, not the ride</span><span></span></div>`:''}
   </div>`;
 }
 function rideWord(s){return {requested:'Requested',en_route:'Driver on the way',arrived:'Arrived',picked_up:'Picked up',complete:'Completed'}[s]||'';}
+/* POS menu buttons. Venue 1: item names from Maison Cheryl's published menus, sample prices. Venue 2: fictional sample partner bar. */
+const MENU1=[['The Pear Necessities',14],['Just Peachy',14],['Old Fashioned',15],['Gin Martini',15],['Manhattan',15],['House Red',12],['House White',12],['House Ros\u00e9',12]];
+const MENU2=[['Spicy Margarita',15],['Negroni',15],['Mezcal Paloma',16],['Mezcal Mule',15],['Gin Fizz',14],['Seasonal Spritz',13],['Club Soda',3],['House Lager',8]];
+const menuGrid=()=>(S.venue===2?MENU2:MENU1).map(([n,p])=>`<button class="item">${n}<small>${m(p)}</small></button>`).join('');
 function posCheck(time,extraActs,panelHtml){
   const c=calc();
   return `<div class="pos sk-${SKIN()}">${posTop(time)}
   <div class="pbody">
    <div class="cats"><button class="cat on">Cocktails</button><button class="cat">Beer</button><button class="cat">Wine</button><button class="cat">Food</button><button class="cat">N/A drinks</button><div style="flex:1"></div><button class="cat rn" data-act="rnOpen">RideNite</button></div>
    <div class="menu">
-    <button class="item">Spicy Margarita<small>$15.00</small></button><button class="item">Negroni<small>$15.00</small></button><button class="item">Old Fashioned<small>$16.00</small></button><button class="item">Espresso Martini<small>$16.00</small></button>
-    <button class="item">Paloma<small>$14.00</small></button><button class="item">Gin Fizz<small>$14.00</small></button><button class="item">Mezcal Mule<small>$15.00</small></button><button class="item">Seasonal Spritz<small>$13.00</small></button>
+${menuGrid()}
    </div>
    <div class="check">
     <div class="chd"><b>${TBL()} · ${NAME()}</b><div>Check #${CHK()} · opened ${OPENED()} · card on tab: Visa ending ${L4()}</div>
@@ -125,7 +130,7 @@ function panel(inner){return `<div class="rnp-scrim"></div><section class="rnp" 
 const SCR={};
 
 /* ---------- POS screens ---------- */
-SCR.T1=()=>`<div class="pos sk-${ctl.skin}">${posTop('Fri 9:12 PM')}
+SCR.T1=()=>`<div class="pos sk-${ctl.skin}">${posTop('Fri 7:42 PM')}
   <div class="pbody" style="grid-template-columns:170px 1fr">
    <div class="cats"><button class="cat on">Open tabs</button><button class="cat">Tables</button><button class="cat">Closed</button></div>
    <div class="tabs">
@@ -145,8 +150,8 @@ SCR.T1=()=>`<div class="pos sk-${ctl.skin}">${posTop('Fri 9:12 PM')}
    <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px"><button class="pb">Cancel</button><button class="pb pri" id="startTab" data-act="startTab">Start tab for Maya R.</button></div>
   </div></div>`:''}
  </div>`;
-SCR.T2=()=>posCheck('Sat 12:40 AM');
-SCR.T3=()=>posCheck('Sat 12:40 AM','',panel(`
+SCR.T2=()=>posCheck('Fri 11:10 PM');
+SCR.T3=()=>posCheck('Fri 11:10 PM','',panel(`
   <div class="step">Step 1 of 3 · Book a car</div><h2>Whose tab?</h2>
   <button class="opt sel">${ic('person',24)}<div><b>Table 7 · Maya R. ...0127</b><div class="muted" style="font-size:15px">Check #4468 · $49.00 · the check you're on</div></div></button>
   <button class="opt">${ic('person',24)}<div><b>Bar 3 · Dev K. ...0144</b><div class="muted" style="font-size:15px">Check #4471 · $36.00</div></div></button>
@@ -155,48 +160,48 @@ SCR.T3=()=>posCheck('Sat 12:40 AM','',panel(`
   <div class="two"><button class="btn btn-secondary ep" data-act="entry" data-v="guest_request">${ic('hand',26)} Guest asked</button><button class="btn btn-secondary ep" data-act="entry" data-v="staff_offer">${ic('person',26)} I offered</button></div>
   <p class="help">We record only which one. No reason, notes or drink counts.</p>
   <div class="q" style="font-size:16px"><b>Offer line:</b> "Can I get you a car home? It goes on your tab."<div class="muted" style="font-size:14px;margin-top:4px">A car never replaces stopping service.</div></div>`));
-SCR.T4=()=>posCheck('Sat 12:40 AM','',panel(`
+SCR.T4=()=>posCheck('Fri 11:10 PM','',panel(`
   <div class="step">Step 2 of 3 · Drop-off</div>
   <div><span class="pill warn">${epPill()}</span> <b style="font-size:18px;margin-left:6px">${TBL()} · check #${CHK()}</b></div>
-  <div class="muted" style="font-size:15px">Maya R. ...0127 · pickup: ${S.venue===2?'Bar Lumen, front door':'front door, N 6th St.'}</div>
+  <div class="muted" style="font-size:15px">Maya R. ...0127 · pickup: ${S.venue===2?'Bar Lumen, front door':'front door, N Fillmore St.'}</div>
   <button class="opt ${S.dropMode==='link'?'sel':''}" data-act="dropMode" data-v="link">${ic('phone',24)}<div><b>Text Maya a link to enter drop-off</b><div class="muted" style="font-size:15px">She picks the address and sees the price on her phone</div></div></button>
   <button class="opt">${ic('grid',24)}<div><b>Or show a QR</b></div></button>
   <button class="opt ${S.dropMode==='enter'?'sel':''}" data-act="dropMode" data-v="enter">${ic('kbd',24)}<div><b>I'll enter the drop-off</b><div class="muted" style="font-size:15px">Then show the guest the price and fare note</div></div></button>
   ${S.dropMode==='enter'?`<label style="font-weight:700">Address or place</label><input class="inp" value="655 prk pl" aria-label="Drop-off address">
    <div class="muted" style="font-size:14px">Did you mean</div>
-   <button class="opt" data-act="addr">${ic('pin',24)}<div><b>655 Park Pl</b><div class="muted" style="font-size:15px">Crown Heights, Brooklyn 11216</div></div></button>
-   <button class="opt">${ic('pin',24)}<div><b>655 Park Ave</b><div class="muted" style="font-size:15px">Bed-Stuy, Brooklyn</div></div></button>
-   <button class="opt">${ic('pin',24)}<div><b>655 Park Ave</b><div class="muted" style="font-size:15px">Manhattan</div></div></button>`
-  :`<div class="strip warn">${ic('phone')} Link sent to ...0127 at 12:40 AM. Waiting for Maya.</div>
+   <button class="opt" data-act="addr">${ic('pin',24)}<div><b>655 N Harrison St</b><div class="muted" style="font-size:15px">Westover, Arlington, VA 22205</div></div></button>
+   <button class="opt">${ic('pin',24)}<div><b>655 S Harrison St</b><div class="muted" style="font-size:15px">Arlington, VA 22204</div></div></button>
+   <button class="opt">${ic('pin',24)}<div><b>655 Harrison St NW</b><div class="muted" style="font-size:15px">Washington, DC</div></div></button>`
+  :`<div class="strip warn">${ic('phone')} Link sent to ...0127 at 11:10 PM. Waiting for Maya.</div>
    <button class="btn btn-primary dbtn" data-go="P3c">See Maya's phone (demo)</button>`}`));
-SCR.T5=()=>posCheck(S.venue===2?'Sat 1:21 AM':'Sat 12:41 AM','',panel(`
+SCR.T5=()=>posCheck(S.venue===2?'Fri 11:51 PM':'Fri 11:11 PM','',panel(`
   <div class="step">Step 3 of 3 · Quote and book</div>
   <div><span class="pill warn">${epPill()}</span>${S.pass==='linked'?' <span class="pill ok">Night pass</span>':''} <b style="font-size:18px;margin-left:6px">${TBL()} · check #${CHK()}</b></div>
-  <div class="muted" style="font-size:15px">Drop-off: 655 Park Pl, Crown Heights (${S.dropMode==='link'?FN()+' entered':'staff entered'}) · Partner order: Local partners first</div>
+  <div class="muted" style="font-size:15px">Drop-off: 655 N Harrison St, Westover (${S.dropMode==='link'?FN()+' entered':'staff entered'}) · Partner order: Local partners first</div>
   ${S.changed?`<div class="banner info" style="font-size:16px">${ic('alert',24)}<div><b>The price changed before booking.</b> Was $21.00, now ${m(S.quote)}. ${S.saw?'Guest OK\'d the new price.':'Show the guest again (E2).'}</div></div>`:''}
   <table class="t"><thead><tr><th>Partner</th><th>Pickup</th><th class="r">Quote</th></tr></thead><tbody>
-   <tr><td><b>Northside Car Service</b> <span class="pill ok" style="font-size:12px">Local partner · picked</span> <span class="muted" style="font-size:13px">black car base</span></td><td>6 min</td><td class="r"><b>${m(S.quote)}</b></td></tr>
-   <tr><td>Greenpoint Livery <span class="muted" style="font-size:13px">local partner, binding quote</span></td><td>9 min</td><td class="r">$22.40</td></tr>
+   <tr><td><b>Northside Car Service</b> <span class="pill ok" style="font-size:12px">Local partner · picked</span> <span class="muted" style="font-size:13px">local car service</span></td><td>6 min</td><td class="r"><b>${m(S.quote)}</b></td></tr>
+   <tr><td>Langston Livery <span class="muted" style="font-size:13px">local partner, binding quote</span></td><td>9 min</td><td class="r">$22.40</td></tr>
    <tr><td>App ride (Lyft) <span class="muted" style="font-size:13px">venue account, fallback</span></td><td>5 min</td><td class="r">about $22.80</td></tr>
    <tr><td>App ride (Uber) <span class="muted" style="font-size:13px">venue account, called only if no one above confirms</span></td><td></td><td class="r muted" style="font-size:13px">price not shown here</td></tr>
   </tbody></table>
   <div class="q"><div class="row"><span class="price">${m(S.quote)}</span><span class="muted">car about 6 min away</span></div>
    <div class="lockline" style="color:var(--info)">${quoteLine()}</div>
-   <div style="font-size:15px;margin-top:4px">Goes on check #${CHK()} as "${rideLabel()}".${S.venue===2?' Pickup: Bar Lumen, front door.':''}</div></div>
+   <div style="font-size:15px;margin-top:4px">Goes on check #${CHK()} as "${rideLabel()}".${S.venue===2?' Pickup: Bar Lumen (sample partner bar), front door.':''}</div></div>
   <div class="disc"><b>Show the guest:</b> ${disc(S.quote)} ${A('cap: lesser of 20% or $5.00')}</div>
-  <div class="bookrow"><button class="chk ${S.saw?'on':''}" data-act="saw" aria-pressed="${S.saw}"><span class="box">${S.saw?ic('check',20):''}</span>${S.sawBy==='guest'&&S.saw?`Guest saw the price and the fare note (${FN()} tapped Yes on her phone, ${S.venue===2?'1:21 AM':'12:41 AM'})`:'Guest saw the price and the fare note'}</button>
+  <div class="bookrow"><button class="chk ${S.saw?'on':''}" data-act="saw" aria-pressed="${S.saw}"><span class="box">${S.saw?ic('check',20):''}</span>${S.sawBy==='guest'&&S.saw?`Guest saw the price and the fare note (${FN()} tapped Yes on her phone, ${S.venue===2?'11:51 PM':'11:11 PM'})`:'Guest saw the price and the fare note'}</button>
   <button class="btn btn-primary dbtn" data-act="book" ${S.saw?'':'disabled'} style="min-height:64px;font-size:22px">${ic('car',26)} Book</button></div>
   <div style="display:flex;justify-content:space-between;gap:10px;font-size:14px"><button class="link" data-act="unsafeHelp">Guest says they feel unsafe?</button>${S.changed?'':`<button class="link" data-act="priceChange">Demo control: price changes before booking</button>`}</div>
   <p class="help">Quotes, partners and times are fictional sample data.</p>`));
-SCR.T6=()=>posCheck(S.venue===2?'Sat 1:22 AM':'Sat 12:42 AM',`<button class="pb">Send</button><button class="pb">Pay</button><button class="pb rn" data-act="toDash">${ic('car',18)} Open RideNite dashboard</button>`,
+SCR.T6=()=>posCheck(S.venue===2?'Fri 11:52 PM':'Fri 11:12 PM',`<button class="pb">Send</button><button class="pb">Pay</button><button class="pb rn" data-act="toDash">${ic('car',18)} Open RideNite dashboard</button>`,
   `<div style="position:absolute;left:190px;top:72px;background:#0B0F14;color:#F4F6FA;border:2px solid #FFC83D;border-radius:12px;padding:12px 16px;font-size:16px;max-width:620px">${ic('check',18)} RideNite posted <b>${rideLabel()} ${m(S.quote)}</b> to check #${CHK()} at ${POSTED()}. Car requested from Northside Car Service.${S.venue===2?' No card or charge moved between venues.':''}</div>`);
-SCR.T7=()=>{const c=calc();return `<div class="pos sk-${SKIN()}">${posTop('Sat 1:15 AM')}
+SCR.T7=()=>{const c=calc();return `<div class="pos sk-${SKIN()}">${posTop('Fri 11:45 PM')}
   <div class="pbody" style="grid-template-columns:1fr 560px">
    <div style="padding:22px;display:flex;flex-direction:column;gap:14px">
     <h2 style="margin:0;font-size:28px">Close check #${CHK()} · ${TBL()} · Maya R.</h2>
-    <div style="color:#4B5563">Card on tab: Visa ending 4242 (sample). Ride completed at 1:07 AM; final fare reconciled at 1:08 AM.</div>
+    <div style="color:#4B5563">Card on tab: Visa ending 4242 (sample). Ride completed at 11:37 PM; final fare reconciled at 11:38 PM.</div>
     <div style="background:#fff;border:1px solid #D6DBE3;border-radius:12px;padding:14px 16px;font-size:15px;line-height:1.5">
-     <b>What the tab shows</b><br>Drinks and food are taxed at 8.875%. Ride lines carry no sales tax in this demo ${A('flag for counsel and tax review')}.<br>
+     <b>What the tab shows</b><br>Drinks and food are taxed at 11% (Virginia sales tax plus Arlington meals tax). Ride lines carry no sales tax in this demo ${A('flag for counsel and tax review')}.<br>
      Staff tip is on drinks and food only (${m(c.food)}), never on the ride.<br>
      Adjustment rule shown to the guest before booking: up to ${m(c.cap)} over the quote posts (20% of the quote, never more than $5.00); more needs the guest's OK; lower fares post a credit. ${A('cap')}
     </div>
@@ -220,33 +225,33 @@ function reconSentence(c){
   return `"${adjName(c)} ${sm(c.adj)}" posted to check #4468.`;
 }
 function mayaRow(c){
-  const st={requested:['info','Requested'],en_route:['info','Driver on the way'],arrived:['ok','Arrived'],picked_up:['info','Picked up'],complete:['','Completed 1:07 AM']}[S.ride]||['','-'];
-  const eta={requested:'finding',en_route:S.near?NEAR_MIN+' min':'6 min',arrived:'here',picked_up:'drop-off 1:07 AM',complete:'-'}[S.ride]||'-';
-  return `<tr style="background:rgba(255,200,61,.06)"><td><button class="link" data-act="openB6">${TBL()} · #${CHK()}</button></td><td>${NAME()}${S.pass==='linked'?' <span class="pill ok" style="font-size:12px">Night pass</span>':''}</td><td><span class="pill ${st[0]}">${st[1]}</span>${S.near&&S.ride==='en_route'?` <span class="pill warn" style="font-size:12px">${NEAR_MIN} min away</span>`:''}</td><td>Gray Camry T555012C</td><td>Northside Car Service</td><td>${eta}</td><td>12:41 AM</td><td class="r">${m(c.q)}</td><td class="r">${S.recon?m(c.fin):'pending'}</td></tr>`;
+  const st={requested:['info','Requested'],en_route:['info','Driver on the way'],arrived:['ok','Arrived'],picked_up:['info','Picked up'],complete:['','Completed 11:37 PM']}[S.ride]||['','-'];
+  const eta={requested:'finding',en_route:S.near?NEAR_MIN+' min':'6 min',arrived:'here',picked_up:'drop-off 11:37 PM',complete:'-'}[S.ride]||'-';
+  return `<tr style="background:rgba(255,200,61,.06)"><td><button class="link" data-act="openB6">${TBL()} · #${CHK()}</button></td><td>${NAME()}${S.pass==='linked'?' <span class="pill ok" style="font-size:12px">Night pass</span>':''}</td><td><span class="pill ${st[0]}">${st[1]}</span>${S.near&&S.ride==='en_route'?` <span class="pill warn" style="font-size:12px">${NEAR_MIN} min away</span>`:''}</td><td>Gray Camry XLT-5012</td><td>Northside Car Service</td><td>${eta}</td><td>11:11 PM</td><td class="r">${m(c.q)}</td><td class="r">${S.recon?m(c.fin):'pending'}</td></tr>`;
 }
-SCR.B4=()=>{const c=calc();const done=S.ride==='complete';return `<div class="desk">${side('B4')}<div class="main">${top(done?'Sat 1:08 AM':S.near?'Sat 12:47 AM':'Sat 12:42 AM',7)}
+SCR.B4=()=>{const c=calc();const done=S.ride==='complete';return `<div class="desk">${side('B4')}<div class="main">${top(done?'Fri 11:38 PM':S.near?'Fri 11:17 PM':'Fri 11:12 PM',7)}
   <div class="content">
    ${S.near&&S.ride==='en_route'?`<div class="strip warn nearchip" style="font-size:17px">${ic('car',22)} <b>Car ${NEAR_MIN} min away, ${TBL()}</b> <span class="muted" style="font-size:14px;margin-left:8px">No sound. Tell the guest quietly if you can; they also get a text.</span></div>`:''}
-   ${done&&S.recon?`<div class="banner info" style="font-size:17px;align-items:center">${ic('receipt',26)}<div style="flex:1"><b>Table 7 · Maya R.: ride completed 1:07 AM.</b> ${reconSentence(c)}</div><button class="btn btn-secondary dbtn" style="width:auto;padding:0 18px" data-act="openB6">Open tab</button></div>`:''}
+   ${done&&S.recon?`<div class="banner info" style="font-size:17px;align-items:center">${ic('receipt',26)}<div style="flex:1"><b>Table 7 · Maya R.: ride completed 11:37 PM.</b> ${reconSentence(c)}</div><button class="btn btn-secondary dbtn" style="width:auto;padding:0 18px" data-act="openB6">Open tab</button></div>`:''}
    <div class="kpis"><div class="kpi"><div class="v">${done?2:3}</div><div class="l">Active now</div></div><div class="kpi"><div class="v">5.8 min</div><div class="l">Avg pickup wait tonight</div></div><div class="kpi"><div class="v">${done?4:3}</div><div class="l">Completed tonight</div></div><div class="kpi"><div class="v">0</div><div class="l">Needs attention</div></div></div>
    <table class="t"><thead><tr><th>Tab (link)</th><th>Guest</th><th>Status</th><th>Car</th><th>Partner</th><th>ETA</th><th>Booked</th><th class="r">Quote</th><th class="r">Final fare</th></tr></thead><tbody>
     ${mayaRow(c)}
-    <tr><td><button class="link">Table 12 · #4459</button></td><td>Jordan T.</td><td><span class="pill ok">Arrived</span></td><td>White Prius T555031C</td><td>Northside Car Service</td><td>here</td><td>12:33 AM</td><td class="r">$21.00</td><td class="r">pending</td></tr>
-    <tr><td><button class="link">Bar 5 · #4462</button></td><td>Ana G.</td><td><span class="pill info">Driver on the way</span></td><td>Black Accord T555077C</td><td>Greenpoint Livery</td><td>3 min</td><td>12:22 AM</td><td class="r">$16.50</td><td class="r">pending</td></tr>
-    <tr><td><button class="link">Table 9 · #4457</button></td><td>Kai W.</td><td><span class="pill">Completed 12:30 AM</span></td><td>Gray Sienna T555090C</td><td>App ride (Lyft)</td><td>-</td><td>12:04 AM</td><td class="r">$26.80</td><td class="r">$26.80</td></tr>
+    <tr><td><button class="link">Table 12 · #4459</button></td><td>Jordan T.</td><td><span class="pill ok">Arrived</span></td><td>White Prius XLT-5031</td><td>Northside Car Service</td><td>here</td><td>11:03 PM</td><td class="r">$21.00</td><td class="r">pending</td></tr>
+    <tr><td><button class="link">Bar 5 · #4462</button></td><td>Ana G.</td><td><span class="pill info">Driver on the way</span></td><td>Black Accord XLT-5077</td><td>Langston Livery</td><td>3 min</td><td>10:52 PM</td><td class="r">$16.50</td><td class="r">pending</td></tr>
+    <tr><td><button class="link">Table 9 · #4457</button></td><td>Kai W.</td><td><span class="pill">Completed 11:00 PM</span></td><td>Gray Sienna XLT-5090</td><td>App ride (Lyft)</td><td>-</td><td>10:34 PM</td><td class="r">$26.80</td><td class="r">$26.80</td></tr>
    </tbody></table>
    ${mode==='free'&&!done?`<div><button class="btn btn-primary dbtn" style="width:auto;padding:0 20px" data-act="advance">Demo control: next ride status (${rideWord(STATUS[STATUS.indexOf(S.ride)+1])})</button></div>`:''}
    <p class="muted" style="margin:0;font-size:14px">Statuses: Requested, Driver on the way, Arrived, Completed, Driver declined, Cancelled. Tab links open the matching POS check. No tracking after drop-off; nothing here asks staff to confirm arrival.</p>
-   <p class="fict" style="text-align:left">Northside Car Service and Greenpoint Livery are fictional local bases. Sample data only.</p>
+   <p class="fict" style="text-align:left">Northside Car Service and Langston Livery are fictional local car services. Sample data only.</p>
   </div></div></div>`;};
-SCR.B6=()=>{const c=calc();return `<div class="desk">${side('B4')}<div class="main">${top('Sat 1:09 AM',7)}
+SCR.B6=()=>{const c=calc();return `<div class="desk">${side('B4')}<div class="main">${top('Fri 11:39 PM',7)}
   <div class="content"><div class="cols c2">
    <div class="panel"><h3>Table 7 · Maya R. · check #4468 <span class="muted" style="font-size:14px;font-weight:600">synced from POS</span></h3>
     <table class="t"><tbody>
      ${DRINKS.concat(FOOD).map(([n,p])=>`<tr><td>${n}</td><td class="r">${m(p)}</td></tr>`).join('')}
-     <tr><td>Sales tax 8.875% (drinks and food)</td><td class="r">${m(c.tax)}</td></tr>
-     <tr><td><b>${rideLabel()}</b><div class="muted" style="font-size:13px">Posted to POS 12:41 AM · no sales tax ${A()}</div></td><td class="r"><b>${m(c.q)}</b></td></tr>
-     ${S.recon&&c.adj!==0?`<tr><td><b>${adjName(c)}</b><div class="muted" style="font-size:13px">${c.why} · posted to POS 1:08 AM</div></td><td class="r"><b>${sm(c.adj)}</b></td></tr>`:''}
+     <tr><td>Tax 11% (drinks and food)</td><td class="r">${m(c.tax)}</td></tr>
+     <tr><td><b>${rideLabel()}</b><div class="muted" style="font-size:13px">Posted to POS 11:11 PM · no sales tax ${A()}</div></td><td class="r"><b>${m(c.q)}</b></td></tr>
+     ${S.recon&&c.adj!==0?`<tr><td><b>${adjName(c)}</b><div class="muted" style="font-size:13px">${c.why} · posted to POS 11:38 PM</div></td><td class="r"><b>${sm(c.adj)}</b></td></tr>`:''}
      ${S.recon&&c.pend>0?`<tr><td class="muted">Held for guest OK (E7)</td><td class="r muted">${m(c.pend)}</td></tr>`:''}
      <tr><td><b>Total before tip</b></td><td class="r"><b>${m(c.pre)}</b></td></tr>
     </tbody></table>
@@ -255,15 +260,15 @@ SCR.B6=()=>{const c=calc();return `<div class="desk">${side('B4')}<div class="ma
    </div>
    <div style="display:flex;flex-direction:column;gap:16px">
     <div class="panel"><h3>Ride</h3>
-     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill">${rideWord(S.ride)}${S.ride==='complete'?' 1:07 AM':''}</span><span class="pill warn">${epPill()}</span><span class="muted">Northside Car Service · Luis M. · Gray Camry T555012C</span></div>
-     <div class="muted" style="font-size:14px;margin-top:8px">Booked 12:41 AM · picked up 12:49 AM · drop-off near 655 Park Pl</div></div>
+     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill">${rideWord(S.ride)}${S.ride==='complete'?' 11:37 PM':''}</span><span class="pill warn">${epPill()}</span><span class="muted">Northside Car Service · Luis M. · Gray Camry XLT-5012</span></div>
+     <div class="muted" style="font-size:14px;margin-top:8px">Booked 11:11 PM · picked up 11:19 PM · drop-off near 655 N Harrison St</div></div>
     <div class="panel"><h3>Fare reconciliation</h3>
      <div class="reco"><div><b>${m(c.q)}</b><span>Quote (guest saw it)</span></div><div><b>${S.recon?m(c.fin):'pending'}</b><span>Final fare from partner</span></div><div><b>${S.recon?sm(c.diff):'-'}</b><span>Difference</span></div><div><b>${S.recon?sm(c.adj):'-'}</b><span>Posted to tab</span></div></div>
      <p style="font-size:15px;margin:10px 0 0">${S.recon?reconSentence(c):'Waiting for the final fare.'}</p>
      <p class="muted" style="font-size:13px;margin:6px 0 0">Rule (shown to the guest before booking): up to ${m(c.cap)} over posts automatically (20% of the quote, max $5.00); more is held for the guest's OK; lower posts a credit. Anything over the cap that is not approved is absorbed by RideNite, not the bar. ${A('cap')}</p></div>
     <div class="panel" style="font-size:15px"><b>Bar only:</b> RideNite fee for this ride $1.00, billed monthly on your one invoice. Ride fares are not RideNite fees.</div>
    </div>
-  </div><p class="fict" style="text-align:left">Fictional sample tab.</p></div></div></div>`;};
+  </div><p class="fict" style="text-align:left">Sample tab: item names from Maison Cheryl's menu, prices are sample.</p></div></div></div>`;};
 SCR.B7=()=>{const c=calc();const tabs=r2(1342.50+c.rideTotal), north=r2(526.00+c.rideTotal);
   return `<div class="desk">${side('B7')}<div class="main">${top('Sat 9:30 AM',0)}
   <div class="content">
@@ -284,7 +289,7 @@ SCR.B7=()=>{const c=calc();const tabs=r2(1342.50+c.rideTotal), north=r2(526.00+c
      <p class="muted" style="font-size:13px;margin:8px 0 0">${SKINS[ctl.skin]} (simulated connection).</p></div>
    </div>
    <div class="panel"><h3>By partner (on guest tabs)</h3><table class="t"><thead><tr><th>Partner</th><th class="r">Rides</th><th class="r">Fares</th></tr></thead><tbody>
-    <tr><td>Northside Car Service (local)</td><td class="r">28</td><td class="r">${m(north)}</td></tr><tr><td>Greenpoint Livery (local)</td><td class="r">11</td><td class="r">$214.50</td></tr>
+    <tr><td>Northside Car Service (local)</td><td class="r">28</td><td class="r">${m(north)}</td></tr><tr><td>Langston Livery (local)</td><td class="r">11</td><td class="r">$214.50</td></tr>
     <tr><td>Uber for Business (venue account)</td><td class="r">14</td><td class="r">$352.40</td></tr><tr><td>Lyft Business (venue account)</td><td class="r">9</td><td class="r">$249.60</td></tr></tbody></table></div>
    <p class="fict" style="text-align:left">Sample figures extend the UI spec B7 sample (61 rides through Oct 9) with tonight's demo ride. All fictional.</p>
   </div></div></div>`;};
@@ -293,12 +298,12 @@ SCR.B7=()=>{const c=calc();const tabs=r2(1342.50+c.rideTotal), north=r2(526.00+c
 const phone=(inner,light)=>`<section class="phone${light?' light':''}"><div class="ph" style="gap:14px${light?';min-height:auto':''}">${inner}</div></section>`;
 const qcol=()=>'var(--info)';
 SCR.P0=()=>phone(`
-  <div class="ph-top"><span class="venue-chip">${ic('bar')} ${V}</span><span>Fri 9:12 PM</span></div>
+  <div class="ph-top"><span class="venue-chip">${ic('bar')} ${V}</span><span>Fri 7:42 PM</span></div>
   <span class="status st-ok" style="align-self:flex-start">${ic('receipt')} Tab open</span>
   <h1 class="h1" style="font-size:36px">Your card is with the bar.</h1>
-  <p class="body">Table 7 · tab opened 9:12 PM. That's a normal bar tab: the bar keeps your card and charges it when you settle up.</p>
+  <p class="body">Table 7 · tab opened 7:42 PM. That's a normal bar tab: the bar keeps your card and charges it when you settle up.</p>
   <div style="height:120px;border-radius:14px;background:linear-gradient(135deg,#334155,#0F172A);padding:16px;display:flex;flex-direction:column;justify-content:space-between;font-family:var(--mono);font-size:18px"><span>VISA (sample)</span><span>•••• 4242</span><span>MAYA R.</span></div>
-  <div class="card" style="padding:14px"><div class="small muted">Bank app notice (example)</div><div class="body" style="font-size:19px">Pending authorization: THE COPPER LANTERN</div><div class="muted" style="font-size:15px">Whether and how this shows depends on your bank and the bar's processor. ${A()}</div></div>
+  <div class="card" style="padding:14px"><div class="small muted">Bank app notice (example)</div><div class="body" style="font-size:19px">Pending authorization: MAISON CHERYL</div><div class="muted" style="font-size:15px">Whether and how this shows depends on your bank and the bar's processor. ${A()}</div></div>
   <p class="small muted" style="margin:0">Nothing from RideNite yet. You hear from RideNite only if you ask for a car, or staff offer one and you say yes. You see the price before anything is booked.</p>
   <div class="spacer"></div><p class="fict">Patron view, no app needed. Fictional sample data.</p>`);
 SCR.P3c=()=>phone(`
@@ -306,7 +311,7 @@ SCR.P3c=()=>phone(`
   <p class="small muted" style="margin:0">Link from ${V} staff.</p>
   <h1 class="h2">Ride home</h1>
   <div class="card" style="display:flex;flex-direction:column;gap:8px">
-   <div class="row"><span class="body">${ic('pin')} 655 Park Pl</span><button class="lang">Change</button></div>
+   <div class="row"><span class="body">${ic('pin')} 655 N Harrison St</span><button class="lang">Change</button></div>
    <div class="row"><span class="price">${m(S.quote)}</span><span class="small muted">car about 6 min away</span></div>
    <div class="lockline" style="color:${qcol()}">${quoteLine()}</div>
    <div class="small" style="line-height:1.4">${disc(S.quote)}</div>
@@ -332,20 +337,20 @@ SCR.P5=()=>{const c=calc();return phone(`
   <div class="ph-top"><span class="status st-info">${ic('car')} Driver on the way</span><span>${V}</span></div>
   <div class="row"><span class="eta">6 min</span><span class="body muted">pickup at front door</span></div>
   <p class="small" style="margin:0">Before you get in, check the plate. Your driver will say your first name.</p>
-  <div class="plate" aria-label="Plate T 5 5 5 0 1 2 C">T555012C</div>
+  <div class="plate" aria-label="Plate X L T 5 0 1 2">XLT-5012</div>
   <div class="driver card" style="padding:14px"><div class="avatar" aria-hidden="true">L</div><div><b style="font-size:24px">Luis M.</b><div class="body muted small">Gray Toyota Camry</div><div class="muted" style="font-size:16px">Northside Car Service (local partner)</div></div></div>
   <div class="card" style="padding:12px 16px"><div class="row"><span class="small">On your tab at ${V} (quote)</span><span class="body" style="font-weight:800">${m(c.q)}</span></div>
    <div class="muted" style="font-size:15px;margin-top:4px">Final fare may differ by up to ${m(c.cap)}; more and we ask you first.</div></div>
   <button class="btn btn-secondary" data-go="P14">${ic('receipt',28)} See my tab</button>
   <p class="fict">Driver, car and plate are fictional.</p>`);};
 SCR.P14=()=>{const c=calc();return phone(`
-  <div class="ph-top"><button class="lang" data-go="P5">Back</button><span>${S.recon?'1:08 AM':'12:44 AM'}</span></div>
+  <div class="ph-top"><button class="lang" data-go="P5">Back</button><span>${S.recon?'11:38 PM':'11:14 PM'}</span></div>
   <h1 class="h2">Your tab at ${V}</h1>
-  <p class="small muted" style="margin:0">Table 7 · card ending 4242 · opened 9:12 PM</p>
+  <p class="small muted" style="margin:0">Table 7 · card ending 4242 · opened 7:42 PM</p>
   <table class="inv" aria-label="Your tab so far">
    ${DRINKS.concat(FOOD).map(([n,p])=>`<tr><td>${n}</td><td>${m(p)}</td></tr>`).join('')}
    <tr><td>Sales tax (drinks and food)</td><td>${m(c.tax)}</td></tr>
-   <tr><td><b>${rideLabel()}</b><span class="note">Northside Car Service, 12:41 AM</span></td><td><b>${m(c.q)}</b></td></tr>
+   <tr><td><b>${rideLabel()}</b><span class="note">Northside Car Service, 11:11 PM</span></td><td><b>${m(c.q)}</b></td></tr>
    ${S.recon&&c.adj!==0?`<tr><td><b>${adjName(c)}</b><span class="note">${adjNote(c)}</span></td><td><b>${sm(c.adj)}</b></td></tr>`:''}
    <tr class="total"><td>So far</td><td>${m(c.pre)}</td></tr>
   </table>
@@ -358,7 +363,7 @@ SCR.P7=()=>{const c=calc();let fare='';
    <div class="row small"><span class="muted">${c.diff<0?'Credit on your tab':'Added to your tab'}</span><span>${sm(c.adj)}</span></div>
    <p class="small" style="margin:8px 0 0;line-height:1.4">${c.diff<0?`It came in lower, so ${m(-c.diff)} goes back on your tab.`:c.pend>0?`${c.why}. ${m(c.cap)} is on your tab, as shown before booking. The other ${m(c.pend)} isn't charged unless you OK it. We'll ask in the morning.`:`Within the ${m(c.cap)} shown before booking, so it's on your tab at ${V}.`}</p></div>`;
   return phone(`
-  <div class="ph-top"><span class="venue-chip">RideNite</span><span>1:07 AM</span></div>
+  <div class="ph-top"><span class="venue-chip">RideNite</span><span>11:37 PM</span></div>
   <span class="status st-ok" style="align-self:flex-start">${ic('check')} Ride complete</span>
   <h1 class="h1">You've arrived.</h1>${fare}
   <div class="spacer"></div>
@@ -370,13 +375,13 @@ function smsBody(c){
     c.diff>c.cap?`RideNite: You've arrived. Final fare ${m(c.fin)}. ${m(c.cap)} over the quote is on your tab, as shown before booking; we'll ask you about the other ${m(r2(c.diff-c.cap))} in the morning.`:
     `RideNite: You've arrived. Final fare ${m(c.fin)} (${m(c.diff)} over the quote), on your tab at ${V}.`;
   const rideTxt=c.adj===0?m(c.q):`${m(c.rideTotal)} (quoted ${m(c.q)}, final fare ${m(c.fin)}, ${c.adj>0?'adjustment':'credit'} ${sm(c.adj)})`;
-  return {fn,done,morning:`RideNite: Your ride home from ${V}, 12:49 AM, ${rideTxt} on your tab. Tab total ${m(c.total)}.${c.pend>0?` One item needs your OK (${m(c.pend)}).`:''} Receipt and review: rdnt.example/m/abc123 Reply STOP to opt out, HELP for help.`};
+  return {fn,done,morning:`RideNite: Your ride home from ${V}, 11:19 PM, ${rideTxt} on your tab. Tab total ${m(c.total)}.${c.pend>0?` One item needs your OK (${m(c.pend)}).`:''} Receipt and review: rdnt.example/m/abc123 Reply STOP to opt out, HELP for help.`};
 }
 SCR.M2=()=>{const c=calc(),t=smsBody(c);return `<section class="sms">
   <div style="text-align:center;color:#AEB9C7;font-size:14px">RideNite (555) 010-0100</div>
-  <div style="text-align:center;color:#AEB9C7;font-size:13px;margin-top:10px">Sat 12:42 AM</div>
-  <div class="bubble">RideNite: Your car is requested. Luis, gray Toyota Camry, plate T555012C, about 6 min. ${t.fn} Before you get in, check the plate. Trip and tab: <a>rdnt.example/t/k7Q2</a></div>
-  <div style="text-align:center;color:#AEB9C7;font-size:13px">1:07 AM</div>
+  <div style="text-align:center;color:#AEB9C7;font-size:13px;margin-top:10px">Fri 11:12 PM</div>
+  <div class="bubble">RideNite: Your car is requested. Luis, gray Toyota Camry, plate XLT-5012, about 6 min. ${t.fn} Before you get in, check the plate. Trip and tab: <a>rdnt.example/t/k7Q2</a></div>
+  <div style="text-align:center;color:#AEB9C7;font-size:13px">11:37 PM</div>
   <div class="bubble">${t.done}</div>
   <div style="text-align:center;color:#AEB9C7;font-size:13px">Sat 9:00 AM</div>
   <div class="bubble">${(S.receipt||ctl.receipt)==='neutral'?`RideNite: Your receipt from ${VN()} is ready: rdnt.example/m/abc123 Reply STOP to opt out, HELP for help.`:t.morning}</div>
@@ -384,9 +389,9 @@ SCR.M2=()=>{const c=calc(),t=smsBody(c);return `<section class="sms">
 function invRows(c,withTipButtons){
   let h=`<tr class="sec"><td>Drinks</td><td></td></tr>${(S.venue===2?B2DRINKS:DRINKS).map(([n,p])=>`<tr><td>${n}</td><td>${m(p)}</td></tr>`).join('')}
    ${S.venue===2?'':`<tr class="sec"><td>Food</td><td></td></tr>${FOOD.map(([n,p])=>`<tr><td>${n}</td><td>${m(p)}</td></tr>`).join('')}`}
-   <tr><td>Sales tax (8.875%)<span class="note">On drinks and food</span></td><td>${m(c.tax)}</td></tr>
+   <tr><td>Tax 11%<span class="note">VA sales 6% + Arlington meals 5%, on drinks and food</span></td><td>${m(c.tax)}</td></tr>
    <tr class="sec"><td>Ride</td><td></td></tr>
-   <tr><td>${rideLabel()}<span class="note">Northside Car Service, quote you OK'd at 12:41 AM</span></td><td>${m(c.q)}</td></tr>`;
+   <tr><td>${rideLabel()}<span class="note">Northside Car Service, quote you OK'd at 11:11 PM</span></td><td>${m(c.q)}</td></tr>`;
   if(c.adj!==0) h+=`<tr><td>${adjName(c)}<span class="note">${adjNote(c)}</span></td><td>${sm(c.adj)}</td></tr>`;
   if(c.pend>0) h+=`<tr><td><b>Needs your OK</b><span class="note">${m(c.pend)} over the ${m(c.cap)} cap. ${c.why}. Not charged unless you OK it.</span></td><td><button class="lang" data-go="E7" style="min-height:44px">Review</button></td></tr>`;
   if(c.declined>0) h+=`<tr><td>Not charged<span class="note">You said no to the extra ${m(c.declined)}</span></td><td>$0.00</td></tr>`;
@@ -400,21 +405,21 @@ SCR.M1=()=>{const c=calc();return `<section class="mail">
   <div class="hdr"><div><b>RideNite for ${VN()}</b> &lt;receipts@ridenite.example&gt;</div><div>To: maya.r@example.test</div><div>Subject: <b>${(S.receipt||ctl.receipt)==='neutral'?`Your receipt from ${VN()}`:`Your ${VN().replace('The ','')} tab and ride home receipt`}</b></div><div style="color:#4B5563">Sat, Oct 10, 9:00 AM</div></div>
   <div class="msg">
    <p style="margin-top:0">Good morning, Maya.</p>
-   <p>Here's last night's tab from ${VN()}, including your ride home: 12:49 AM, ${m(c.rideTotal)}, on your tab.</p>
+   <p>Here's last night's tab from ${VN()}, including your ride home: 11:19 PM, ${m(c.rideTotal)}, on your tab.</p>
    <table class="inv" style="font-size:16px">${invRows(c,false)}</table>
    <a class="cta" data-go="P9" href="#">Review and pay</a>
    <p style="font-size:15px;color:#4B5563">${S.close==='closed'?'Paid with card ending 4242.':'Your card ending 4242 is on hold. If you do nothing, it\'s charged Sun, Oct 11 at 11:00 AM.'} Question about a charge? Open Review and tap "Something's wrong."</p>
-   <p style="font-size:13px;color:#4B5563">${S.venue===2?'Only your Bar Lumen tab is shown here. Any other tab tonight is billed by that venue as usual. ':''}${VN()}, ${S.venue===2?'88 Kent Ave':'142 N 6th St'}, Brooklyn. RideNite books cars from local car services and ride apps for this venue. SAMPLE: no real charge. All names, amounts and addresses are fictional.</p>
+   <p style="font-size:13px;color:#4B5563">${S.venue===2?'Only your Bar Lumen tab is shown here. Any other tab tonight is billed by that venue as usual. ':''}${S.venue===2?'Bar Lumen (sample partner bar, fictional), Clarendon, Arlington, VA.':'Maison Cheryl, 2900 Wilson Blvd, Suite 104, Arlington, VA 22201. Shown as an illustrative example; not a live RideNite partner.'} RideNite books cars from local car services and ride apps for this venue. SAMPLE: no real charge. Guest and driver names, amounts and the drop-off address are sample data.</p>
   </div></section>`;};
 SCR.P9=()=>{const c=calc();return phone(`
   <div class="ph-top"><span class="venue-chip">${V}</span><span class="muted">Sat 9:04 AM</span></div>
   <h1 class="h1">Last night, Fri Oct 9</h1>
   <span class="status" style="align-self:flex-start;color:#8A5A00;background:#FFF4DB">${S.close==='closed'?'Paid last night':'Ready to review'}: ${m(c.total)}</span>
   <div class="card" style="background:#fff;border:1px solid #E5E7EB"><h3 style="margin:0 0 6px;font-size:20px">Your night</h3><ul class="tl">
-   <li><b>9:12 PM</b><span>Tab opened at ${V}</span></li>
-   <li><b>12:41 AM</b><span>Ride home booked (${S.sawBy==='guest'?'you tapped Yes':'you OK\'d the price with staff'})</span></li>
-   <li><b>12:49 AM</b><span>Picked up. Luis M., gray Camry, T555012C</span></li>
-   <li><b>1:07 AM</b><span>Ride complete near 655 Park Pl. Final fare ${m(c.fin)}</span></li></ul></div>
+   <li><b>7:42 PM</b><span>Tab opened at ${V}</span></li>
+   <li><b>11:11 PM</b><span>Ride home booked (${S.sawBy==='guest'?'you tapped Yes':'you OK\'d the price with staff'})</span></li>
+   <li><b>11:19 PM</b><span>Picked up. Luis M., gray Camry, XLT-5012</span></li>
+   <li><b>11:37 PM</b><span>Ride complete near 655 N Harrison St. Final fare ${m(c.fin)}</span></li></ul></div>
   <table class="inv" aria-label="Itemized bill">${invRows(c,S.close!=='closed')}</table>
   ${S.venue===2?'<p class="small muted" style="margin:0">Only your Bar Lumen tab is shown here. Any other tab tonight is billed by that venue as usual.</p>':''}
   ${S.close==='closed'?'':`<button class="btn btn-primary" data-act="pay">Approve and pay ${m(c.total)}</button>`}
@@ -429,7 +434,7 @@ SCR.E7=()=>{const c=calc();const over=r2(c.diff-c.cap);return phone(`
    <div class="row small"><span>Added, as shown before booking (up to ${m(c.cap)})</span><span>${sm(Math.min(c.diff,c.cap))}</span></div>
    <div class="row body" style="font-weight:800;margin-top:6px"><span>Needs your OK</span><span>${m(over)}</span></div>
   </div>
-  <p class="body" style="font-size:20px">You added a stop at 12:58 AM, so the trip came in higher than quoted. The extra ${m(over)} is not charged unless you say yes.</p>
+  <p class="body" style="font-size:20px">You added a stop at 11:28 PM, so the trip came in higher than quoted. The extra ${m(over)} is not charged unless you say yes.</p>
   <div class="spacer"></div>
   <button class="btn btn-primary" data-act="overOk" data-v="1">Yes, add ${m(over)}</button>
   <button class="btn btn-secondary" data-act="overOk" data-v="0">No, don't add it</button>
@@ -449,14 +454,14 @@ SCR.P11=()=>{const c=calc();return phone(`
 /* ---------- roaming night pass branch (optional, post-pilot gated) ---------- */
 const capLine='The final fare may differ from the quote by up to 20% of the quote, never more than $5.00, on that venue\'s tab; more than that and we\'ll ask you first.';
 function qr(seed){let h='',x=seed;for(let i=0;i<441;i++){x=(x*1103515245+12345)&0x7fffffff;const r=Math.floor(i/21),c=i%21;const f=(r<7&&c<7)||(r<7&&c>13)||(r>13&&c<7);const on=f?((r%6===0||c%6===0||r===20||c===20)||((r%7>1&&r%7<5)&&(c%7>1&&c%7<5))):(x>>16)&1;h+=`<i${on?' class="on"':''}></i>`;}return `<div class="qr" aria-label="Sample QR code">${h}</div>`;}
-SCR.T8=()=>posCheck('Fri 10:58 PM','',panel(`
+SCR.T8=()=>posCheck('Fri 9:28 PM','',panel(`
   <div class="step">Night pass · optional</div><h2>Turn on a RideNite night pass?</h2>
   <div class="q" style="font-size:16px;line-height:1.45"><b>Show the guest:</b> Tonight only, until 6 AM. If you open a tab with this card (Visa ending 4242) at another RideNite partner venue tonight, staff there can see that your night pass is on, so getting a car home is quicker. They won't see where you were before. A car is only booked if you ask or say yes, and you'll see the price first. ${capLine} If it comes in lower, you get the difference back. We keep the link between venues until 6 AM, then delete it. We don't use your location.</div>
   <div class="muted" style="font-size:15px">Notice and off switch go to Maya's mobile ...0127.</div>
   <div class="two"><button class="btn btn-primary dbtn" data-act="passOn">Turn on night pass</button><button class="btn btn-secondary dbtn" data-act="rnClose">No thanks</button></div>
   <p class="help">Staff only: offer it like any other amenity. Never alongside a drink order. ${A('pilot feature, post-pilot gate')}</p>`));
 SCR.P15=()=>phone(`
-  <div class="ph-top"><span class="venue-chip">RideNite</span><span>Fri 10:59 PM</span></div>
+  <div class="ph-top"><span class="venue-chip">RideNite</span><span>Fri 9:29 PM</span></div>
   ${S.pass==='off'?`<span class="status st-warn" style="align-self:flex-start">Night pass off</span><p class="body">Nothing is linked. You can still ask any partner venue for a car.</p>`:
   `<span class="status st-ok" style="align-self:flex-start">${ic('check')} Night pass on until 6 AM.</span>
   <h1 class="h2" style="margin:0">Visa ending 4242</h1>
@@ -466,7 +471,7 @@ SCR.P15=()=>phone(`
   <button class="btn btn-secondary" data-act="passOff">Turn off night pass</button>`}
   ${mode==='free'&&S.pass!=='off'?`<button class="btn btn-primary" data-act="toBar2">Demo: later, Maya opens a tab at ${V2}</button>`:''}
   <div class="spacer"></div><p class="fict">Pass page from the text link, no app. Fictional sample data.</p>`);
-SCR.T9=()=>posCheck('Sat 1:19 AM','',`<div style="position:absolute;left:190px;top:72px;background:#0B0F14;color:#F4F6FA;border:2px solid #FFC83D;border-radius:12px;padding:12px 16px;font-size:16px;max-width:620px">${V2}'s own POS and its own card authorization. RideNite is not told. Tab opened 11:50 PM with Visa ending 4242.</div>`);
+SCR.T9=()=>posCheck('Fri 11:49 PM','',`<div style="position:absolute;left:190px;top:72px;background:#0B0F14;color:#F4F6FA;border:2px solid #FFC83D;border-radius:12px;padding:12px 16px;font-size:16px;max-width:620px">${V2}'s own POS and its own card authorization. RideNite is not told. Tab opened 10:20 PM with Visa ending 4242.</div>`);
 function t10body(){
   const weak=S.match==='one_weak'||(mode==='guided'&&ctl.roam==='one_weak');
   return `<div class="step">Book a car</div>
@@ -477,14 +482,14 @@ function t10body(){
   <button class="btn btn-primary dbtn" data-act="passConfirm" style="min-height:64px;font-size:22px">Maya R. is here</button>
   <button class="link" data-act="passNotThis" style="align-self:flex-start">Not this guest</button>
   <p class="help">Shown only because you opened RideNite on this check. The guest still sees the price before anything is booked.</p>`;}
-SCR.T10=()=>posCheck('Sat 1:20 AM','',panel(t10body()));
-SCR.T10m=()=>posCheck('Sat 1:20 AM','',panel(`<div class="step">Book a car</div>
+SCR.T10=()=>posCheck('Fri 11:50 PM','',panel(t10body()));
+SCR.T10m=()=>posCheck('Fri 11:50 PM','',panel(`<div class="step">Book a car</div>
   <div class="strip warn" style="font-size:17px">Possible RideNite night pass. Ask the guest to show it on their phone or tell you their mobile number.</div>
   <button class="btn btn-secondary dbtn" data-act="passScan">Scan night pass</button>
   <button class="btn btn-secondary dbtn" data-act="passPhone">Enter mobile number</button>
   <button class="btn btn-secondary dbtn" data-act="passNone">Book without it</button>
   <p class="help">No names are shown when two passes look alike. RideNite never guesses.</p>`));
-SCR.T10n=()=>posCheck('Sat 1:20 AM','',panel(`
+SCR.T10n=()=>posCheck('Fri 11:50 PM','',panel(`
   <div class="step">Step 1 of 3 · Book a car</div><h2>Whose tab?</h2>
   <button class="opt sel">${ic('person',24)}<div><b>Bar 4 · Maya R.</b><div class="muted" style="font-size:15px">Check #2210 · ${m(calc().food)} · the check you're on</div></div></button>
   <h2 style="font-size:22px;margin-top:6px">How did this start?</h2>
@@ -493,7 +498,7 @@ SCR.T10n=()=>posCheck('Sat 1:20 AM','',panel(`
   <p class="help">We record only which one. No reason, notes or drink counts.</p>`));
 SCR.P16=()=>`<section class="sms">
   <div style="text-align:center;color:#AEB9C7;font-size:14px">RideNite (555) 010-0100</div>
-  <div style="text-align:center;color:#AEB9C7;font-size:13px;margin-top:10px">Sat 1:20 AM</div>
+  <div style="text-align:center;color:#AEB9C7;font-size:13px;margin-top:10px">Fri 11:50 PM</div>
   <div class="bubble">RideNite: your night pass is on at ${V2}. Reply OFF to turn it off. Ends 6 AM.</div>
   ${mode==='free'?`<div style="text-align:center;margin-top:16px"><button class="btn btn-primary" style="width:auto;padding:0 20px" data-act="toQuote2">Demo: back to ${V2}'s POS</button></div>`:''}
   <p style="color:#AEB9C7;font-size:13px;text-align:center;margin-top:20px">Sample message. Names, numbers and links are fictional.</p></section>`;
@@ -508,7 +513,7 @@ SCR.K1=()=>`<section class="kit"><div class="kithd"><b>House car kit</b> · prin
    <div class="kpc rest"><div class="kl">Restroom card</div><div class="cbig" style="font-size:22px">Need to head out? Scan to quietly ask staff for a car, or just ask for the house car.</div>${qr(3)}</div>
   </div>
   <p class="kitft">SAMPLE artwork. No gesture codes or coded drink orders. Every way of asking is recorded as "Guest asked."</p></section>`;
-SCR.T1q=()=>`<div class="pos sk-${ctl.skin}">${posTop('Sat 12:39 AM')}
+SCR.T1q=()=>`<div class="pos sk-${ctl.skin}">${posTop('Fri 11:09 PM')}
   <div class="pbody" style="grid-template-columns:170px 1fr">
    <div class="cats"><button class="cat on">Open tabs</button><button class="cat">Tables</button><button class="cat">Closed</button></div>
    <div style="display:flex;flex-direction:column;gap:12px;padding:12px">
@@ -522,16 +527,16 @@ SCR.T1q=()=>`<div class="pos sk-${ctl.skin}">${posTop('Sat 12:39 AM')}
     </div>
     <p class="muted" style="font-size:14px;margin:0">Silent. Shows only on this venue's RideNite screens. No name, no reason.</p>
    </div></div></div>`;
-SCR.B10=()=>`<div class="desk">${side('B1')}<div class="main">${top('Sat 12:39 AM',7)}
+SCR.B10=()=>`<div class="desk">${side('B1')}<div class="main">${top('Fri 11:09 PM',7)}
   <div class="content"><div class="panel" style="max-width:900px">
-   <span class="pill info">Quiet request · 12:39 AM</span>
+   <span class="pill info">Quiet request · 11:09 PM</span>
    <h2 style="margin:10px 0 4px;font-size:30px">Car for a guest at Table 4</h2>
    <div class="banner warn" style="font-size:17px;align-items:flex-start">${ic('list',26)}<div><b>Your venue's procedure first</b><ol style="margin:6px 0 0 18px;padding:0;line-height:1.5"><li>Let the manager on duty know (Dana tonight).</li><li>Go over in person, low-key. Book the house car without asking why.</li><li>If the guest raises a concern, get the manager or security first and follow venue policy. The car is one option.</li></ol></div></div>
    <div class="cols c2" style="margin-top:14px"><button class="btn btn-primary dbtn" data-act="bookQuiet" style="min-height:64px;font-size:20px">${ic('car',24)} Book the house car (Guest asked)</button><button class="btn btn-secondary dbtn">Mark seen</button></div>
-   <div style="display:flex;gap:18px;margin-top:12px;font-size:16px"><label><input type="checkbox" checked> Pickup at side door (Wythe Ave)</label><label><input type="checkbox" checked> Just one rider</label></div>
+   <div style="display:flex;gap:18px;margin-top:12px;font-size:16px"><label><input type="checkbox" checked> Pickup at the Wilson Blvd corner</label><label><input type="checkbox" checked> Just one rider</label></div>
    <p class="muted" style="font-size:14px;margin:12px 0 0">Shown as 'Guest asked' in ride history. This alert is deleted after 30 days. No reason codes or notes. No sound.</p>
   </div></div></div></div>`;
-SCR.T2h=()=>{const c=calc();return `<div class="pos sk-${ctl.skin}">${posTop('Sat 12:38 AM')}
+SCR.T2h=()=>{const c=calc();return `<div class="pos sk-${ctl.skin}">${posTop('Fri 11:08 PM')}
   <div class="pbody">
    <div class="cats"><button class="cat">Cocktails</button><button class="cat">Beer</button><button class="cat">Wine</button><button class="cat">Food</button><button class="cat">N/A drinks</button><button class="cat on">Services</button></div>
    <div class="menu"><button class="item" data-act="houseItem" id="houseItem">Courtesy car (open price)<small>RideNite quote</small></button><button class="item">Coat check<small>$3.00</small></button></div>
@@ -545,7 +550,7 @@ SCR.P5w=()=>phone(`
   <div class="ph-top"><span class="status st-warn">${ic('car')} ${NEAR_MIN} min away</span><span>${V}</span></div>
   <h1 class="h2" style="margin:0">Your car is about ${NEAR_MIN} min away.</h1>
   <p class="body" style="margin:0">You can wait inside. We'll text you when it's at the door.</p>
-  <div class="plate" aria-label="Plate T 5 5 5 0 1 2 C">T555012C</div>
+  <div class="plate" aria-label="Plate X L T 5 0 1 2">XLT-5012</div>
   <div class="driver card" style="padding:14px"><div class="avatar" aria-hidden="true">L</div><div><b style="font-size:24px">Luis M.</b><div class="body muted small">Gray Toyota Camry</div></div></div>
   <div class="card" style="padding:12px 16px"><div class="small" style="line-height:1.4">${disc(S.quote)}</div></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><button class="btn btn-secondary">Share my trip</button><button class="btn btn-secondary">Help</button></div>
@@ -583,24 +588,24 @@ const BOOKED=Object.assign({},OPEN,{entry:'staff_offer',addr:true,saw:true,sawBy
 const DONE=Object.assign({},BOOKED,{ride:'complete',recon:true});
 const HELD=Object.assign({},DONE,{close:'held'});
 const STEPS=[
- {id:'P0',st:OPEN,t:'9:12 PM. Maya opens a tab the usual way',s:'"Maya hands her card to Imani, the bartender. A normal bar tab. RideNite isn\'t involved yet."',c:'Click Next.'},
+ {id:'P0',st:OPEN,t:'7:42 PM. Maya opens a tab the usual way',s:'"Maya hands her card to Imani, the bartender. A normal bar tab. RideNite isn\'t involved yet."',c:'Click Next.'},
  {id:'T1',st:{},t:'The bartender starts the tab in the POS',s:'"Imani swipes the card and starts a tab for Table 7. This is the bar\'s own POS. RideNite never touches the card."',c:'Click "Start tab for Maya R."',hot:'#startTab'},
- {id:'T2',st:OPEN,t:'12:40 AM. RideNite sits on the check, not the drink menu',s:'"Hours later, near closing. RideNite is a button on the check, separate from anything she ordered."',c:'Click "RideNite: Book a car" on the check.',hot:'.pb.rn'},
+ {id:'T2',st:OPEN,t:'11:10 PM. RideNite sits on the check, not the drink menu',s:'"Hours later, near closing. RideNite is a button on the check, separate from anything she ordered."',c:'Click "RideNite: Book a car" on the check.',hot:'.pb.rn'},
  {id:'T3',st:Object.assign({},OPEN,{panel:1}),t:'Pick the tab, then Guest asked or I offered',s:'"Imani asks: Can I get you a car home? It goes on your tab. Maya says yes. Imani taps I offered. No reason, no notes."',c:'Click "I offered".',hot:'[data-act=entry][data-v=staff_offer]'},
- {id:'T4',st:Object.assign({},OPEN,{panel:2,entry:'staff_offer'}),t:'Enter the drop-off',s:'"Maya\'s phone is almost dead, so Imani types the address. Typos are fine."',c:'Click "655 Park Pl, Crown Heights".',hot:'[data-act=addr]'},
+ {id:'T4',st:Object.assign({},OPEN,{panel:2,entry:'staff_offer'}),t:'Enter the drop-off',s:'"Maya\'s phone is almost dead, so Imani types the address. Typos are fine."',c:'Click "655 N Harrison St, Westover".',hot:'[data-act=addr]'},
  {id:'T5',st:Object.assign({},OPEN,{panel:3,entry:'staff_offer',addr:true}),t:'Quote, local partner first, and the fare note',s:'"Northside Car Service, a local base, comes first at $21.00. Imani turns the screen: the final fare may differ by up to $4.20, that is 20% of the quote, never more than $5; more than that and we ask first."',c:'Click "Guest saw the price and the fare note".',hot:'[data-act=saw]'},
  {id:'T5',st:Object.assign({},BOOKED,{panel:3}),t:'Book',s:'"Book stays off until the guest has seen the price. Now it\'s one tap."',c:'Click "Book".',hot:'[data-act=book]'},
  {id:'T6',st:Object.assign({},BOOKED,{ride:'requested'}),t:'The quoted fare posts to the check',s:'"Courtesy car, $21.00, lands on her check as its own line. No sales tax on the ride line, pending counsel."',c:'Click "Open RideNite dashboard".',hot:'[data-act=toDash]'},
  {id:'B4',st:Object.assign({},BOOKED,{ride:'en_route'}),t:'Live rides: status, partner, ETA, tab link',s:'"The dashboard shows driver on the way, the partner, a 6-minute ETA, and a link straight to her tab."',c:'Point at the Table 7 row, then click Next.'},
  {id:'P5',st:Object.assign({},BOOKED,{ride:'en_route'}),t:'Maya\'s phone: driver on the way',s:'"Maya gets a text with the plate, car, driver, and the $21.00 quote on her tab with the same $4.20 cap."',c:'Click "See my tab".',hot:'[data-go=P14]'},
  {id:'P14',st:Object.assign({},BOOKED,{ride:'en_route'}),t:'The ride on her tab',s:'"From the trip link she can see her tab: drinks, tax, and the ride line."',c:'Click Next.'},
- {id:'P7',st:DONE,t:'1:07 AM. Arrived; final fare reconciled',s:'"The fare came in at $24.60, $3.60 over the quote. That\'s inside the $4.20 she saw before booking, so it goes on the tab."',c:'Click Next.'},
+ {id:'P7',st:DONE,t:'11:37 PM. Arrived; final fare reconciled',s:'"The fare came in at $24.60, $3.60 over the quote. That\'s inside the $4.20 she saw before booking, so it goes on the tab."',c:'Click Next.'},
  {id:'B4',st:DONE,t:'Dashboard: the adjustment posts as its own line',s:'"RideNite posts a separate line: Ride fare adjustment, final fare $24.60, quoted $21.00, plus $3.60. Nothing already on the check is edited."',c:'Click "Open tab".',hot:'.banner [data-act=openB6]'},
  {id:'B6',st:DONE,t:'Tab detail with reconciliation',s:'"Quote, final fare, difference, posted. The bar\'s RideNite fee for this ride is one dollar, on the monthly invoice."',c:'Click "Hold for morning checkout".',hot:'.btn-primary[data-act=toPOSClose]'},
- {id:'T7',st:DONE,t:'1:15 AM. Close: all items, tax on drinks only, total',s:'"$49 of drinks and food, $4.35 tax on those only, $24.60 in ride lines: $77.95 before tip. Imani holds it for morning checkout."',c:'Click "Hold for morning checkout".',hot:'[data-act=hold]'},
+ {id:'T7',st:DONE,t:'11:45 PM. Close: all items, tax on drinks only, total',s:'"$49 of drinks and food, $5.39 tax on those only, $24.60 in ride lines: $78.99 before tip. Imani holds it for morning checkout."',c:'Click "Hold for morning checkout".',hot:'[data-act=hold]'},
  {id:'M2',st:HELD,t:'9:00 AM. The morning text',s:'"Next morning Maya gets one short text: her receipt is ready. By default it doesn\'t mention the ride on the lock screen; the venue can switch to a detailed text."',c:'Click Next.'},
  {id:'M1',st:HELD,t:'The morning-after email',s:'"And an itemized email with a plain subject line. Inside: drinks, the ride, the adjustment, tip and total."',c:'Click "Review and pay".',hot:'.cta'},
- {id:'P9',st:HELD,t:'Review and pay',s:'"She tips on drinks and food only and approves: $87.75 total."',c:'Click "Approve and pay".',hot:'[data-act=pay]'},
+ {id:'P9',st:HELD,t:'Review and pay',s:'"She tips on drinks and food only and approves: $88.79 total."',c:'Click "Approve and pay".',hot:'[data-act=pay]'},
  {id:'P11',st:Object.assign({},HELD,{paid:true}),t:'Paid',s:'"Done. One card, one tab, one receipt."',c:'Click Next.'},
  {id:'B7',st:Object.assign({},HELD,{paid:true}),t:'The bar gets one invoice',s:'"For the bar: $199 a month plus $1 a ride. Fares ride on guest tabs and settle to partners. That\'s the whole flow."',c:'End of the main walkthrough. Next shows optional branches.'},
  {id:'P3c',st:Object.assign({},OPEN,{panel:3,entry:'guest_request',addr:true,dropMode:'link'}),t:'Branch: link path, the fare note on her own phone',s:'"If staff text a link instead, Maya sees the same quote and fare note on her phone and taps Yes."',c:'Click Next.'},
@@ -614,8 +619,8 @@ const LINKED=Object.assign({},AT2,{tab:'open',pass:'linked',confirmed:true,linkM
 STEPS.push(
  {id:'T8',st:Object.assign({},OPEN,{pass:'offered'}),t:'Branch: roaming (post-pilot option). Night pass at the first bar',s:'"Heading anywhere else tonight? Imani offers a night pass. Maya reads the fare rule and turns it on. Nothing is booked."',c:'Click "Turn on night pass".',hot:'[data-act=passOn]'},
  {id:'P15',st:PASSON,t:'Her night pass, on her phone',s:'"Until 6 AM. A QR that refreshes every minute, a backup code, and an off switch. Only Maya sees where it was used."',c:'Click Next.'},
- {id:'T9',st:Object.assign({},AT2,{tab:'open'}),t:'1:19 AM. A normal tab at Bar Lumen (opened 11:50 PM)',s:'"Maya closed her first tab and opened a new one at Bar Lumen with the same card. Bar Lumen\'s own POS. RideNite isn\'t told."',c:'Click "RideNite: Book a car" on the check.',hot:'.pb.rn'},
- {id:'T10',st:Object.assign({},AT2,{tab:'open',panel:1,match:'one_strong'}),t:'1:20 AM. Night pass found on this card',s:'"Theo opens RideNite because Maya asked for a car. Her card matches an active night pass. Bar Lumen sees only: night pass on, fare rule accepted. Theo confirms Maya is here."',c:'Click "Maya R. is here".',hot:'[data-act=passConfirm]'},
+ {id:'T9',st:Object.assign({},AT2,{tab:'open'}),t:'11:49 PM. A normal tab at Bar Lumen (opened 10:20 PM)',s:'"Maya closed her first tab and opened a new one at Bar Lumen with the same card. Bar Lumen\'s own POS. RideNite isn\'t told."',c:'Click "RideNite: Book a car" on the check.',hot:'.pb.rn'},
+ {id:'T10',st:Object.assign({},AT2,{tab:'open',panel:1,match:'one_strong'}),t:'11:50 PM. Night pass found on this card',s:'"Theo opens RideNite because Maya asked for a car. Her card matches an active night pass. Bar Lumen sees only: night pass on, fare rule accepted. Theo confirms Maya is here."',c:'Click "Maya R. is here".',hot:'[data-act=passConfirm]'},
  {id:'P16',st:LINKED,t:'One notice text',s:'"Maya gets one text with an off switch."',c:'Click Next.'},
  {id:'T5r',st:Object.assign({},LINKED,{panel:3,entry:'guest_request',addr:true,dropMode:'link',saw:true,sawBy:'guest'}),t:'Quote from Bar Lumen, same fare rule',s:'"The quote is from Bar Lumen\'s door: $21.00, and the final fare may differ by up to $4.20. She still sees the price and taps yes. The pass only saves the explanation."',c:'Click "Book".',hot:'[data-act=book]'},
  {id:'T6',st:Object.assign({},LINKED,{entry:'guest_request',addr:true,saw:true,sawBy:'guest',ride:'requested'}),t:'The ride posts to Bar Lumen\'s tab',s:'"Courtesy car, $21.00, on Bar Lumen\'s check. Her first tab already closed normally at that venue. No card crossed between bars."',c:'Click Next.'},

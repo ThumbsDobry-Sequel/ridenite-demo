@@ -28,17 +28,17 @@
 
   // Price display modes (bar setting). tab = fare at cost on guest tab (default);
   // comp = venue perk, first $10 on the venue; addon = fare + add-on (needs counsel OK); pass = Ride Home Pass on the check (pilot).
-  const V='The Copper Lantern';
+  const V='Maison Cheryl';
   const C={
     tab:{p1:`Ride goes on your tab at ${V}.`,p3:`Added to your tab at ${V}.`,p5:`On your tab at ${V}`,p7:`Your ride from ${V} is on your tab.`,amt:'$24.00',ride:24,adj:0},
     comp:{p1:`Venue perk: ${V} pays the first $10 of your ride. The rest goes on your tab.`,p3:`Venue perk: first $10 on ${V}. You pay $14.00 on your tab.`,p5:`$14.00 on your tab after house credit`,p7:`Your ride from ${V} is on your tab ($10.00 perk applied).`,amt:'$14.00',ride:24,adj:-10},
-    pass:{p1:`Ride goes on your tab at ${V}.`,p3:`Ride Home Pass applies up to $25. Fare $24.00. You pay $0.00.`,p5:`Paid with your Ride Home Pass`,p7:`Your ride from ${V} was paid with your Ride Home Pass.`,amt:'$0.00',ride:24,adj:-24+13.07},
+    pass:{p1:`Ride goes on your tab at ${V}.`,p3:`Ride Home Pass applies up to $25. Fare $24.00. You pay $0.00.`,p5:`Paid with your Ride Home Pass`,p7:`Your ride from ${V} was paid with your Ride Home Pass.`,amt:'$0.00',ride:24,adj:-24+13.32},
     addon:{p1:`Ride plus a $2.00 add-on goes on your tab at ${V}.`,p3:`$24.00 ride + $2.00 add-on, on your tab at ${V}.`,p5:`On your tab (incl. $2.00 add-on)`,p7:`Your ride from ${V} is on your tab.`,amt:'$26.00',ride:24,adj:2}
   };
   let mode=C[params.get('mode')]?params.get('mode'):'tab', tipPct=20;
   const money=n=>(n<0?'-$':'$')+Math.abs(n).toFixed(2);
   function recalc(){
-    const c=C[mode], base=49, tax=4.35, tip=Math.round(base*tipPct)/100;
+    const c=C[mode], base=49, tax=5.39, tip=Math.round(base*tipPct)/100;
     const total=base+tax+c.ride+c.adj+tip;
     const t=document.getElementById('tipamt'); if(t) t.textContent=money(tip);
     document.querySelectorAll('[data-total]').forEach(n=>n.textContent=money(total));

@@ -129,3 +129,7 @@ body.shot #stage{padding-bottom:14px}
 .kpc.coaster{border-radius:50%;aspect-ratio:1;justify-content:center;align-items:center;text-align:center;padding:30px;min-height:0;border:3px solid #0B0F14}
 .cbig{font-size:24px;font-weight:800;line-height:1.2}.csm{font-size:15px;color:#4B5563}
 .kitft{margin:14px 0 0;font-size:14px;color:#4B5563}
+
+/* Maison Cheryl example venue: light co-brand strip (colors from the Maison Cheryl Marketing Hub) */
+#cobrand{background:#ffcbe9;color:#2a4d5e;text-align:center;font-size:13px;line-height:1.4;padding:6px 12px;border-bottom:2px solid #3f738d}
+#cobrand b{color:#804c6a}

@@ -209,3 +209,8 @@ table.t td.r,table.t th.r{text-align:right}
 .inv td:last-child{width:92px}
 .inv td[colspan]{width:auto}
 .drawer>*{flex-shrink:0}
+
+#simbar{position:relative;z-index:1;background:#FFB547;color:#0B0F14;font-weight:900;text-align:center;font-size:15px;padding:8px 12px;border-bottom:2px solid #0B0F14}
+/* Maison Cheryl example venue: light co-brand strip (colors from the Maison Cheryl Marketing Hub) */
+#cobrand{background:#ffcbe9;color:#2a4d5e;text-align:center;font-size:13px;line-height:1.4;padding:6px 12px;border-bottom:2px solid #3f738d}
+#cobrand b{color:#804c6a}

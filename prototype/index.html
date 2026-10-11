@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>RideNite UI prototype (fictional sample data)</title>
+<title>RideNite UI prototype: Maison Cheryl example (SIMULATED DEMO, sample data)</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -33,8 +33,10 @@
   <symbol id="i-wifi-off" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5.2-2.8M19 13a10 10 0 0 0-2.5-1.8M2 8.8a15 15 0 0 1 4.2-2.6M22 8.8A15 15 0 0 0 10.7 5M12 20h.01"/></symbol>
  </defs>
 </svg>
+<div id="simbar" role="note">SIMULATED DEMO, sample data. No real payments, rides or POS connection.</div>
+<div id="cobrand" role="note"><b>Maison Cheryl x RideNite (simulated)</b> · Maison Cheryl (Clarendon, Arlington, VA) is shown as an illustrative example and is not a live RideNite partner. Menu item names are from its published menu; prices, guests, drivers and rides are sample data.</div>
 <div id="switcher" role="navigation" aria-label="Prototype screen switcher">
- <strong>RideNite prototype</strong><span class="tag">Fictional sample data. Not deployed.</span>
+ <strong>RideNite prototype</strong><span class="tag">Simulated demo. Sample data.</span>
  <button id="prev" aria-label="Previous screen">Prev</button>
  <select id="pick" aria-label="Choose screen"></select>
  <button id="next" aria-label="Next screen">Next</button>
@@ -49,24 +51,24 @@
 <div class="stage">
 <section class="screen phone" id="P1" data-title="P1 Patron: Table QR (Your ride home, on your tab)">
  <div class="ph">
-  <div class="ph-top"><span class="venue-chip"><svg class="ico" width="26" height="26" style="color:var(--primary)"><use href="#i-bar"/></svg>The Copper Lantern</span><button class="lang" aria-label="Español">ES</button></div>
+  <div class="ph-top"><span class="venue-chip"><svg class="ico" width="26" height="26" style="color:var(--primary)"><use href="#i-bar"/></svg>Maison Cheryl</span><button class="lang" aria-label="Español">ES</button></div>
   <p class="muted small" style="margin:0">Table 7</p>
   <h1 class="h1">Your ride home, on your tab.</h1>
   <p class="body">Need to head out? Ask your bartender, or tap below and staff will come over. You'll see the price before anything is booked.</p>
   <p class="body small muted" style="margin:0">If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment.</p>
-  <div class="card" data-row="passblock" style="display:none;padding:12px 14px"><p class="small" style="margin:0"><b>Ride Home Pass</b> (optional): one ride home tonight from The Copper Lantern, up to $25. Anything over goes on your tab, and you see the total first. Refunded if we can't book you a car. Ask your server to add it.</p></div>
+  <div class="card" data-row="passblock" style="display:none;padding:12px 14px"><p class="small" style="margin:0"><b>Ride Home Pass</b> (optional): one ride home tonight from Maison Cheryl, up to $25. Anything over goes on your tab, and you see the total first. Refunded if we can't book you a car. Ask your server to add it.</p></div>
   <div class="spacer"></div>
   <button class="btn btn-primary btn-xl" data-go="P3w"><svg class="ico"><use href="#i-hand"/></svg>Ask staff for a car</button>
-  <p class="body small" style="text-align:center;margin:0"><span data-price="p1">Ride goes on your tab at The Copper Lantern.</span></p>
+  <p class="body small" style="text-align:center;margin:0"><span data-price="p1">Ride goes on your tab at Maison Cheryl.</span></p>
   <button class="btn btn-secondary" data-go="P1h"><svg class="ico"><use href="#i-help"/></svg>How it works</button>
-  <p class="small muted" style="margin:0;text-align:center">Rides are provided by licensed drivers. The Copper Lantern is a RideNite partner venue.</p>
+  <p class="small muted" style="margin:0;text-align:center">Rides are provided by licensed drivers. Maison Cheryl is shown as an illustrative example, not a live RideNite partner.</p>
   <p class="fict">Sample venue and data are fictional.</p>
  </div>
 </section>
 
 <section class="screen phone" id="P1h" data-title="P1h Patron: How it works">
  <div class="ph">
-  <div class="ph-top"><button class="lang" data-go="P1">Back</button><span>The Copper Lantern</span></div>
+  <div class="ph-top"><button class="lang" data-go="P1">Back</button><span>Maison Cheryl</span></div>
   <h2 class="h2">How it works</h2>
   <div class="choice"><b style="font-size:40px;color:var(--primary);width:40px">1</b><div><b>Tell us where you're going.</b></div></div>
   <div class="choice"><b style="font-size:40px;color:var(--primary);width:40px">2</b><div><b>See the price before we book.</b></div></div>
@@ -80,10 +82,10 @@
 
 <section class="screen phone" id="P2" data-title="P2 Patron: Where to? (opened from staff link)">
  <div class="ph">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span><span>Maya R.</span></div>
-  <p class="small muted" style="margin:0">Link from The Copper Lantern staff</p>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span><span>Maya R.</span></div>
+  <p class="small muted" style="margin:0">Link from Maison Cheryl staff</p>
   <h2 class="h2">Where to?</h2>
-  <button class="choice selected" data-go="P3"><svg class="ico"><use href="#i-home"/></svg><div><b>Home</b><span>655 Park Pl, Brooklyn</span></div></button>
+  <button class="choice selected" data-go="P3"><svg class="ico"><use href="#i-home"/></svg><div><b>Home</b><span>655 N Harrison St, Arlington</span></div></button>
   <button class="choice" data-go="P2v"><svg class="ico"><use href="#i-mic"/></svg><div><b>Say it</b><span>Tap and say the address</span></div></button>
   <button class="choice" data-go="P2t"><svg class="ico"><use href="#i-kbd"/></svg><div><b>Type it</b><span>Big keyboard, we'll fix typos</span></div></button>
   <button class="choice" data-go="P3w"><svg class="ico"><use href="#i-bar"/></svg><div><b>Ask the bartender</b><span>Staff will set it for you</span></div></button>
@@ -98,8 +100,8 @@
   <h2 class="h2" style="text-align:center">Say the address</h2>
   <button class="mic listening" id="micbtn" aria-label="Listening. Tap to start again"><svg><use href="#i-mic"/></svg></button>
   <p class="body muted" style="text-align:center" aria-live="polite" id="vstate">Listening...</p>
-  <div class="card"><p class="muted small" style="margin:0 0 6px">I heard</p><div class="transcript" id="vtext">"655 Park Place Brooklyn"</div></div>
-  <button class="choice selected" data-go="P3"><svg class="ico"><use href="#i-pin"/></svg><div><b>655 Park Pl</b><span>Crown Heights, Brooklyn 11216</span></div></button>
+  <div class="card"><p class="muted small" style="margin:0 0 6px">I heard</p><div class="transcript" id="vtext">"655 North Harrison Street Arlington"</div></div>
+  <button class="choice selected" data-go="P3"><svg class="ico"><use href="#i-pin"/></svg><div><b>655 N Harrison St</b><span>Westover, Arlington, VA 22205</span></div></button>
   <div class="spacer"></div>
   <button class="btn btn-secondary" data-go="P2t"><svg class="ico"><use href="#i-kbd"/></svg>Type it instead</button>
  </div>
@@ -111,9 +113,9 @@
   <div class="field"><label for="addr">Address or place</label><input class="input" id="addr" value="655 prk pl" autocomplete="street-address"></div>
   <p class="muted small" style="margin:0">Did you mean</p>
   <div class="suggest">
-   <button class="choice selected" data-go="P3"><svg class="ico"><use href="#i-pin"/></svg><div><b>655 Park Pl</b><span>Crown Heights, Brooklyn</span></div></button>
-   <button class="choice" data-go="P3"><svg class="ico"><use href="#i-pin"/></svg><div><b>655 Park Ave</b><span>Bed-Stuy, Brooklyn</span></div></button>
-   <button class="choice" data-go="P3"><svg class="ico"><use href="#i-pin"/></svg><div><b>655 Park Ave</b><span>Manhattan</span></div></button>
+   <button class="choice selected" data-go="P3"><svg class="ico"><use href="#i-pin"/></svg><div><b>655 N Harrison St</b><span>Westover, Arlington, VA</span></div></button>
+   <button class="choice" data-go="P3"><svg class="ico"><use href="#i-pin"/></svg><div><b>655 S Harrison St</b><span>Arlington, VA 22204</span></div></button>
+   <button class="choice" data-go="P3"><svg class="ico"><use href="#i-pin"/></svg><div><b>655 Harrison St NW</b><span>Washington, DC</span></div></button>
   </div>
   <div class="spacer"></div>
   <p class="fict">Suggestions are fictional sample data.</p>
@@ -125,10 +127,10 @@
   <div class="ph-top"><button class="lang" data-go="P2">Back</button><span>Maya R.</span></div>
   <h2 class="h2">Ride home</h2>
   <div class="card">
-   <div class="row"><span class="body"><svg width="22" height="22" style="vertical-align:-3px"><use href="#i-pin"/></svg> 655 Park Pl</span><button class="textlink" style="width:auto;min-height:56px;font-size:19px" data-go="P2">Change</button></div>
+   <div class="row"><span class="body"><svg width="22" height="22" style="vertical-align:-3px"><use href="#i-pin"/></svg> 655 N Harrison St</span><button class="textlink" style="width:auto;min-height:56px;font-size:19px" data-go="P2">Change</button></div>
    <div class="row" style="margin-top:6px"><span class="price" data-price="amt">$24.00</span><span class="body muted">car about 6 min away</span></div>
    <div class="lockline" style="color:var(--info)"><svg width="22" height="22"><use href="#i-clock"/></svg>Quote. Final fare may differ by up to $4.80; more than that and we ask you first.</div>
-   <p class="tabline" style="margin:10px 0 0" data-price="p3">Added to your tab at The Copper Lantern.</p>
+   <p class="tabline" style="margin:10px 0 0" data-price="p3">Added to your tab at Maison Cheryl.</p>
   </div>
   <div class="card" style="padding:14px">
    <p class="small" style="margin:0 0 10px;font-weight:700">Who's riding?</p>
@@ -145,9 +147,9 @@
 
 <section class="screen phone" id="P3w" data-title="P3w Patron: Staff are coming over">
  <div class="ph">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span><span>Maya R.</span></div>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span><span>Maya R.</span></div>
   <div class="spinner" role="img" aria-label="Waiting"></div>
-  <h2 class="h2" style="text-align:center">Got it. Someone from The Copper Lantern is coming over.</h2>
+  <h2 class="h2" style="text-align:center">Got it. Someone from Maison Cheryl is coming over.</h2>
   <p class="body muted" style="text-align:center" aria-live="polite">You'll get a text to pick where you're going and see the price.</p>
   <div class="spacer"></div>
   <button class="btn btn-secondary" data-go="P1">Cancel request</button>
@@ -156,7 +158,7 @@
 
 <section class="screen phone" id="P4" data-title="P4 Patron: Finding a car">
  <div class="ph">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span><span>12:41 AM</span></div>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span><span>11:11 PM</span></div>
   <div class="spinner" role="img" aria-label="Finding a car"></div>
   <h2 class="h2" style="text-align:center">Your car is requested</h2>
   <p class="body muted" style="text-align:center" aria-live="polite">Checking local car services and ride apps for the best match.</p>
@@ -168,15 +170,15 @@
 
 <section class="screen phone" id="P5" data-title="P5 Patron: Driver on the way (plate)">
  <div class="ph" style="gap:12px">
-  <div class="ph-top"><span class="status st-info"><svg width="22" height="22"><use href="#i-car"/></svg>Driver on the way</span><span>The Copper Lantern</span></div>
+  <div class="ph-top"><span class="status st-info"><svg width="22" height="22"><use href="#i-car"/></svg>Driver on the way</span><span>Maison Cheryl</span></div>
   <div class="row"><span class="eta">6 min</span><span class="body muted">pickup at front door</span></div>
   <p class="small" style="margin:0">Before you get in, check the plate. Your driver will say your first name.</p>
-  <div class="plate" aria-label="Plate T 5 5 5 0 1 2 C">T555012C</div>
+  <div class="plate" aria-label="Plate X L T 5 0 1 2">XLT-5012</div>
   <div class="driver card" style="padding:14px">
    <div class="avatar" aria-hidden="true">L</div>
    <div><b style="font-size:24px">Luis M.</b><div class="body muted small">Gray Toyota Camry</div><div class="muted" style="font-size:16px">Northside Car Service (local partner)</div></div>
   </div>
-  <div class="card" style="padding:12px 16px"><div class="row"><span class="small" data-price="p5">On your tab at The Copper Lantern</span><span class="body" style="font-weight:800" data-price="amt">$24.00</span></div></div>
+  <div class="card" style="padding:12px 16px"><div class="row"><span class="small" data-price="p5">On your tab at Maison Cheryl</span><span class="body" style="font-weight:800" data-price="amt">$24.00</span></div></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
    <button class="btn btn-secondary" data-go="P13" style="font-size:20px"><svg class="ico"><use href="#i-share"/></svg>Share my trip</button>
    <button class="btn btn-secondary" data-go="P8"><svg class="ico"><use href="#i-help"/></svg>Help</button>
@@ -187,19 +189,19 @@
 
 <section class="screen phone" id="P6" data-title="P6 Patron: On the way home">
  <div class="ph" style="gap:12px">
-  <div class="ph-top"><span class="status st-ok"><svg width="22" height="22"><use href="#i-home"/></svg>Picked up</span><span>1:02 AM</span></div>
-  <div class="map" role="img" aria-label="Map showing route from The Copper Lantern to home">
+  <div class="ph-top"><span class="status st-ok"><svg width="22" height="22"><use href="#i-home"/></svg>Picked up</span><span>11:32 PM</span></div>
+  <div class="map" role="img" aria-label="Map showing route from Maison Cheryl to home">
    <div class="road" style="left:0;right:0;top:120px;height:8px"></div><div class="road" style="left:150px;width:8px;top:0;bottom:0"></div><div class="road" style="left:0;right:0;top:50px;height:6px"></div>
    <div class="route" style="left:60px;top:58px;width:220px;transform:rotate(15deg);transform-origin:left"></div>
    <div class="pin" style="left:48px;top:46px;background:var(--muted)"></div><div class="lbl" style="left:20px;top:16px">Pickup</div>
    <div class="pin" style="left:262px;top:106px;background:var(--primary)"></div><div class="lbl" style="left:240px;top:140px">Home</div>
    <div class="attr">Map data: OpenStreetMap</div>
   </div>
-  <div class="row"><span class="eta">11 min</span><span class="body muted">arrive about 1:13 AM</span></div>
+  <div class="row"><span class="eta">11 min</span><span class="body muted">arrive about 11:43 PM</span></div>
   <ul class="steps" aria-label="Trip progress">
-   <li><span class="dot done"></span>Picked up 12:49 AM</li>
+   <li><span class="dot done"></span>Picked up 11:19 PM</li>
    <li><span class="dot now"></span>On the way</li>
-   <li><span class="dot"></span>Arrive near 655 Park Pl</li>
+   <li><span class="dot"></span>Arrive near 655 N Harrison St</li>
   </ul>
   <div class="spacer"></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -212,10 +214,10 @@
 
 <section class="screen phone" id="P7" data-title="P7 Patron: Trip complete (optional text a friend)">
  <div class="ph">
-  <div class="ph-top"><span class="venue-chip">RideNite</span><span>1:07 AM</span></div>
+  <div class="ph-top"><span class="venue-chip">RideNite</span><span>11:37 PM</span></div>
   <span class="status st-ok" style="align-self:flex-start"><svg width="22" height="22"><use href="#i-check"/></svg>Ride complete</span>
   <h1 class="h1">You've arrived.</h1>
-  <p class="body muted"><span data-price="p7">Your ride from The Copper Lantern is on your tab.</span></p>
+  <p class="body muted"><span data-price="p7">Your ride from Maison Cheryl is on your tab.</span></p>
   <div class="spacer"></div>
   <a class="btn btn-success btn-xl" href="sms:?&amp;body=I'm%20home" style="text-decoration:none"><svg class="ico"><use href="#i-check"/></svg>Text a friend I'm home</a>
   <button class="btn btn-secondary" data-go="P8"><svg class="ico"><use href="#i-help"/></svg>Help</button>
@@ -228,7 +230,7 @@
 
 <section class="screen phone" id="P8" data-title="P8 Patron: Help sheet">
  <div class="ph">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span><span>Maya R.</span></div>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span><span>Maya R.</span></div>
   <div class="scrim"></div>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="helpt">
    <h2 class="h2" id="helpt">Help</h2>
@@ -244,7 +246,7 @@
 
 <section class="screen phone" id="P12" data-title="P12 Patron: Ask staff for a car (quiet request)">
  <div class="ph">
-  <div class="ph-top"><button class="lang" data-go="P1">Back</button><span>The Copper Lantern</span></div>
+  <div class="ph-top"><button class="lang" data-go="P1">Back</button><span>Maison Cheryl</span></div>
   <h2 class="h2">Ask staff for a car</h2>
   <p class="body muted" style="margin:0">Send it quietly, or show this screen to any staff member.</p>
   <div class="card" style="background:var(--primary);color:#0B0F14;border:0;padding:28px 22px;text-align:center">
@@ -258,7 +260,7 @@
 
 <section class="screen phone" id="P12s" data-title="P12s Patron: Quiet request sent">
  <div class="ph">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span><span>Table 7</span></div>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span><span>Table 7</span></div>
   <div style="width:110px;height:110px;border-radius:50%;background:rgba(65,217,154,.14);color:var(--success);display:flex;align-items:center;justify-content:center;margin:30px auto 0"><svg width="64" height="64"><use href="#i-check"/></svg></div>
   <h2 class="h2" style="text-align:center">Thanks. A staff member will find you.</h2>
   <p class="body muted" style="text-align:center">No need to explain.</p>
@@ -288,7 +290,7 @@
    <div class="route" style="left:60px;top:58px;width:220px;transform:rotate(15deg);transform-origin:left"></div>
    <div class="pin" style="left:48px;top:46px;background:var(--muted)"></div><div class="pin" style="left:262px;top:106px;background:var(--primary)"></div><div class="attr">Map data: OpenStreetMap</div></div>
   <div class="row"><span class="eta">11 min</span><span class="body muted">to arrival area</span></div>
-  <div class="plate">T555012C</div>
+  <div class="plate">XLT-5012</div>
   <p class="body muted" style="margin:0">Gray Toyota Camry, driver Luis M.</p>
   <p class="small muted" style="margin:0">Exact home address is not shown. Link expires at drop-off.</p>
   <div class="spacer"></div>
@@ -297,7 +299,7 @@
 </section>
 <section class="screen phone" id="E1" data-title="E1 Edge: No car available">
  <div class="ph">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span><span>1:58 AM</span></div>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span><span>11:58 PM</span></div>
   <div class="banner warn" role="alert"><svg class="ico" style="color:var(--warning)"><use href="#i-alert"/></svg><div>No cars nearby right now. Nothing was added to your tab.</div></div>
   <h2 class="h2">What next?</h2>
   <button class="btn btn-primary"><svg class="ico"><use href="#i-clock"/></svg>Keep trying for 5 min</button>
@@ -309,7 +311,7 @@
 
 <section class="screen phone" id="E2" data-title="E2 Edge: Price changed before booking">
  <div class="ph">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span><span>Maya R.</span></div>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span><span>Maya R.</span></div>
   <div class="banner info"><svg class="ico" style="color:var(--info)"><use href="#i-alert"/></svg><div>The price changed before your car was booked.</div></div>
   <div class="card">
    <div class="row"><span class="body muted">Was</span><span class="body muted" style="text-decoration:line-through">$24.00</span></div>
@@ -326,8 +328,8 @@
  <div class="ph">
   <div class="ph-top"><span class="status st-warn"><svg width="22" height="22"><use href="#i-clock"/></svg>Car is outside</span></div>
   <h1 class="h1">Your car is here</h1>
-  <div class="plate">T555012C</div>
-  <p class="body">Front door, N 6th St. Gray Camry.</p>
+  <div class="plate">XLT-5012</div>
+  <p class="body">Front door, N Fillmore St. Gray Camry.</p>
   <div class="card"><p class="body" style="margin:0">The driver waits about <b>3 more min</b>. After that the ride may be canceled and nothing goes on your tab.</p></div>
   <div class="spacer"></div>
   <button class="btn btn-success btn-xl"><svg class="ico"><use href="#i-check"/></svg>I'm coming</button>
@@ -337,7 +339,7 @@
 
 <section class="screen phone" id="E4" data-title="E4 Edge: Tab already closed">
  <div class="ph">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span></div>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span></div>
   <div class="banner info"><svg class="ico" style="color:var(--info)"><use href="#i-receipt"/></svg><div>Your tab here is already closed.</div></div>
   <h2 class="h2">You can still get a car</h2>
   <button class="btn btn-primary" data-go="P3w"><svg class="ico"><use href="#i-bar"/></svg>Ask staff to add it</button>
@@ -351,8 +353,8 @@
  <div class="ph">
   <div class="ph-top"><span class="status st-warn"><svg width="22" height="22"><use href="#i-wifi-off"/></svg>No signal</span></div>
   <h2 class="h2">Your ride is still booked</h2>
-  <p class="body muted">Last update 12:47 AM. This page refreshes when you're back online.</p>
-  <div class="plate">T555012C</div>
+  <p class="body muted">Last update 11:17 PM. This page refreshes when you're back online.</p>
+  <div class="plate">XLT-5012</div>
   <p class="body">Gray Toyota Camry, Luis M.</p>
   <div class="spacer"></div>
   <button class="btn btn-secondary"><svg class="ico"><use href="#i-bolt"/></svg>Try again</button>
@@ -362,7 +364,7 @@
 
 <section class="screen phone" id="E6" data-title="E6 Edge: Driver declined the ride">
  <div class="ph">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span><span>12:52 AM</span></div>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span><span>11:22 PM</span></div>
   <div class="banner warn" role="alert"><svg class="ico" style="color:var(--warning)"><use href="#i-alert"/></svg><div>Your driver cancelled. Nothing was added to your tab.</div></div>
   <h2 class="h2">Please see the bar staff to rebook</h2>
   <p class="body muted" style="margin:0">Staff were told on their screen and can rebook in one tap, with another service if needed.</p>
@@ -374,40 +376,40 @@
 
 <section class="screen phone light" id="P9" data-title="P9 Morning-after checkout (review and pay)">
  <div class="ph" style="gap:14px;min-height:auto">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span><span class="muted">Sat 9:04 AM</span></div>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span><span class="muted">Sat 9:04 AM</span></div>
   <h1 class="h1">Last night, Fri Oct 9</h1>
-  <span class="status" style="align-self:flex-start;color:#8A5A00;background:#FFF4DB">Ready to review: <span data-total>$87.15</span></span>
+  <span class="status" style="align-self:flex-start;color:#8A5A00;background:#FFF4DB">Ready to review: <span data-total>$88.19</span></span>
   <div class="card" style="background:#fff;border:1px solid #E5E7EB">
    <h3 style="margin:0 0 6px;font-size:20px">Your night</h3>
    <ul class="tl">
-    <li><b>9:12 PM</b><span>Tab opened at The Copper Lantern</span></li>
-    <li><b>12:41 AM</b><span>Ride home booked (you tapped Yes)</span></li>
-    <li><b>12:49 AM</b><span>Picked up. Luis M., gray Camry, T555012C</span></li>
-    <li><b>1:07 AM</b><span>Ride complete near 655 Park Pl</span></li>
+    <li><b>7:42 PM</b><span>Tab opened at Maison Cheryl</span></li>
+    <li><b>11:11 PM</b><span>Ride home booked (you tapped Yes)</span></li>
+    <li><b>11:19 PM</b><span>Picked up. Luis M., gray Camry, XLT-5012</span></li>
+    <li><b>11:37 PM</b><span>Ride complete near 655 N Harrison St</span></li>
    </ul>
   </div>
   <table class="inv" aria-label="Itemized bill">
    <tr class="sec"><td>Drinks</td><td></td></tr>
-   <tr><td>Spicy Margarita</td><td>$15.00</td></tr>
-   <tr><td>Negroni</td><td>$15.00</td></tr>
-   <tr><td>House Lager</td><td>$8.00</td></tr>
+   <tr><td>The Pear Necessities</td><td>$14.00</td></tr>
+   <tr><td>Old Fashioned</td><td>$15.00</td></tr>
+   <tr><td>House Beer</td><td>$8.00</td></tr>
    <tr class="sec"><td>Food</td><td></td></tr>
-   <tr><td>Truffle Fries</td><td>$11.00</td></tr>
-   <tr><td>Sales tax (8.875%)</td><td>$4.35</td></tr>
+   <tr><td>Madeleines</td><td>$12.00</td></tr>
+   <tr><td>Tax 11% (VA sales + Arlington meals)</td><td>$5.39</td></tr>
    <tr class="sec"><td>Ride</td><td></td></tr>
    <tr><td><span data-price="line">Courtesy car</span><span class="note">Northside Car Service, quote; any fare adjustment shows as its own line</span></td><td data-price="ridecell">$24.00</td></tr>
-   <tr data-row="comp" style="display:none"><td>Venue perk<span class="note">First $10 on The Copper Lantern</span></td><td>-$10.00</td></tr>
+   <tr data-row="comp" style="display:none"><td>Venue perk<span class="note">First $10 on Maison Cheryl</span></td><td>-$10.00</td></tr>
    <tr data-row="pass" style="display:none"><td>Ride Home Pass applied<span class="note">One ride tonight, up to $25</span></td><td>-$24.00</td></tr>
-   <tr data-row="pass" style="display:none"><td>Ride Home Pass<span class="note">Separate line on your check, $12.00 + $1.07 tax</span></td><td>$13.07</td></tr>
-   <tr data-row="addon" style="display:none"><td>Ride add-on<span class="note">Set by The Copper Lantern [needs counsel OK]</span></td><td>$2.00</td></tr>
+   <tr data-row="pass" style="display:none"><td>Ride Home Pass<span class="note">Separate line on your check, $12.00 + $1.32 tax</span></td><td>$13.32</td></tr>
+   <tr data-row="addon" style="display:none"><td>Ride add-on<span class="note">Set by Maison Cheryl [needs counsel OK]</span></td><td>$2.00</td></tr>
    <tr class="sec"><td>Tip for bar staff</td><td></td></tr>
    <tr><td colspan="2"><div class="seg" role="group" aria-label="Staff tip on drinks and food">
      <button aria-pressed="false" data-tip="18">18%</button><button aria-pressed="true" data-tip="20">20%</button><button aria-pressed="false" data-tip="22">22%</button><button aria-pressed="false" data-tip="0">None</button></div>
      <span class="note" style="display:block;margin-top:6px">Tip is on drinks and food ($49.00), not the ride.</span></td></tr>
    <tr><td>Staff tip</td><td id="tipamt">$9.80</td></tr>
-   <tr class="total"><td>Total</td><td data-total>$87.15</td></tr>
+   <tr class="total"><td>Total</td><td data-total>$88.19</td></tr>
   </table>
-  <button class="btn btn-primary" data-go="P11">Approve and pay <span data-total>$87.15</span></button>
+  <button class="btn btn-primary" data-go="P11">Approve and pay <span data-total>$88.19</span></button>
   <button class="btn btn-secondary" data-go="P10">Something's wrong</button>
   <p class="small muted" style="margin:0">Card ending 4242 is on hold. If you do nothing, it's charged Sun, Oct 11 at 11:00 AM.</p>
   <p class="fict" style="color:#4B5563">Fictional sample bill.</p>
@@ -416,25 +418,25 @@
 
 <section class="screen phone light" id="P10" data-title="P10 Morning-after: Something's wrong">
  <div class="ph">
-  <div class="ph-top"><button class="lang" data-go="P9" style="color:#111827">Back</button><span class="muted">The Copper Lantern</span></div>
+  <div class="ph-top"><button class="lang" data-go="P9" style="color:#111827">Back</button><span class="muted">Maison Cheryl</span></div>
   <h2 class="h2">What's wrong?</h2>
   <button class="choice"><div><b>I don't recognize a charge</b></div></button>
   <button class="choice selected"><div><b>An amount is wrong</b></div></button>
   <button class="choice"><div><b>The ride didn't happen</b></div></button>
   <button class="choice"><div><b>Something else</b></div></button>
-  <div class="field"><label for="note">Add a note (optional)</label><input class="input" id="note" value="Only had one Negroni"></div>
+  <div class="field"><label for="note">Add a note (optional)</label><input class="input" id="note" value="Only had one Old Fashioned"></div>
   <div class="spacer"></div>
-  <button class="btn btn-primary" data-go="P11">Send to The Copper Lantern</button>
+  <button class="btn btn-primary" data-go="P11">Send to Maison Cheryl</button>
   <p class="small muted" style="margin:0">Items you question aren't charged until the bar replies.</p>
  </div>
 </section>
 
 <section class="screen phone light" id="P11" data-title="P11 Morning-after: Paid">
  <div class="ph">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span></div>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span></div>
   <div style="width:110px;height:110px;border-radius:50%;background:#E7F6EE;color:#0F7B4F;display:flex;align-items:center;justify-content:center;margin:30px auto 0"><svg width="64" height="64"><use href="#i-check"/></svg></div>
   <h2 class="h2" style="text-align:center">All set</h2>
-  <p class="body" style="text-align:center"><span data-total>$87.15</span> paid with card ending 4242.</p>
+  <p class="body" style="text-align:center"><span data-total>$88.19</span> paid with card ending 4242.</p>
   <p class="body muted" style="text-align:center">Receipt sent to maya.r@example.test</p>
   <div class="spacer"></div>
   <button class="btn btn-secondary">Download receipt (PDF)</button>
@@ -444,45 +446,45 @@
 </section>
 
 <section class="screen mail" id="M1" data-title="M1 Morning-after email">
- <div class="hdr"><div><b>RideNite for The Copper Lantern</b></div><div>To: maya.r@example.test</div><div>Subject: <b>Your Copper Lantern tab and ride home receipt</b></div><div style="color:#4B5563">Sat, Oct 10, 9:00 AM</div></div>
+ <div class="hdr"><div><b>RideNite for Maison Cheryl</b></div><div>To: maya.r@example.test</div><div>Subject: <b>Your Maison Cheryl tab and ride home receipt</b></div><div style="color:#4B5563">Sat, Oct 10, 9:00 AM</div></div>
  <div class="msg">
   <p style="margin-top:0">Good morning, Maya.</p>
-  <p>Here's last night's tab from The Copper Lantern, including your ride home: 12:49 AM, $24.00, on your tab.</p>
+  <p>Here's last night's tab from Maison Cheryl, including your ride home: 11:19 PM, $24.00, on your tab.</p>
   <table class="inv" style="font-size:16px">
    <tr><td>Drinks and food</td><td>$49.00</td></tr>
-   <tr><td>Sales tax</td><td>$4.35</td></tr>
-   <tr><td>Courtesy car, 12:49 to 1:07 AM<span class="note">Northside Car Service, T555012C</span></td><td>$24.00</td></tr>
+   <tr><td>Tax (11%)</td><td>$5.39</td></tr>
+   <tr><td>Courtesy car, 12:49 to 11:37 PM<span class="note">Northside Car Service, XLT-5012</span></td><td>$24.00</td></tr>
    <tr><td>Staff tip (20%)</td><td>$9.80</td></tr>
-   <tr class="total"><td>Total</td><td>$87.15</td></tr>
+   <tr class="total"><td>Total</td><td>$88.19</td></tr>
   </table>
   <a class="cta" href="#P9">Review and pay</a>
   <p style="font-size:15px;color:#4B5563">Your card ending 4242 is on hold. If you do nothing, it's charged Sun, Oct 11 at 11:00 AM. Question about a charge? Open Review and tap "Something's wrong."</p>
   <p style="font-size:15px;margin:0 0 6px"><b>Two quick questions (optional)</b></p><p style="font-size:15px;margin:0">Did this make leaving easier? <u>Yes</u> / <u>No</u><br>Did anything on the signs make you uncomfortable? <u>Yes</u> / <u>No</u></p>
-  <p style="font-size:13px;color:#4B5563">Itemized invoice attached (PDF). The Copper Lantern, 142 N 6th St, Brooklyn. RideNite books cars from local car services and ride apps for this venue. Sample email: all names, amounts and addresses are fictional.</p>
+  <p style="font-size:13px;color:#4B5563">Itemized invoice attached (PDF). Maison Cheryl, 2900 Wilson Blvd, Suite 104, Arlington, VA 22201. Shown as an illustrative example; not a live RideNite partner. RideNite books cars from local car services and ride apps for this venue. Sample email: guest and driver names, amounts and the drop-off address are sample data.</p>
  </div>
 </section>
 
 <section class="screen sms" id="M2" data-title="M2 SMS thread (night and morning)">
  <div style="text-align:center;color:#AEB9C7;font-size:14px">RideNite (555) 010-0100</div>
- <div style="text-align:center;color:#AEB9C7;font-size:13px;margin-top:10px">Fri 12:40 AM</div>
- <div class="bubble">RideNite: The Copper Lantern staff sent you a link to pick where you're going. You'll see the price before anything is booked: <a>rdnt.example/h/Q8p4</a> Reply STOP to opt out.</div>
- <div style="text-align:center;color:#AEB9C7;font-size:13px">12:42 AM</div>
- <div class="bubble">RideNite: Your car is requested. Luis, gray Toyota Camry, plate T555012C, about 6 min. It goes on your tab at The Copper Lantern ($24.00). Before you get in, check the plate. Trip: <a>rdnt.example/t/k7Q2</a></div>
- <div style="text-align:center;color:#AEB9C7;font-size:13px">1:07 AM</div>
- <div class="bubble">RideNite: You've arrived. Your ride from The Copper Lantern is on your tab.</div>
+ <div style="text-align:center;color:#AEB9C7;font-size:13px;margin-top:10px">Fri 11:10 PM</div>
+ <div class="bubble">RideNite: Maison Cheryl staff sent you a link to pick where you're going. You'll see the price before anything is booked: <a>rdnt.example/h/Q8p4</a> Reply STOP to opt out.</div>
+ <div style="text-align:center;color:#AEB9C7;font-size:13px">11:12 PM</div>
+ <div class="bubble">RideNite: Your car is requested. Luis, gray Toyota Camry, plate XLT-5012, about 6 min. It goes on your tab at Maison Cheryl ($24.00). Before you get in, check the plate. Trip: <a>rdnt.example/t/k7Q2</a></div>
+ <div style="text-align:center;color:#AEB9C7;font-size:13px">11:37 PM</div>
+ <div class="bubble">RideNite: You've arrived. Your ride from Maison Cheryl is on your tab.</div>
  <div style="text-align:center;color:#AEB9C7;font-size:13px">Sat 9:00 AM</div>
- <div class="bubble">RideNite: Your ride home from The Copper Lantern, 12:49 AM, $24.00, on your tab. Tab total $87.15. Receipt and review: <a>rdnt.example/m/abc123</a> Reply STOP to opt out, HELP for help.</div>
+ <div class="bubble">RideNite: Your ride home from Maison Cheryl, 11:19 PM, $24.00, on your tab. Tab total $88.19. Receipt and review: <a>rdnt.example/m/abc123</a> Reply STOP to opt out, HELP for help.</div>
  <p style="color:#AEB9C7;font-size:13px;text-align:center;margin-top:20px">Sample messages. Names, numbers and links are fictional.</p>
 </section>
 
 <section class="screen sms" id="M3" data-title="M3 Ride Home Pass morning messages (pilot)">
  <div style="text-align:center;color:#AEB9C7;font-size:14px">RideNite (555) 010-0100 · three variants</div>
  <div style="text-align:center;color:#AEB9C7;font-size:13px;margin-top:14px">Pass used · Sat 9:00 AM</div>
- <div class="bubble">Ride Home Pass $12.00 + $1.07 tax. Your ride home from The Copper Lantern, 12:49 AM, $24.00, paid with your pass. Receipt: <a>rdnt.example/m/abc123</a></div>
+ <div class="bubble">Ride Home Pass $12.00 + $1.32 tax. Your ride home from Maison Cheryl, 11:19 PM, $24.00, paid with your pass. Receipt: <a>rdnt.example/m/abc123</a></div>
  <div style="text-align:center;color:#AEB9C7;font-size:13px;margin-top:14px">Pass not used · Sat 9:00 AM</div>
- <div class="bubble">Your Ride Home Pass from The Copper Lantern last night was not used. Passes are good for one ride on the night you buy them.</div>
+ <div class="bubble">Your Ride Home Pass from Maison Cheryl last night was not used. Passes are good for one ride on the night you buy them.</div>
  <div style="text-align:center;color:#AEB9C7;font-size:13px;margin-top:14px">Pass refunded · Sat 9:00 AM</div>
- <div class="bubble">We couldn't book a car last night, so your Ride Home Pass ($13.07) has been refunded to your card.</div>
+ <div class="bubble">We couldn't book a car last night, so your Ride Home Pass ($13.32) has been refunded to your card.</div>
  <p style="color:#AEB9C7;font-size:13px;text-align:center;margin-top:20px">Pilot feature. Sample messages; names, amounts and links are fictional.</p>
 </section>
 <template id="sidebar">
@@ -493,11 +495,11 @@
   <button class="nav" data-go="B5" data-nav="B5"><svg><use href="#i-list"/></svg>Ride history</button>
   <button class="nav" data-go="B7" data-nav="B7"><svg><use href="#i-receipt"/></svg>Billing</button>
   <button class="nav" data-go="B8" data-nav="B8"><svg><use href="#i-gear"/></svg>Settings</button>
-  <div class="foot">The Copper Lantern<br>Signed in: Dani (bartender)<br><br><span class="sim">FICTIONAL SAMPLE DATA</span></div>
+  <div class="foot">Maison Cheryl<br>Signed in: Dani (bartender)<br><br><span class="sim">FICTIONAL SAMPLE DATA</span></div>
  </aside>
 </template>
 <template id="topbar">
- <div class="topbar"><h1>The Copper Lantern</h1><span class="pill ok">Full Live</span><span class="pill">Fri Oct 9, 12:41 AM</span><span class="pill info">Rides tonight: 7</span><span style="flex:1"></span><button class="btn btn-primary bigbook" data-go="B2" style="min-height:56px;font-size:20px"><svg class="ico" style="width:26px;height:26px"><use href="#i-car"/></svg>Book ride</button></div>
+ <div class="topbar"><h1>Maison Cheryl</h1><span class="pill ok">Full Live</span><span class="pill">Fri Oct 9, 11:11 PM</span><span class="pill info">Rides tonight: 7</span><span style="flex:1"></span><button class="btn btn-primary bigbook" data-go="B2" style="min-height:56px;font-size:20px"><svg class="ico" style="width:26px;height:26px"><use href="#i-car"/></svg>Book ride</button></div>
 </template>
 
 <section class="screen desk" id="B0" data-title="B0 Bar: First staff login">
@@ -517,15 +519,15 @@
  <div data-side></div>
  <div class="main"><div data-top></div>
   <div class="content">
-   <div class="banner warn" style="font-size:17px;align-items:center"><svg class="ico" style="color:var(--warning)"><use href="#i-hand"/></svg><div style="flex:1"><b>Quiet request:</b> car for a guest at Table 4 · 12:39 AM</div><button class="btn btn-primary dbtn" style="width:auto;padding:0 20px" data-go="B10">Open</button></div>
+   <div class="banner warn" style="font-size:17px;align-items:center"><svg class="ico" style="color:var(--warning)"><use href="#i-hand"/></svg><div style="flex:1"><b>Quiet request:</b> car for a guest at Table 4 · 11:09 PM</div><button class="btn btn-primary dbtn" style="width:auto;padding:0 20px" data-go="B10">Open</button></div>
    <div class="grid">
-    <div class="tabcard"><div class="row"><span class="who">Table 7</span><span class="amt">$49.00</span></div><div class="meta">Maya R. ...0127 · opened 9:12 PM</div><div class="strip warn"><svg><use href="#i-phone"/></svg>Link sent · waiting for Maya</div><button class="btn btn-secondary dbtn">Resend text</button></div>
-    <div class="tabcard"><div class="row"><span class="who">Bar 3</span><span class="amt">$36.00</span></div><div class="meta">Dev K. ...0144 · opened 10:20 PM</div><div class="spacer"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn btn-primary dbtn" data-go="B3" style="font-size:16px;padding:6px">Guest asked</button><button class="btn btn-primary dbtn" data-go="B3" style="font-size:16px;padding:6px">I offered</button></div></div>
-    <div class="tabcard"><div class="row"><span class="who">Table 12</span><span class="amt">$71.50</span></div><div class="meta">Jordan T. ...0161 · opened 8:45 PM</div><div class="strip ok"><svg><use href="#i-pin"/></svg>Arrived · Prius T555031C</div><button class="btn btn-secondary dbtn" data-go="B6">Open tab</button></div>
-    <div class="tabcard"><div class="row"><span class="who">Bar 5</span><span class="amt">$28.00</span></div><div class="meta">Ana G. ...0109 · opened 11:02 PM</div><div class="strip info"><svg><use href="#i-car"/></svg>Driver on the way · 4 min</div><button class="btn btn-secondary dbtn" data-go="B6">Open tab</button></div>
-    <div class="tabcard"><div class="row"><span class="who">Table 2</span><span class="amt">$112.00</span></div><div class="meta">Priya S. +2 · opened 9:40 PM</div><div class="spacer"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn btn-primary dbtn" data-go="B3" style="font-size:16px;padding:6px">Guest asked</button><button class="btn btn-primary dbtn" data-go="B3" style="font-size:16px;padding:6px">I offered</button></div></div>
-    <div class="tabcard"><div class="row"><span class="who">Bar 9</span><span class="amt">$22.00</span></div><div class="meta">Sam O. ...0188 · opened 12:05 AM</div><div class="strip bad"><svg><use href="#i-alert"/></svg>Driver declined. Rebook?</div><button class="btn btn-danger dbtn" data-go="B4">Rebook</button></div>
-    <div class="tabcard"><div class="row"><span class="who">Table 4</span><span class="amt">$58.00</span></div><div class="meta">Rosa L. ...0152 · opened 10:48 PM</div><div class="strip warn"><svg><use href="#i-hand"/></svg>Car requested · quiet</div><button class="btn btn-primary dbtn" data-go="B10">Open</button></div>
+    <div class="tabcard"><div class="row"><span class="who">Table 7</span><span class="amt">$49.00</span></div><div class="meta">Maya R. ...0127 · opened 7:42 PM</div><div class="strip warn"><svg><use href="#i-phone"/></svg>Link sent · waiting for Maya</div><button class="btn btn-secondary dbtn">Resend text</button></div>
+    <div class="tabcard"><div class="row"><span class="who">Bar 3</span><span class="amt">$36.00</span></div><div class="meta">Dev K. ...0144 · opened 8:50 PM</div><div class="spacer"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn btn-primary dbtn" data-go="B3" style="font-size:16px;padding:6px">Guest asked</button><button class="btn btn-primary dbtn" data-go="B3" style="font-size:16px;padding:6px">I offered</button></div></div>
+    <div class="tabcard"><div class="row"><span class="who">Table 12</span><span class="amt">$71.50</span></div><div class="meta">Jordan T. ...0161 · opened 7:15 PM</div><div class="strip ok"><svg><use href="#i-pin"/></svg>Arrived · Prius XLT-5031</div><button class="btn btn-secondary dbtn" data-go="B6">Open tab</button></div>
+    <div class="tabcard"><div class="row"><span class="who">Bar 5</span><span class="amt">$28.00</span></div><div class="meta">Ana G. ...0109 · opened 9:32 PM</div><div class="strip info"><svg><use href="#i-car"/></svg>Driver on the way · 4 min</div><button class="btn btn-secondary dbtn" data-go="B6">Open tab</button></div>
+    <div class="tabcard"><div class="row"><span class="who">Table 2</span><span class="amt">$112.00</span></div><div class="meta">Priya S. +2 · opened 8:10 PM</div><div class="spacer"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn btn-primary dbtn" data-go="B3" style="font-size:16px;padding:6px">Guest asked</button><button class="btn btn-primary dbtn" data-go="B3" style="font-size:16px;padding:6px">I offered</button></div></div>
+    <div class="tabcard"><div class="row"><span class="who">Bar 9</span><span class="amt">$22.00</span></div><div class="meta">Sam O. ...0188 · opened 10:35 PM</div><div class="strip bad"><svg><use href="#i-alert"/></svg>Driver declined. Rebook?</div><button class="btn btn-danger dbtn" data-go="B4">Rebook</button></div>
+    <div class="tabcard"><div class="row"><span class="who">Table 4</span><span class="amt">$58.00</span></div><div class="meta">Rosa L. ...0152 · opened 9:18 PM</div><div class="strip warn"><svg><use href="#i-hand"/></svg>Car requested · quiet</div><button class="btn btn-primary dbtn" data-go="B10">Open</button></div>
     <div class="tabcard" style="border-style:dashed;align-items:center;justify-content:center;text-align:center"><svg width="36" height="36" style="color:var(--primary)"><use href="#i-person"/></svg><b style="font-size:18px">New guest</b><span class="meta">No tab yet</span><button class="btn btn-secondary dbtn" data-go="B2">Start tab + book</button></div>
    </div>
    <p class="fict" style="text-align:left">All names, tabs and plates are fictional sample data.</p>
@@ -567,12 +569,12 @@
    <div class="dscrim"></div>
    <div class="drawer" role="dialog" aria-label="Booking sheet for Bar 3, tab 4471">
     <div class="row"><h2 style="margin:0;font-size:24px">Bar seat 3 · tab #4471</h2><span class="pill">Guest asked</span></div>
-    <p class="muted" style="margin:0">Dev K. ...0144 · pickup: front door, N 6th St</p>
+    <p class="muted" style="margin:0">Dev K. ...0144 · pickup: front door, N Fillmore St</p>
     <button class="opt sel"><svg width="26" height="26"><use href="#i-phone"/></svg><div><b>Text guest a link to enter drop-off</b><br><span class="muted">Dev picks the address and sees the price on their phone</span></div></button>
     <div class="opt"><div class="qr" style="width:80px;height:80px;border-width:5px" role="img" aria-label="QR code (illustrative)"></div><div><b>Or show a QR</b><br><span class="muted">Dev scans it with their camera</span></div></div>
     <button class="opt"><svg width="26" height="26"><use href="#i-kbd"/></svg><div><b>I'll enter the drop-off</b><br><span class="muted">For a dead or missing phone. Show Dev the price.</span></div></button>
     <div class="panel" style="background:var(--bg)">
-     <div class="row"><span>Drop-off</span><b>Greenpoint (Dev entered)</b></div>
+     <div class="row"><span>Drop-off</span><b>Ballston (Dev entered)</b></div>
      <div class="row" style="margin-top:6px"><span>Local partner, 6 min</span><b style="font-size:22px">$21.40</b></div>
      <div class="lockline" style="font-size:15px;color:var(--info)"><svg width="18" height="18"><use href="#i-clock"/></svg>Quote, goes on tab #4471. May differ by up to $4.28.</div>
     </div>
@@ -592,12 +594,12 @@
    <div class="dscrim"></div>
    <div class="drawer" role="dialog" aria-label="Booking sheet for Table 2, tab 4466, Ride Home Pass on check">
     <div class="row"><h2 style="margin:0;font-size:24px">Table 2 · tab #4466 <span class="pill" style="font-size:15px;vertical-align:middle">Pass</span></h2><span class="pill">I offered</span></div>
-    <p class="muted" style="margin:0">Priya S. ...0133 · pickup: front door, N 6th St</p>
+    <p class="muted" style="margin:0">Priya S. ...0133 · pickup: front door, N Fillmore St</p>
     <button class="opt sel"><svg width="26" height="26"><use href="#i-phone"/></svg><div><b>Text guest a link to enter drop-off</b><br><span class="muted">Priya picks the address and sees the price on their phone</span></div></button>
     <div class="opt"><div class="qr" style="width:80px;height:80px;border-width:5px" role="img" aria-label="QR code (illustrative)"></div><div><b>Or show a QR</b><br><span class="muted">Priya scans it with their camera</span></div></div>
     <button class="opt"><svg width="26" height="26"><use href="#i-kbd"/></svg><div><b>I'll enter the drop-off</b><br><span class="muted">For a dead or missing phone. Show Priya the price.</span></div></button>
     <div class="panel" style="background:var(--bg)">
-     <div class="row"><span>Drop-off</span><b>Astoria (Priya entered)</b></div>
+     <div class="row"><span>Drop-off</span><b>Shirlington (Priya entered)</b></div>
      <div class="row" style="margin-top:6px"><span>Local partner, 7 min</span><b style="font-size:22px">$28.80</b></div>
      <div class="lockline" style="font-size:15px;color:var(--info)"><svg width="18" height="18"><use href="#i-clock"/></svg>Quote. May differ by up to $5.00.</div>
      <p style="margin:10px 0 0;font-size:17px"><b>Pass applies to $25.00. Guest pays $3.80 on the tab. Show the guest before booking.</b></p>
@@ -620,7 +622,7 @@
    <div class="drawer" role="dialog" aria-label="Venue procedure">
     <h2 style="margin:0;font-size:26px">Follow your venue's procedure first</h2>
     <p style="font-size:20px;line-height:1.5;margin:0">Manager, security, or 911 if needed. A car is one option. If the guest wants one, book it and keep pickup details on their phone only.</p>
-    <div class="panel" style="background:var(--bg)"><h3 style="margin:0 0 6px">Copper Lantern procedure</h3><p class="muted" style="margin:0;font-size:15px">Manager on duty tonight: Theo. Security: door staff. (Written by your venue in Settings. Sample text.)</p></div>
+    <div class="panel" style="background:var(--bg)"><h3 style="margin:0 0 6px">Maison Cheryl procedure</h3><p class="muted" style="margin:0;font-size:15px">Manager on duty tonight: Theo. Security: door staff. (Written by your venue in Settings. Sample text.)</p></div>
     <button class="btn btn-secondary dbtn" data-go="B3">Back to booking</button>
    </div>
   </div></div>
@@ -633,14 +635,14 @@
    <div class="banner bad" role="alert" style="font-size:17px;align-items:center"><svg class="ico" style="color:var(--danger)"><use href="#i-alert"/></svg><div style="flex:1"><b>Driver declined. Rebook?</b> Bar seat 9 · Sam O.</div><button class="btn btn-danger dbtn" style="width:auto;padding:0 20px">Rebook</button><button class="btn btn-secondary dbtn" style="width:auto;padding:0 16px">Another partner</button></div>
    <div class="kpis"><div class="kpi"><div class="v">4</div><div class="l">Active now</div></div><div class="kpi"><div class="v">5.8 min</div><div class="l">Avg pickup wait tonight</div></div><div class="kpi"><div class="v">3</div><div class="l">Completed tonight</div></div><div class="kpi"><div class="v" style="color:var(--danger)">1</div><div class="l">Needs attention</div></div></div>
    <table class="t"><thead><tr><th>Tab</th><th>Guest</th><th>Status</th><th>Car</th><th>Partner</th><th>Booked</th><th class="r">Quote</th><th></th></tr></thead><tbody>
-    <tr><td>Bar 9</td><td>Sam O.</td><td><span class="pill bad">Driver declined</span></td><td>-</td><td>-</td><td>12:31 AM</td><td class="r">-</td><td><button class="btn btn-primary dbtn" style="min-height:44px;font-size:15px;width:auto;padding:0 12px">Rebook</button> <button class="btn btn-secondary dbtn" style="min-height:44px;font-size:15px;width:auto;padding:0 12px">Other service</button></td></tr>
-    <tr><td>Table 12</td><td>Jordan T.</td><td><span class="pill ok">Arrived</span></td><td>White Prius T555031C</td><td>Northside Car Service</td><td>12:33 AM</td><td class="r">$21.00</td><td></td></tr>
-    <tr><td>Table 7</td><td>Maya R.</td><td><span class="pill warn">Link sent</span></td><td>-</td><td>-</td><td>12:40 AM</td><td class="r">-</td><td><button class="btn btn-secondary dbtn" style="min-height:44px;font-size:15px;width:auto;padding:0 12px">Resend</button></td></tr>
-    <tr><td>Bar 5</td><td>Ana G.</td><td><span class="pill info">Driver on the way</span></td><td>Black Accord T555077C</td><td>Greenpoint Livery</td><td>12:22 AM</td><td class="r">$16.50</td><td></td></tr>
-    <tr><td>Table 9</td><td>Kai W.</td><td><span class="pill">Completed 12:30 AM</span></td><td>Gray Sienna T555090C</td><td>App ride (Uber)</td><td>12:04 AM</td><td class="r">$26.80</td><td></td></tr>
+    <tr><td>Bar 9</td><td>Sam O.</td><td><span class="pill bad">Driver declined</span></td><td>-</td><td>-</td><td>11:01 PM</td><td class="r">-</td><td><button class="btn btn-primary dbtn" style="min-height:44px;font-size:15px;width:auto;padding:0 12px">Rebook</button> <button class="btn btn-secondary dbtn" style="min-height:44px;font-size:15px;width:auto;padding:0 12px">Other service</button></td></tr>
+    <tr><td>Table 12</td><td>Jordan T.</td><td><span class="pill ok">Arrived</span></td><td>White Prius XLT-5031</td><td>Northside Car Service</td><td>11:03 PM</td><td class="r">$21.00</td><td></td></tr>
+    <tr><td>Table 7</td><td>Maya R.</td><td><span class="pill warn">Link sent</span></td><td>-</td><td>-</td><td>11:10 PM</td><td class="r">-</td><td><button class="btn btn-secondary dbtn" style="min-height:44px;font-size:15px;width:auto;padding:0 12px">Resend</button></td></tr>
+    <tr><td>Bar 5</td><td>Ana G.</td><td><span class="pill info">Driver on the way</span></td><td>Black Accord XLT-5077</td><td>Langston Livery</td><td>10:52 PM</td><td class="r">$16.50</td><td></td></tr>
+    <tr><td>Table 9</td><td>Kai W.</td><td><span class="pill">Completed 11:00 PM</span></td><td>Gray Sienna XLT-5090</td><td>App ride (Uber)</td><td>10:34 PM</td><td class="r">$26.80</td><td></td></tr>
    </tbody></table>
    <p class="muted" style="margin:0;font-size:14px">Statuses: Requested, Driver on the way, Arrived, Completed, Driver declined, Cancelled. Red banner within 5 s if a driver declines or cancels; amber if the wait passes 15 min [A]. No tracking after drop-off.</p>
-   <p class="fict" style="text-align:left">Northside Car Service and Greenpoint Livery are fictional local bases. Sample data only.</p>
+   <p class="fict" style="text-align:left">Northside Car Service and Langston Livery are fictional local car services. Sample data only.</p>
   </div></div>
 </section>
 
@@ -651,13 +653,13 @@
    <div class="filters"><button class="fbtn">Tonight</button><button class="fbtn">Last 7 days</button><button class="fbtn on">This month</button><span style="width:16px"></span><button class="fbtn on">All entry points</button><button class="fbtn">Guest request</button><button class="fbtn">Staff offer</button><span style="width:16px"></span><button class="fbtn">Local partners</button><button class="fbtn">App rides</button><span style="flex:1"></span><button class="fbtn">Export CSV</button></div>
    <div class="kpis" style="grid-template-columns:2fr 1fr 1fr"><div class="kpi"><div class="v">Rides this month: 63</div><div class="l">Guest request 41 · Staff offer 22 (venue totals only, never per staff member)</div></div><div class="kpi"><div class="v">2</div><div class="l">POS lines to fix</div></div><div class="kpi"><div class="v">90 days</div><div class="l">Record retention [A, counsel]</div></div></div>
    <table class="t"><thead><tr><th>Time</th><th>Tab</th><th>Entry point</th><th>Provider</th><th class="r">Fare</th><th>Status</th><th>POS line</th></tr></thead><tbody>
-    <tr><td>Oct 9, 12:04 AM</td><td>#4462</td><td>Guest request</td><td>App ride (Uber)</td><td class="r">$26.80</td><td>Completed</td><td><span class="pill ok">Posted</span></td></tr>
-    <tr><td>Oct 8, 11:52 PM</td><td>#4449</td><td>Staff offer</td><td>Northside Car Service</td><td class="r">$17.00</td><td>Completed</td><td><span class="pill ok">Posted</span></td></tr>
-    <tr><td>Oct 8, 11:15 PM</td><td>#4441</td><td>Guest request</td><td>Greenpoint Livery</td><td class="r">$22.00</td><td>Completed</td><td><span class="pill warn">Not on tab</span></td></tr>
-    <tr><td>Oct 8, 10:40 PM</td><td>#4433</td><td>Guest request</td><td>App ride (Lyft)</td><td class="r">$0.00</td><td>Cancelled</td><td><span class="pill">Nothing charged</span></td></tr>
-    <tr><td>Oct 7, 1:22 AM</td><td>#4420</td><td>Staff offer</td><td>Northside Car Service</td><td class="r">$19.00</td><td>Completed</td><td><span class="pill ok">Posted</span></td></tr>
-    <tr><td>Oct 7, 12:58 AM</td><td>#4418</td><td>Guest request</td><td>App ride (Uber)</td><td class="r">$24.10</td><td>Completed</td><td><span class="pill bad">Amount mismatch</span></td></tr>
-    <tr><td>Oct 6, 11:30 PM</td><td>#4401</td><td>Guest request</td><td>Northside Car Service</td><td class="r">$15.00</td><td>Driver declined, rebooked</td><td><span class="pill ok">Posted</span></td></tr>
+    <tr><td>Oct 9, 10:34 PM</td><td>#4462</td><td>Guest request</td><td>App ride (Uber)</td><td class="r">$26.80</td><td>Completed</td><td><span class="pill ok">Posted</span></td></tr>
+    <tr><td>Oct 8, 10:22 PM</td><td>#4449</td><td>Staff offer</td><td>Northside Car Service</td><td class="r">$17.00</td><td>Completed</td><td><span class="pill ok">Posted</span></td></tr>
+    <tr><td>Oct 8, 9:45 PM</td><td>#4441</td><td>Guest request</td><td>Langston Livery</td><td class="r">$22.00</td><td>Completed</td><td><span class="pill warn">Not on tab</span></td></tr>
+    <tr><td>Oct 8, 9:10 PM</td><td>#4433</td><td>Guest request</td><td>App ride (Lyft)</td><td class="r">$0.00</td><td>Cancelled</td><td><span class="pill">Nothing charged</span></td></tr>
+    <tr><td>Oct 7, 11:52 PM</td><td>#4420</td><td>Staff offer</td><td>Northside Car Service</td><td class="r">$19.00</td><td>Completed</td><td><span class="pill ok">Posted</span></td></tr>
+    <tr><td>Oct 7, 11:28 PM</td><td>#4418</td><td>Guest request</td><td>App ride (Uber)</td><td class="r">$24.10</td><td>Completed</td><td><span class="pill bad">Amount mismatch</span></td></tr>
+    <tr><td>Oct 6, 10:00 PM</td><td>#4401</td><td>Guest request</td><td>Northside Car Service</td><td class="r">$15.00</td><td>Driver declined, rebooked</td><td><span class="pill ok">Posted</span></td></tr>
    </tbody></table>
    <p class="muted" style="margin:0;font-size:14px">Columns: time, tab, entry point, provider, fare, status. No free text. Export includes the same fields only.</p>
    <p class="fict" style="text-align:left">Fictional sample records.</p>
@@ -669,17 +671,17 @@
  <div class="main"><div data-top></div>
   <div class="content">
    <div class="cols c21">
-    <div class="panel"><h3>Table 12 · Jordan T. · opened 8:45 PM</h3>
+    <div class="panel"><h3>Table 12 · Jordan T. · opened 7:15 PM</h3>
      <table class="t"><tbody>
-      <tr><td>Old Fashioned x2</td><td class="r">$32.00</td></tr><tr><td>IPA draft</td><td class="r">$9.00</td></tr><tr><td>Burger</td><td class="r">$19.00</td></tr><tr><td>Sales tax</td><td class="r">$5.33</td></tr>
-      <tr><td><b>Courtesy car</b> <span class="pill ok">Posted to POS 12:34 AM</span><br><span class="muted" style="font-size:13px">Northside Car Service · quote $21.00, final fare may differ by up to $4.20 · tax treatment per counsel [A]</span></td><td class="r"><b>$21.00</b></td></tr>
-      <tr><td><b>Total before tip</b></td><td class="r"><b>$86.33</b></td></tr>
+      <tr><td>Old Fashioned x2</td><td class="r">$30.00</td></tr><tr><td>House Beer</td><td class="r">$8.00</td></tr><tr><td>Maison Burger</td><td class="r">$22.00</td></tr><tr><td>Tax (11%)</td><td class="r">$6.60</td></tr>
+      <tr><td><b>Courtesy car</b> <span class="pill ok">Posted to POS 11:04 PM</span><br><span class="muted" style="font-size:13px">Northside Car Service · quote $21.00, final fare may differ by up to $4.20 · tax treatment per counsel [A]</span></td><td class="r"><b>$21.00</b></td></tr>
+      <tr><td><b>Total before tip</b></td><td class="r"><b>$87.60</b></td></tr>
      </tbody></table>
      <div class="row" style="margin-top:14px;gap:12px"><button class="btn btn-primary dbtn">Close tab now</button><button class="btn btn-secondary dbtn">Hold for morning checkout</button></div>
     </div>
     <div class="panel"><h3>Ride</h3>
      <div class="strip ok"><svg><use href="#i-pin"/></svg>Arrived (car outside)</div>
-     <p style="margin:10px 0 4px">White Toyota Prius</p><div class="plate" style="font-size:34px">T555031C</div>
+     <p style="margin:10px 0 4px">White Toyota Prius</p><div class="plate" style="font-size:34px">XLT-5031</div>
      <p class="muted" style="font-size:14px">Tip prompt uses drinks and food only. Bar-only: RideNite fee for this ride $1.00, billed monthly.</p>
      <button class="btn btn-secondary dbtn" data-go="B9">Show plate card</button>
     </div>
@@ -711,7 +713,7 @@
     <div class="panel"><h3>Rides and pricing</h3>
      <div class="setrow"><div>Guest perk: comp part of every ride home<div class="d">Offered to any guest. Never tied to drinks purchased.</div></div><span class="toggle off" role="switch" aria-checked="false" aria-label="Guest perk"></span></div>
      <div class="setrow"><div>Perk amount and hours<div class="d">$5 · <b>$10</b> · $15 · custom · after 10 PM</div></div><button class="fbtn">Edit</button></div>
-     <div class="setrow"><div>Patron add-on<div class="d">Off until TLC and consumer counsel clear it</div></div><span class="toggle off" role="switch" aria-checked="false" aria-label="Patron add-on"></span></div>
+     <div class="setrow"><div>Patron add-on<div class="d">Off until for-hire rules and consumer counsel clear it</div></div><span class="toggle off" role="switch" aria-checked="false" aria-label="Patron add-on"></span></div>
      <div class="setrow"><div>Tab line name<div class="d">POS item and receipt wording</div></div><select class="fbtn" aria-label="Tab line name"><option>Courtesy car</option><option>RideNite Ride</option></select></div>
      <div class="setrow"><div>Partner order<div class="d">Local car services first when price and wait are close</div></div><select class="fbtn" aria-label="Partner order"><option>Local partners first</option><option>Best price</option><option>Fastest pickup</option></select></div>
      <div class="setrow"><div>Manager PIN above<div class="d">Rides over this price need a manager</div></div><select class="fbtn" aria-label="Manager PIN threshold"><option>$60</option><option>$80</option></select></div>
@@ -721,12 +723,12 @@
      <div class="setrow"><div>Pass price and cap<div class="d">$8 · $10 · <b>$12</b> · cap $25 (fixed in pilot)</div></div><button class="fbtn">Pause pass sales</button></div>
     </div>
     <div class="panel"><h3>Venue</h3>
-     <div class="setrow"><div>Pickup spots<div class="d">Front door, N 6th St · Side door (Wythe Ave)</div></div><button class="fbtn">Edit</button></div>
+     <div class="setrow"><div>Pickup spots<div class="d">Front door, N Fillmore St · Corner of Wilson Blvd</div></div><button class="fbtn">Edit</button></div>
      <div class="setrow"><div>Discreet requests<div class="d">Staff phrase: the house car · Print restroom cards</div></div><span class="toggle" role="switch" aria-checked="true" aria-label="Discreet requests"></span></div>
      <div class="setrow"><div>Venue procedure<div class="d">Your own steps, shown first on every quiet request</div></div><button class="fbtn">Edit</button></div>
      <div class="setrow"><div>Ride record retention<div class="d">Neutral fields only; no free-text notes</div></div><select class="fbtn" aria-label="Retention"><option>90 days [A]</option><option>30 days</option></select></div>
      <div class="setrow"><div>Ride accounts<div class="d">Uber for Business: connected · Lyft Business: connected · Local partners: through RideNite</div></div><button class="fbtn">Manage + terms</button></div>
-     <div class="setrow"><div>Staff (5)<div class="d">Imani: Ride Home Champion · renew ATAP by Mar 2028 · Theo (manager): Ride Home Champion · Dani, Marco, Rafa: module due Oct 24</div></div><button class="fbtn">Add by phone</button></div>
+     <div class="setrow"><div>Staff (5)<div class="d">Imani: Ride Home Champion · RSVP trained · Theo (manager): Ride Home Champion · Dani, Marco, Rafa: module due Oct 24</div></div><button class="fbtn">Add by phone</button></div>
      <div class="setrow"><div>Languages</div><span>English, Español</span></div>
     </div>
    </div>
@@ -740,9 +742,9 @@
    <div class="panel" style="width:760px;text-align:center;padding:30px">
     <p class="muted" style="margin:0;font-size:20px">Show this to the guest</p>
     <h2 style="font-size:40px;margin:8px 0">Jordan, your car is outside</h2>
-    <div class="plate" style="font-size:96px">T555031C</div>
+    <div class="plate" style="font-size:96px">XLT-5031</div>
     <p style="font-size:28px;margin:10px 0">White Toyota Prius · driver Ravi</p>
-    <p class="muted" style="font-size:20px">Front door, N 6th St · $21.00 on your tab</p>
+    <p class="muted" style="font-size:20px">Front door, N Fillmore St · $21.00 on your tab</p>
     <p class="muted" style="font-size:16px">The driver can call the bar at (718) 555-0142 if needed.</p>
     <button class="btn btn-secondary dbtn" data-go="B6" style="width:auto;margin:auto;padding:0 30px">Done</button>
    </div>
@@ -755,10 +757,10 @@
   <div class="content">
    <div class="dscrim"></div>
    <div class="drawer" role="dialog" aria-label="Quiet request">
-    <span class="pill warn" style="align-self:flex-start">Quiet request · 12:39 AM</span>
+    <span class="pill warn" style="align-self:flex-start">Quiet request · 11:09 PM</span>
     <h2 style="margin:0;font-size:28px">Car for a guest at Table 4</h2>
     <div class="panel" style="background:var(--bg)">
-     <h3 style="margin:0 0 8px">Copper Lantern procedure</h3>
+     <h3 style="margin:0 0 8px">Maison Cheryl procedure</h3>
      <ol style="margin:0;padding-left:22px;line-height:1.55;font-size:16px">
       <li>Let the manager on duty know (Theo tonight).</li>
       <li>Go over in person, low-key. Book the house car without asking why.</li>
@@ -767,7 +769,7 @@
      <p class="muted" style="font-size:13px;margin:8px 0 0">Written by your venue in Settings. Sample text.</p>
     </div>
     <button class="btn btn-primary" style="min-height:60px" data-go="B3">Book the house car (Guest asked)</button>
-    <div class="setrow"><span>Pickup at side door (Wythe Ave)</span><span class="toggle" role="switch" aria-checked="true" aria-label="Side door pickup"></span></div>
+    <div class="setrow"><span>Pickup at the Wilson Blvd corner</span><span class="toggle" role="switch" aria-checked="true" aria-label="Side door pickup"></span></div>
     <div class="setrow"><span>Just one rider</span><span class="toggle" role="switch" aria-checked="true" aria-label="Just one rider"></span></div>
     <button class="btn btn-secondary dbtn">Mark seen</button>
     <div style="flex:1"></div>
@@ -780,7 +782,7 @@
   <div class="ph-top"><span class="venue-chip"><i style="width:14px;height:14px;background:var(--primary);border-radius:4px;display:inline-block"></i>RideNite</span><span>Step 1 of 5</span></div>
   <h1 class="h1" style="font-size:32px">Rides home on the tab.</h1>
   <p class="body small muted" style="margin:0">A guest amenity your staff can offer in two taps: any provider, on the check, one statement.</p>
-  <div class="field"><label for="v1">Venue name</label><input class="input" id="v1" value="The Copper Lantern"></div>
+  <div class="field"><label for="v1">Venue name</label><input class="input" id="v1" value="Maison Cheryl"></div>
   <div class="field"><label for="v2">Your name</label><input class="input" id="v2" value="Theo Alvarez"></div>
   <div class="field"><label for="v3">Mobile</label><input class="input" id="v3" value="(555) 010-0175" inputmode="tel"></div>
   <div class="field"><label for="v4">Email</label><input class="input" id="v4" value="theo@example.test" inputmode="email"></div>
@@ -791,9 +793,9 @@
 
 <section class="screen phone" id="S1d" data-title="S1d Signup: Instant demo with venue name">
  <div class="ph" style="gap:12px">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span><span class="sim">DEMO</span></div>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span><span class="sim">DEMO</span></div>
   <h2 class="h2">This is your dashboard</h2>
-  <p class="body muted small" style="margin:0">Here's how The Copper Lantern looks to your guests: "Your ride home, on your tab." Try a sample tab.</p>
+  <p class="body muted small" style="margin:0">Here's how Maison Cheryl looks to your guests: "Your ride home, on your tab." Try a sample tab.</p>
   <div class="tabcard"><div class="row"><span class="who">Table 7</span><span class="amt">$49.00</span></div><div class="meta">Sample guest A.</div><button class="btn btn-primary">Book a car</button></div>
   <div class="tabcard"><div class="row"><span class="who">Bar 3</span><span class="amt">$36.00</span></div><div class="strip ok"><svg><use href="#i-check"/></svg>Ride complete · $19.00 added</div></div>
   <div class="spacer"></div>
@@ -802,17 +804,17 @@
  </div>
 </section>
 
-<section class="screen phone" id="S2" data-title="S2 Signup: Find your venue (NY license type-ahead)">
+<section class="screen phone" id="S2" data-title="S2 Signup: Find your venue (Virginia ABC license type-ahead)">
  <div class="ph" style="gap:12px">
   <div class="ph-top"><span class="venue-chip">RideNite</span><span>Step 2 of 5</span></div>
   <h2 class="h2">Find your venue</h2>
-  <div class="field"><label for="lic">Name or address</label><input class="input" id="lic" value="copper lan"></div>
-  <p class="muted small" style="margin:0">Active NY liquor licenses</p>
-  <button class="choice selected" data-go="S3"><svg class="ico"><use href="#i-check"/></svg><div><b>The Copper Lantern</b><span>142 N 6th St, Brooklyn · On-premises</span></div></button>
-  <button class="choice" data-go="S3"><svg class="ico"><use href="#i-pin"/></svg><div><b>Copper Lane Kitchen</b><span>88 Sample Ave, Queens · Restaurant</span></div></button>
+  <div class="field"><label for="lic">Name or address</label><input class="input" id="lic" value="maison ch"></div>
+  <p class="muted small" style="margin:0">Active Virginia ABC licenses (sample records)</p>
+  <button class="choice selected" data-go="S3"><svg class="ico"><use href="#i-check"/></svg><div><b>Maison Cheryl</b><span>2900 Wilson Blvd, Suite 104, Arlington · Restaurant (on-premises)</span></div></button>
+  <button class="choice" data-go="S3"><svg class="ico"><use href="#i-pin"/></svg><div><b>Maison Sample Café (fictional)</b><span>100 Sample St, Arlington · Restaurant</span></div></button>
   <div class="spacer"></div>
   <button class="textlink">I can't find it</button>
-  <p class="fict">Listings shown are fictional sample records.</p>
+  <p class="fict">Sample records. Maison Cheryl is shown as an illustrative example and is not a live RideNite partner.</p>
  </div>
 </section>
 
@@ -858,7 +860,7 @@
   <h2 class="h2">Who's signing?</h2>
   <div class="field"><label for="sn">Your name</label><input class="input" id="sn" value="Theo Alvarez"></div>
   <div class="field"><label for="st">Title</label><input class="input" id="st" value="Owner"></div>
-  <label class="card" style="display:flex;gap:14px;align-items:flex-start;font-size:19px;cursor:pointer"><input type="checkbox" style="width:32px;height:32px;flex:none;margin-top:2px"> <span>I'm authorized to sign for Copper Lantern Hospitality LLC and agree to the <u>Venue Partner Agreement</u> and <u>ACH Debit Authorization</u>.</span></label>
+  <label class="card" style="display:flex;gap:14px;align-items:flex-start;font-size:19px;cursor:pointer"><input type="checkbox" style="width:32px;height:32px;flex:none;margin-top:2px"> <span>I'm authorized to sign for the venue's operating company (sample) and agree to the <u>Venue Partner Agreement</u> and <u>ACH Debit Authorization</u>.</span></label>
   <p class="small muted" style="margin:0">$199/month plus $1 per ride. First month free. [Draft pricing]</p>
   <div class="spacer"></div>
   <button class="btn btn-primary" data-go="S5">Agree and go live tonight</button>
@@ -868,14 +870,14 @@
 
 <section class="screen phone" id="S5" data-title="S5 Signup: You're live tonight (capped)">
  <div class="ph" style="gap:12px">
-  <div class="ph-top"><span class="venue-chip">The Copper Lantern</span><span class="pill warn">Provisional</span></div>
+  <div class="ph-top"><span class="venue-chip">Maison Cheryl</span><span class="pill warn">Provisional</span></div>
   <h2 class="h2">You're live tonight</h2>
   <p class="body muted small" style="margin:0">Up to 10 rides or $300 tonight, after the staff video.</p>
   <button class="banner info" style="text-align:left;color:var(--text);cursor:pointer" data-go="S6"><svg class="ico" style="color:var(--info)"><use href="#i-lock"/></svg><span>Connect your bank to remove the limit. <u>2 minutes</u></span></button>
   <button class="choice"><svg class="ico"><use href="#i-receipt"/></svg><div><b>Add the POS item</b><span>2 min · video</span></div></button>
   <button class="choice"><svg class="ico"><use href="#i-phone"/></svg><div><b>Watch the 5-minute staff video</b><span>Required before your first real ride, then send it to your team by text</span></div></button>
   <button class="choice"><svg class="ico"><use href="#i-car"/></svg><div><b>Book a free test ride</b><span>See the whole flow once</span></div></button>
-  <button class="choice"><svg class="ico"><use href="#i-bar"/></svg><div><b>Recommended: NY ATAP alcohol training</b><span>The SLA's recommended course. RideNite pays up to $20 per staff member. See SLA-listed courses</span></div></button>
+  <button class="choice"><svg class="ico"><use href="#i-bar"/></svg><div><b>Recommended: Virginia ABC RSVP training</b><span>Responsible Sellers &amp; Servers: Virginia's Program. Free from Virginia ABC, online or in person. See ABC-certified courses</span></div></button>
   <div class="spacer"></div>
   <p class="small muted" style="margin:0">A RideNite rep will call within 24 hours.</p>
  </div>
