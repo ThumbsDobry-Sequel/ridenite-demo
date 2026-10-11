@@ -29,9 +29,9 @@ for (const fake of ['2026-10-11T12:00:00Z', '2026-12-03T20:15:00Z']) { // Sun 8:
 }
 
 /** Team lead (Oct 11): with no stored confirm record (fresh storage), the pitch export's fallback reads the story time, untagged. */
-test('pitch demo: fresh storage, browser clock 8:00 AM ET: g10/g12/g18 and /g/p9 read "Confirmed by guest, 11:26 PM"', async ({ browser }) => {
+test('pitch demo: fresh storage, browser clock 8:00 AM ET: g10/g12/g18 and /g/p9 read "Confirmed by guest, 11:26 PM"', async ({ browser, viewport, baseURL }) => {
   for (const route of ['/g/p9', '/g/inbox', '/g/m1']) {
-    const ctx = await browser.newContext(); // fresh storage, no confirm record
+    const ctx = await browser.newContext({ viewport, baseURL }); // fresh storage, no confirm record, same width as the project
     const page = await ctx.newPage();
     await page.clock.install({ time: new Date('2026-10-11T12:00:00Z') });
     await page.goto(`/pitch/demo/#${route}`);
