@@ -20,7 +20,7 @@ CI: `.github/workflows/ci.yml` runs lint:copy, then build, then test. A failing 
 
 ## Where things live
 
-- `src/venue.config.ts`: every venue value (Maison Cheryl: name, address, menu, 11% tax, $21.00 quote, driver, guest). Swap venues here only.
+- `src/venue.config.ts`: every venue value (Maison Cheryl: name, address, menu, 11% tax, $21.00 quote, driver, guest), plus the venue words and date settings: `terms` (bill noun "tab", staff role "bartender"; screens read them as `T.bill`, `T.staff`), `nightHeading`, `nightCutoffHour` (6), `holdHours` (24). Swap venues here only. `tests/e2e/copy-snapshot.spec.ts` compares the rendered text of 48 screens against `tests/golden/copy-snapshot.json` at a fixed clock (Sat Oct 10, 10:30 PM ET); regenerate with `UPDATE_COPY=1` only for intended copy changes.
 - `src/store/types.ts`: the `DemoStore` interface. App code depends only on it. `InMemoryStore` is the v1 implementation; a backend store can replace it later.
 - `src/lib/fare.ts`: cap = lesser of 20% of quote or $5.00; reconciliation; P9 totals (tip on drinks and food only).
 - `src/lib/rideState.ts`: ride stage derived from `bookedAt` (compressed demo timeline). `src/lib/handoff.ts`: base64url link with tab, entry point, quote and bookedAt so a second phone shows the same status (`#/h?d=...`).
@@ -39,7 +39,7 @@ CI: `.github/workflows/ci.yml` runs lint:copy, then build, then test. A failing 
 
 - Routes: `/#/b` (B0 welcome, then B1 Tonight), `/#/b/new` (B2 who asked), `/#/b/book?tab=` (B3 book: link, QR or staff-saw-price modes; Book needs a quote AND "Guest saw the price"), `/#/b/booked`, `/#/b/live` (B4), `/#/b/history` (B5), `/#/b/tab?tab=` (B6), `/#/b/plate?tab=` (B9), `/#/b/help` (B10), `/#/b/more`, `/#/b/settings` (B8 with Reset). Menu > "Switch to bartender view" / "Switch to guest view". At 768 px and wider, sheets open as a right drawer over Tonight.
 - No free text on bar screens. New guests come from the sample list in `venue.config.ts`.
-- B6: ride lines post only once a driver accepts; adjustment is its own line; tip base excludes the ride.
+- B6: ride lines post only at pickup; adjustment is its own line; tip base excludes the ride.
 
 ## Ride status and charge timing (SCOPE 21:39, 22:22, 22:28, 22:29)
 
@@ -48,7 +48,8 @@ CI: `.github/workflows/ci.yml` runs lint:copy, then build, then test. A failing 
 - The fare line and "Confirmed by guest, h:mm PM" post at PICKUP, not accept. No driver: "Requested by guest, h:mm PM. No driver found. Not charged." Driver accepts then cancels: "Requested by guest, h:mm PM. Driver cancelled. Not charged." Demo controls: force no driver, driver accepts then cancels, force stale quote.
 - Quotes are valid 5 minutes (`QUOTE_VALID_MS`). Keep looking after that shows the new price and needs a new slide; never a silent rebook.
 - Confirm shows "You pay the final fare, never more than $X unless you approve a change." (X = live quote + cap).
-- Receipt / night summary: "[Night date]. Tab closed. Ride home on your tab." right before the ride line, only after pickup. The marketing tagline is not used in the app.
+- Receipt / night summary: "[Night date]. Tab closed. Ride home on your tab." right before the itemized ride line, only after pickup.
+- Morning receipt (P9, M1) itemized ride line, after pickup only: "RideNite car home, [pickup area] area to [drop-off area] area, picked up h:mm PM, $XX.XX". Areas, never street addresses (pickup = venue neighborhood, drop-off = neighborhood of the ride's destination area). The fare is the final ride total on the tab (quote + adjustment + any approved over-cap amount): $24.60 in the default sample, $27.40 in the over-cap-approved scenario. The marketing tagline is not used in the app.
 - Bar: B6 shows the POS line "RideNite car home, [area] area, [pickup time]"; the guest record is shown separately as the RideNite record, never on the POS line. Closing a tab with a ride not yet picked up shows "Ride pending pickup"; it finishes closing at pickup (ride line posts) or closes clean on cancel, inside the 24 h hold.
 
 ## Dates (device clock, America/New_York)

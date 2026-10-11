@@ -29,7 +29,15 @@ await shot('P2', '#/g/p2');
 await shot('P2t', '#/g/p2t', async () => { await page.fill('#addr', '655 harison'); });
 await shot('P2t-location', '#/g/p2t', async () => { await page.fill('#addr', ''); await page.click('[data-testid=use-location]'); });
 await shot('P3-confirm', '#/g/p3');
-await page.click('[data-testid=confirm]');
+{ // hold and slide (M2 confirm): drag the thumb past 70%
+  const t = await page.locator('[data-testid=confirm]').boundingBox();
+  const b = await page.locator('[data-testid=confirm-thumb]').boundingBox();
+  const inset = b.x - t.x, travel = t.width - b.width - inset * 2;
+  const x0 = b.x + b.width / 2, y = b.y + b.height / 2;
+  await page.mouse.move(x0, y); await page.mouse.down();
+  await page.mouse.move(x0 + travel * 0.95, y, { steps: 12 }); await page.mouse.up();
+  await page.waitForTimeout(400);
+}
 await shot('P4-undo', '#/g/p4');
 await page.evaluate(() => { const s = window.__ridenite.store; const r = s.getState().ride; s.getState().ride.bookedAt = Date.now() - 1; s.tick(); });
 await shot('P4-requested', '#/g/p4');
