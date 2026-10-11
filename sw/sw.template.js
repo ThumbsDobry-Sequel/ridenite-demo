@@ -22,6 +22,8 @@ self.addEventListener('message', (e) => { if (e.data === 'version') e.source && 
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  // The unlisted /pitch/ page and its video are served straight from the network (range requests for video).
+  if (new URL(req.url).pathname.startsWith('/pitch')) return;
   e.respondWith(
     fetch(req, { cache: 'no-store' })
       .then((res) => {
