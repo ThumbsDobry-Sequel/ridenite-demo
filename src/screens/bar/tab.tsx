@@ -13,6 +13,7 @@ import { Chip, Sheet } from '../../components/primitives';
 import type { BarSettings, FareScenario } from '../../store/types';
 import { barRideHeadline, barStatus, EP_LABEL, HeaderBook, SheetHead, tabCents, toGuest } from './common';
 import { startBooking } from './tonight';
+import { rideRef } from '../../lib/checkLines';
 
 /* B6 tab detail, B9 plate card, B10 quiet request, More, B8 settings (trimmed). */
 
@@ -44,7 +45,7 @@ export function B6({ route }: { route: Route }) {
   const tot = tabTotals({
     items: tabItems(t.items), taxRate: venue.taxRate, tabLineName: s.bar.settings.tabLineName,
     rideLineName: ride ? barRideLineName(ride.dest, pickupAt(ride), fmtET) : undefined,
-    ride: ride && charged ? { quoteCents: ride.quoteCents, finalCents: done ? venue.finalFareCents[ride.scenario] : null, overCapAnswer: isGuestRide ? s.overCapAnswer : null } : null,
+    ride: ride && charged ? { quoteCents: ride.quoteCents, finalCents: done ? venue.finalFareCents[ride.scenario] : null, overCapAnswer: isGuestRide ? s.overCapAnswer : null, rideId: rideRef(ride.id), pickupMs: pickupAt(ride) } : null,
   });
   const rec = ride ? barConfirmLine(s, ride) : null;
   const st = ride && stage ? barStatus(stage, ride) : null;
@@ -54,14 +55,14 @@ export function B6({ route }: { route: Route }) {
       <table className="btab" data-testid="b6-lines">
         <tbody>
           {tot.lines.map((l, i) => (
-            <tr key={i} data-testid={`b6-${l.kind}`} className={`btab__${l.kind}`}>
+            <tr key={i} data-testid={`b6-${l.type}`} data-kind={l.kind} data-ride-id={l.rideId} className={`btab__${l.type}`}>
               <th scope="row">
-                {l.kind === 'item' && l.qty! > 1 ? `${l.name} x${l.qty}` : l.name}
-                {l.kind === 'ride_quote' && ride && (
+                {l.type === 'item' && l.qty! > 1 ? `${l.name} x${l.qty}` : l.name}
+                {l.type === 'ride_quote' && ride && (
                   <span className="foot btab__note">{EP_LABEL[ride.entryPoint]} · quoted fare</span>
                 )}
               </th>
-              <td className="num">{l.kind === 'ride_adjustment' || l.kind === 'ride_credit' ? fmtSigned(l.cents) : l.kind === 'ride_held' ? `(${fmt(l.cents)})` : fmt(l.cents)}</td>
+              <td className="num">{l.type === 'ride_adjustment' || l.type === 'ride_credit' ? fmtSigned(l.cents) : l.type === 'ride_held' ? `(${fmt(l.cents)})` : fmt(l.cents)}</td>
             </tr>
           ))}
           <tr className="btab__total" data-testid="b6-total"><th scope="row">Total before tip</th><td className="num">{fmt(tot.totalBeforeTipCents)}</td></tr>

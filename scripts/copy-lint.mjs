@@ -19,7 +19,7 @@ export const SAFE = /\bsafe\b|unsafe/i;
 /** Standalone 'lit' reads as alcohol related (founder, Oct 10). Whole word only: little, split, literally pass. */
 export const LIT = /\blit\b/i;
 /** Harper legal items (money-promises memo): whole word or phrase. */
-export const LEGAL = /\bguarantee\b|\bguaranteed\b|\binsured\b|\bprotection plan\b|\bzero risk\b/i;
+export const LEGAL = /\bguarantee\b|\bguaranteed\b|\binsured\b|\bprotection plan\b|\bzero risk\b|\bnever hit the bar\b|\bnever reach the bar\b|\boff the bar['\u2019]s account\b|\bcannot dispute\b|\bcan['\u2019]t dispute\b|\bno disputes after\b/i;
 export const APPROVED = [
   'If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment.',
   // same approved sentence with the venue bill noun read from venue.config.ts (renders identically)

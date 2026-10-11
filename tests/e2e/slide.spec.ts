@@ -510,7 +510,7 @@ test('morning receipt itemized ride line: areas, pickup time and the final ride 
   await expect(page.getByTestId('ride-item')).toContainText(want);
   await expect(page.getByTestId('total')).toHaveText('$91.59');
   // the itemized fare equals the ride lines on the tab: quote + adjustment
-  const amts = await page.locator('[data-testid=ride-line] .amt, [data-testid=adj-line] .amt').allInnerTexts();
+  const amts = await page.locator('[data-testid=ride-line] .amt, [data-testid=adj-line] .amt, [data-testid=stop-line] .amt').allInnerTexts();
   const cents = amts.map((t) => Math.round(Math.abs(parseFloat(t.replace(/[^0-9.]/g, ''))) * 100) * (/[-\u2212]/.test(t) ? -1 : 1));
   expect(cents.reduce((a, b) => a + b, 0)).toBe(2740);
   // areas, never full street addresses
@@ -528,4 +528,60 @@ test('no itemized ride line before pickup or without a ride', async ({ page }) =
   await page.evaluate(() => { location.hash = '/g/p9'; });
   await expect(page.getByTestId('ride-item')).toHaveCount(0);
   await expect(page.getByTestId('night-tagline')).toHaveCount(0);
+});
+
+for (const [label, iso] of [['Sat 10:52 PM', '2026-10-11T02:52:00Z'], ['Sun 9:30 AM', '2026-10-11T13:30:00Z']] as const) {
+  test(`morning heading at ${label} ET reads "Night of Sat, Oct 10" (never "Last night")`, async ({ page }) => {
+    await page.clock.install({ time: new Date(iso) });
+    await open(page, '/g/p9');
+    await expect(page.getByTestId('night-heading')).toHaveText('Night of Sat, Oct 10');
+    await expect(page.locator('h1')).not.toContainText('Last night');
+  });
+}
+
+test('morning receipt split: Bar sales $64.19 + RideNite rides $27.40 = $91.59 (over-cap approved), each section with its own question', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-10-11T02:30:00Z') });
+  await open(page, '/g/p9');
+  await page.evaluate(() => { const s = (window as any).__ridenite.store; s.setFareScenario('over'); s.setOverCapAnswer('yes'); });
+  const cents = async (id: string) => Math.round(parseFloat((await page.getByTestId(id).innerText()).replace(/[^0-9.]/g, '')) * 100);
+  await expect(page.getByTestId('bar-subtotal')).toHaveText('$64.19');
+  await expect(page.getByTestId('ride-subtotal')).toHaveText('$27.40');
+  await expect(page.getByTestId('total')).toHaveText('$91.59');
+  expect([await cents('bar-subtotal'), await cents('ride-subtotal'), await cents('total')]).toEqual([6419, 2740, 9159]);
+  expect((await cents('bar-subtotal')) + (await cents('ride-subtotal'))).toBe(await cents('total'));
+  const bar = page.getByTestId('bar-section'), ride = page.getByTestId('ride-section');
+  // tax and tip live in bar sales only
+  await expect(bar.getByTestId('tax')).toBeVisible();
+  await expect(bar.getByTestId('tip-amt')).toBeVisible();
+  await expect(ride.getByTestId('tax')).toHaveCount(0);
+  await expect(ride.getByTestId('tip-amt')).toHaveCount(0);
+  // ride lines: quote, adjustment within the cap, approved stop
+  await expect(ride.getByTestId('ride-line').locator('.amt')).toHaveText('$21.00');
+  await expect(ride.getByTestId('adj-line').locator('.amt')).toHaveText('+$4.20');
+  await expect(ride.getByTestId('stop-line').locator('.amt')).toHaveText('+$2.20');
+  await expect(ride.getByTestId('ride-id')).toContainText(/Ride ID RN-[0-9A-Z]{6}/);
+  // each section has its own question path
+  await expect(bar.getByTestId('bar-question')).toHaveText('Questions about drinks or food go to Maison Cheryl.');
+  await expect(ride.getByTestId('ride-question')).toContainText('Ride charge look wrong? Tap here.');
+  await ride.getByTestId('ride-question').tap();
+  await expect(page).toHaveURL(/#\/g\/p10$/);
+  // M1 email carries the same split
+  await nav(page, '/g/m1');
+  await expect(page.getByTestId('bar-subtotal')).toHaveText('$64.19');
+  await expect(page.getByTestId('ride-subtotal')).toHaveText('$27.40');
+  await expect(page.getByTestId('total')).toHaveText('$91.59');
+  await expect(page.getByTestId('ride-section').getByTestId('ride-id')).toContainText(/Ride ID RN-[0-9A-Z]{6}/);
+  await expect(page.getByTestId('bar-section').getByTestId('bar-question')).toBeVisible();
+  await expect(page.getByTestId('ride-section').getByTestId('ride-question')).toBeVisible();
+});
+
+test('morning receipt split, standard sample night (no stop): $64.19 + $24.60 = $88.79 in cents', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-10-11T02:30:00Z') });
+  await open(page, '/g/p9');
+  const cents = async (id: string) => Math.round(parseFloat((await page.getByTestId(id).innerText()).replace(/[^0-9.]/g, '')) * 100);
+  expect(await cents('bar-subtotal')).toBe(6419);
+  expect(await cents('ride-subtotal')).toBe(2460);
+  expect(await cents('total')).toBe(8879);
+  expect((await cents('bar-subtotal')) + (await cents('ride-subtotal'))).toBe(await cents('total'));
+  await expect(page.getByTestId('stop-line')).toHaveCount(0);
 });

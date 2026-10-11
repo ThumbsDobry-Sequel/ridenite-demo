@@ -194,6 +194,10 @@ img { max-width: 100%; }
 .inv td.amt, .inv th.amt { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; width: 6.5rem; }
 .inv tr.sec th { font-weight: var(--w-heavy); padding-top: var(--s4); border-bottom: 0; font-size: var(--t-footnote); text-transform: uppercase; letter-spacing: var(--track-wide); color: var(--text-2); }
 .inv tr.total th, .inv tr.total td { font-weight: var(--w-heavy); font-size: var(--t-title-2); border-bottom: 0; padding-top: var(--s3); }
+.inv tr.sec--sub th { padding-top: var(--s2); font-weight: var(--w-bold); text-transform: none; letter-spacing: 0; }
+.inv tr.subtotal th, .inv tr.subtotal td { font-weight: var(--w-bold); }
+.inv td.sec-foot { font-size: var(--t-footnote); color: var(--text-2); border-bottom: 0; }
+.inv tbody + tbody tr.sec th { padding-top: var(--s6); }
 .inv .note { display: block; font-size: var(--t-footnote); color: var(--text-2); }
 .seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); }
 .seg button { min-height: var(--tap-guest); border-radius: var(--r-control); border: var(--border-w) solid var(--border); background: var(--surface); color: var(--text); font-size: var(--t-callout); font-weight: var(--w-bold); cursor: pointer; }

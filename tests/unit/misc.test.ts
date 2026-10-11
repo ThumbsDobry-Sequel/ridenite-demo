@@ -67,6 +67,8 @@ describe('copy lint', () => {
     for (const t of ['Rides are Guaranteed', 'Every ride is insured', 'Add a Protection Plan', 'Zero risk for the bar', 'A guarantee.']) expect(lintText(t).length, t).toBeGreaterThan(0);
     for (const t of ['uninsuredish', 'zero risky']) expect(lintText(t).filter((p) => /insured|zero risk/i.test(p.match)).length, t).toBe(0);
     expect(lintText('No liability for the bar')).toHaveLength(1);
+    // bar vs RideNite split (SCOPE 23:01): no claims that ride disputes stay off the bar
+    for (const t of ['Ride disputes Never Hit The Bar.', 'Chargebacks never reach the bar', "Disputes stay off the bar's account", 'Kept off the bar\u2019s account', 'You cannot dispute this', "You can't dispute it later", 'You can\u2019t dispute', 'No disputes after Friday']) expect(lintText(t).length, t).toBeGreaterThan(0);
   });
   it('allows the two approved unsafe strings only', () => {
     expect(lintText('If you feel unsafe or just need to get home, you can put your ride home on your bar tab. No app, no phone, no separate payment.')).toHaveLength(0);

@@ -30,6 +30,11 @@ export const venue = {
   nightCutoffHour: 6,
   /** Card hold window in hours (Toast-style POS hold). The charge time must land inside it. */
   holdHours: 24,
+  /** Owner payouts (data only, no guest copy, no UI yet). Each ride line's payout return window ends this many
+   *  calendar days after the ride's pickup date (ET). */
+  payoutReturnWindowDays: 90,
+  /** Business days (Mon to Fri, ET, no holiday calendar) the bar has after receiving a dispute notice. Data only. */
+  disputeNoticeBusinessDays: 3,
   pickupSpot: 'front door, N Fillmore St',
   pickupShort: 'Front door, N Fillmore St.',
   /** Fictional 555-01xx number. */
@@ -68,6 +73,8 @@ export const venue = {
   quoteCents: 2100,
   e2NewQuoteCents: 2350,
   finalFareCents: { higher: 2460, lower: 1890, equal: 2100, over: 2740 },
+  /** Fictional RideNite ride ID for the seeded sample ride (shown on the receipt ride line detail). */
+  sampleRideId: 'RN-7Q4K2M',
   overCapReason: 'You added a stop at 11:28 PM',
   etaMinutes: 6,
 

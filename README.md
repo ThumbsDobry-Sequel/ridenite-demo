@@ -53,6 +53,15 @@ CI: `.github/workflows/ci.yml` runs lint:copy, then build, then test. A failing 
 - Morning receipt (P9, M1) itemized ride line, after pickup only: "RideNite car home, [pickup area] area to [drop-off area] area, picked up h:mm PM, $XX.XX". Areas, never street addresses (pickup = venue neighborhood, drop-off = neighborhood of the ride's destination area). The fare is the final ride total on the tab (quote + adjustment + any approved over-cap amount): $24.60 in the default sample, $27.40 in the over-cap-approved scenario. The marketing tagline is not used in the app.
 - Bar: B6 shows the POS line "RideNite car home, [area] area, [pickup time]"; the guest record is shown separately as the RideNite record, never on the POS line. Closing a tab with a ride not yet picked up shows "Ride pending pickup"; it finishes closing at pickup (ride line posts) or closes clean on cancel, inside the 24 h hold.
 
+## Bar vs RideNite split (SCOPE 23:01)
+
+- Every line carries a kind, `'bar'` or `'ride'`: B6 tab lines (`TabLine.kind`, with `type` for item, tax or ride line) and the guest check (`src/lib/checkLines.ts`). Ride lines carry a fictional ride ID (`RN-xxxxxx`; the sample ride is `venue.sampleRideId`), shown on the receipt ride line detail.
+- P9 and M1 show two sections with subtotals. Bar sales covers drinks, food, 11% tax and the tip for bar staff. RideNite rides covers the quote, the adjustment within the cap, and any stop the guest approved over the cap. Subtotals are sums of the lines, so they always equal the check (over-cap approved sample: $64.19 + $27.40 = $91.59). Each section has its own question: drinks and food go to the venue; the ride question uses the approved ride copy.
+- Owner preview data (`src/lib/ownerData.ts`, no UI yet, waits on Riley's mock): `evidencePack()` returns ride lines only, grouped by ride ID; `monthlyStatement()` splits Bar sales and RideNite rides with exact sums. Both are labeled Sample data, and the model has no payout-return or reimbursement field.
+- Payout data (`src/lib/payouts.ts`, owner only, never shown to guests): ride lines carry `returnWindowEnds` = pickup date (ET) + `payoutReturnWindowDays` (90) calendar days. The statement status chip (muted, never amber) reads "Return window open until Jan 8", then "Payout final". Eligibility for a payout return is keyed on the processor's dispute notice date: notice date <= pickup date + 90 days AND evidence filed before the processor deadline (`payoutReturnEligible()`). `sampleOwnerRides(now)` seeds Sample data rides relative to now, some past 90 days and some recent. `disputeNoticeDue()` = notice date + `disputeNoticeBusinessDays` (3) business days, Mon to Fri, no holiday calendar (data only). Copy lint also bans "cannot dispute", "can't dispute" and "no disputes after".
+- Sample nights: standard $64.19 + $24.60 = $88.79; approved stop $64.19 + $27.40 = $91.59.
+- Copy lint also bans "never hit the bar", "never reach the bar" and "off the bar's account".
+
 ## Theme (design rev 04.1)
 
 - `src/theme/tokens.css`: Vera's night palette (`design/moodboard/palette-tokens-draft.css`) merged into Riley's token names; nothing renamed, NEW tokens added, `--font-venue` removed. No web fonts (no Libre Baskerville).
@@ -62,6 +71,7 @@ CI: `.github/workflows/ci.yml` runs lint:copy, then build, then test. A failing 
 ## Dates (device clock, America/New_York)
 
 - Night date = today, except 00:00 to 05:59 counts as the previous date (`src/lib/night.ts`).
+- Morning heading: "Night of Sat, Oct 10", the night date of the tab-open time, so it reads true the same night and the next morning.
 - Seeding is relative to now: the tab opens now minus 4 h (to the minute); sample times sit between open and now; a live booking happens at now.
 - Charge time (`src/lib/hold.ts`): next 11:00 AM ET if it is in the future and less than 24 h after open, else the latest whole hour at least 1 h before open + 24 h. Shown as "charged Sun, Oct 11 at 11:00 AM"; never "today" or "tomorrow".
 

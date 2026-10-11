@@ -44,5 +44,11 @@ export function sampleNightTimes(openedAt: number, now: number) {
 const SHORT = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' });
 /** "Sat Oct 10" (no comma, matches the receipt heading style) */
 export const nightShort = (now: number): string => SHORT.format(new Date(Date.UTC(nightDate(now).y, nightDate(now).m - 1, nightDate(now).d, 12))).replace(',', '');
+/** Morning heading, true at any hour: "Night of Sat, Oct 10". Pass the tab-open time: the night date
+ *  (venue cutoff hour) of when the night started, so a Sunday-morning review still names Saturday. */
+export const nightOfHeading = (t: number): string => {
+  const n = nightDate(t);
+  return `Night of ${SHORT.format(new Date(Date.UTC(n.y, n.m - 1, n.d, 12)))}`;
+};
 /** "Sat" */
 export const nightWeekday = (now: number): string => nightShort(now).split(' ')[0];

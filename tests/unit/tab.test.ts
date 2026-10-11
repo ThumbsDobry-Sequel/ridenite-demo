@@ -25,43 +25,43 @@ describe('B6 tab line math (POS 3a, Maison Cheryl sample)', () => {
   });
   it('quoted fare is its own line before the final fare is in', () => {
     const t = tabTotals({ ...base, ride: { quoteCents: 2100, finalCents: null } });
-    const l = t.lines.find((x) => x.kind === 'ride_quote')!;
+    const l = t.lines.find((x) => x.type === 'ride_quote')!;
     expect(l.name).toBe('Courtesy car, quoted fare');
     expect(l.cents).toBe(2100);
     expect(t.totalBeforeTipCents).toBe(7539);
-    expect(t.lines.filter((x) => x.kind === 'ride_adjustment' || x.kind === 'ride_credit')).toHaveLength(0);
+    expect(t.lines.filter((x) => x.type === 'ride_adjustment' || x.type === 'ride_credit')).toHaveLength(0);
   });
   it('higher fare: +$3.60 adjustment as a separate line, total $78.99', () => {
     const t = ride('higher');
-    const adj = t.lines.find((x) => x.kind === 'ride_adjustment')!;
+    const adj = t.lines.find((x) => x.type === 'ride_adjustment')!;
     expect(adj.name).toBe('Ride fare adjustment (final fare $24.60, quoted $21.00)');
     expect(adj.cents).toBe(360);
-    expect(t.lines.find((x) => x.kind === 'ride_quote')!.cents).toBe(2100);
+    expect(t.lines.find((x) => x.type === 'ride_quote')!.cents).toBe(2100);
     expect(t.totalBeforeTipCents).toBe(7899);
   });
   it('lower fare: -$2.10 credit as a separate line, total $73.29', () => {
     const t = ride('lower');
-    const c = t.lines.find((x) => x.kind === 'ride_credit')!;
+    const c = t.lines.find((x) => x.type === 'ride_credit')!;
     expect(c.cents).toBe(-210);
     expect(c.name).toBe('Ride fare credit (final fare $18.90, quoted $21.00)');
     expect(t.totalBeforeTipCents).toBe(7329);
   });
   it('equal fare: no adjustment line', () => {
     const t = ride('equal');
-    expect(t.lines.filter((x) => x.kind === 'ride_adjustment' || x.kind === 'ride_credit')).toHaveLength(0);
+    expect(t.lines.filter((x) => x.type === 'ride_adjustment' || x.type === 'ride_credit')).toHaveLength(0);
     expect(t.totalBeforeTipCents).toBe(7539);
   });
   it('over cap: $4.20 posted, $2.20 held and never in the bar total ($79.59)', () => {
     const t = ride('over');
-    expect(t.lines.find((x) => x.kind === 'ride_adjustment')!.cents).toBe(420);
-    expect(t.lines.find((x) => x.kind === 'ride_held')!.cents).toBe(220);
+    expect(t.lines.find((x) => x.type === 'ride_adjustment')!.cents).toBe(420);
+    expect(t.lines.find((x) => x.type === 'ride_held')!.cents).toBe(220);
     expect(t.heldCents).toBe(220);
     expect(t.rideCents).toBe(2520);
     expect(t.totalBeforeTipCents).toBe(7959);
   });
   it('over cap, guest said no: held part dropped, still $79.59', () => {
     const t = ride('over', 'no');
-    expect(t.lines.some((x) => x.kind === 'ride_held')).toBe(false);
+    expect(t.lines.some((x) => x.type === 'ride_held')).toBe(false);
     expect(t.totalBeforeTipCents).toBe(7959);
   });
   it('tip base is drinks and food only ($49.00), in every scenario', () => {
@@ -70,7 +70,7 @@ describe('B6 tab line math (POS 3a, Maison Cheryl sample)', () => {
   });
   it('tab line name follows the setting', () => {
     const t = tabTotals({ ...base, tabLineName: 'RideNite Ride', ride: { quoteCents: 2100, finalCents: null } });
-    expect(t.lines.find((x) => x.kind === 'ride_quote')!.name).toBe('RideNite Ride, quoted fare');
+    expect(t.lines.find((x) => x.type === 'ride_quote')!.name).toBe('RideNite Ride, quoted fare');
   });
   it('groups repeated items with a count', () => {
     const t = tabTotals({ items: tabItems([['Old Fashioned', 3]]), taxRate: 0.11, tabLineName: 'Courtesy car' });

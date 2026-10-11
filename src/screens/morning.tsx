@@ -1,4 +1,4 @@
-import { nightShort, nightWeekday } from '../lib/night';
+import { nightOfHeading, nightWeekday } from '../lib/night';
 import { holdText } from '../lib/hold';
 import type { DemoState } from '../store/types';
 import { useState } from 'react';
@@ -7,6 +7,7 @@ import { navigate } from '../router';
 import { useDemoState, useStore } from '../store';
 import { morningFor, nightTimes } from '../lib/morning';
 import { neighborhood } from '../lib/tab';
+import { checkLines, receiptRideId, splitSubtotals } from '../lib/checkLines';
 import { nightTagline } from '../lib/brand';
 import { noDriverLine, confirmLine, fmtET } from '../lib/confirmRecord';
 import { useNow } from '../hooks';
@@ -90,6 +91,7 @@ export function M1() {
   const m = morningFor(s);
   const N = useN(s);
   const tag = nightTagline(m.hasRide);
+  const split = splitSubtotals(checkLines(s, m));
   return (
     <Screen id="M1">
       <Top back="/g/inbox" ctx="Email" />
@@ -103,18 +105,29 @@ export function M1() {
       </Card>
       <h1 className="h3">Good morning, {venue.guest.first}.</h1>
       <p className="callout">Here's last night's tab from {venue.name}, including your ride home: {N.pickedUp}, {fmt(m.rideCents)}, on your {T.bill}.</p>
-      <table className="inv">
-        <tbody>
+      <table className="inv" data-testid="invoice">
+        <tbody data-testid="bar-section">
+          <tr className="sec"><th colSpan={2} scope="colgroup">Bar sales</th></tr>
           <tr><th scope="row">Drinks and food</th><td className="amt">{fmt(m.tipBaseCents)}</td></tr>
           <tr><th scope="row">{venue.taxLabel}</th><td className="amt">{fmt(m.taxCents)}</td></tr>
-          {tag && <tr data-testid="night-tagline-row"><td colSpan={2} className="night-tagline" data-testid="night-tagline">{tag}</td></tr>}
-          {m.hasRide && <tr data-testid="ride-item"><th scope="row">{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note">{s.bar.settings.tabLineName}, {venue.driver.partner}, {venue.driver.plate}</span></th><td className="amt">{fmt(m.rideCents)}</td></tr>}
           <tr><th scope="row">Staff tip ({s.tipPct}%)</th><td className="amt">{fmt(m.tipCents)}</td></tr>
-          <tr className="total"><th scope="row">Total</th><td className="amt">{fmt(m.totalCents)}</td></tr>
+          <tr className="subtotal"><th scope="row">Bar sales subtotal</th><td className="amt" data-testid="bar-subtotal">{fmt(split.barCents)}</td></tr>
+          <tr><td colSpan={2} className="sec-foot" data-testid="bar-question">Questions about drinks or food go to {venue.name}.</td></tr>
+        </tbody>
+        <tbody data-testid="ride-section">
+          <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
+          {tag && <tr data-testid="night-tagline-row"><td colSpan={2} className="night-tagline" data-testid="night-tagline">{tag}</td></tr>}
+          {m.hasRide
+            ? <tr data-testid="ride-item"><th scope="row">{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note" data-testid="ride-id">Ride ID {receiptRideId(s)}. {s.bar.settings.tabLineName}, {venue.driver.partner}, {venue.driver.plate}</span></th><td className="amt">{fmt(m.rideCents)}</td></tr>
+            : <tr data-testid="no-ride-line"><th scope="row">No ride on this {T.bill}</th><td className="amt">{fmt(0)}</td></tr>}
+          <tr className="subtotal"><th scope="row">RideNite rides subtotal</th><td className="amt" data-testid="ride-subtotal">{fmt(split.rideCents)}</td></tr>
+          <tr><td colSpan={2} className="sec-foot"><RideQuestion /></td></tr>
+        </tbody>
+        <tbody>
+          <tr className="total"><th scope="row">Total</th><td className="amt" data-testid="total">{fmt(split.totalCents)}</td></tr>
         </tbody>
       </table>
       <Button onClick={() => navigate('/g/p9')}>Review and pay</Button>
-      <RideQuestion />
       <p className="foot" data-testid="hold-line">Your card ending {venue.card.last4} is on hold. If you do nothing, it's {holdText(s.tabOpenedAt, s.seededAt)}. Question about a charge? Open Review and tap "Something's wrong."</p>
       <p className="fict">{venue.addressLine}. {venue.disclaimer} SAMPLE: no real charge.</p>
     </Screen>
@@ -133,10 +146,15 @@ export function P9() {
   const adjName = r.postedAdjCents < 0 ? 'Ride fare credit' : 'Ride fare adjustment';
   const N = useN(s);
   const tag = nightTagline(m.hasRide);
+  const lines = checkLines(s, m);
+  const split = splitSubtotals(lines);
+  const rideId = receiptRideId(s);
+  const adj = lines.find((l) => l.type === 'ride_adjustment' || l.type === 'ride_credit');
+  const stop = lines.find((l) => l.type === 'ride_stop');
   return (
     <Screen id="P9" tight>
       <Top left={<VenueChip />} ctx={nowClock()} />
-      <h1 className="h2">Last night, {nightShort(Date.now())}</h1>
+      <h1 className="h2" data-testid="night-heading">{nightOfHeading(s.tabOpenedAt)}</h1>
       <span className="status-pill" data-testid="ready-total">{s.paid ? 'Paid' : 'Ready to review'}: <span className="num">{fmt(m.totalCents)}</span></span>
       <Card>
         <h2 className="h3">Your night</h2>
@@ -150,31 +168,14 @@ export function P9() {
         </ul>
       </Card>
       <table className="inv" aria-label="Itemized bill" data-testid="invoice">
-        <tbody>
-          <tr className="sec"><th colSpan={2} scope="colgroup">Drinks</th></tr>
-          {venue.menu.filter((i) => i.kind === 'drink').map((i) => <tr key={i.name}><th scope="row">{i.name}</th><td className="amt">{fmt(i.cents)}</td></tr>)}
-          <tr className="sec"><th colSpan={2} scope="colgroup">Food</th></tr>
-          {venue.menu.filter((i) => i.kind === 'food').map((i) => <tr key={i.name}><th scope="row">{i.name}</th><td className="amt">{fmt(i.cents)}</td></tr>)}
-          <tr><th scope="row">{venue.taxLabel}<span className="note">{venue.taxNote}</span></th><td className="amt" data-testid="tax">{fmt(m.taxCents)}</td></tr>
-          <tr className="sec"><th colSpan={2} scope="colgroup">Ride</th></tr>
-          {tag && <tr data-testid="night-tagline-row"><td colSpan={2} className="night-tagline" data-testid="night-tagline">{tag}</td></tr>}
-          {m.hasRide && <tr data-testid="ride-item" className="ride-item"><th scope="row" colSpan={2}>{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note">Made up of the lines below.</span></th></tr>}
-          {m.hasRide ? (
-            <tr data-testid="ride-line"><th scope="row">{s.bar.settings.tabLineName}, quoted fare<span className="note">{venue.driver.partner}</span>
-              {cl && <><span className="note confirm-record" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</span><span className="note" data-testid="confirm-record-amounts">{cl.amounts}</span></>}</th><td className="amt">{fmt(m.quoteCents)}</td></tr>
-          ) : (
-            <tr data-testid="no-ride-line"><th scope="row">No ride on this {T.bill}<span className="note">Nothing was added for a ride.</span>
-              {nd && <span className="note" data-testid="no-driver-record">{nd}</span>}</th><td className="amt">{fmt(0)}</td></tr>
-          )}
-          {r.postedAdjCents !== 0 && (
-            <tr data-testid="adj-line"><th scope="row">{adjName} (final fare {fmt(r.finalCents)}, quoted {fmt(r.quoteCents)})<span className="note">{r.postedAdjCents > 0 ? `Within the ${fmt(r.capCents)} you saw before booking.` : 'The fare came in lower than the quote, so this credit lowers your total.'}</span></th><td className="amt">{fmtSigned(r.postedAdjCents)}</td></tr>
-          )}
-          {r.heldCents > 0 && (
-            <tr data-testid="held-line" className="needs-ok-row"><th scope="row"><span className="needs-ok__l"><Icon name="help" /><b>Needs your OK</b></span><span className="note">{fmt(r.heldCents)} over the {fmt(r.capCents)} cap. {venue.overCapReason}. Not charged unless you OK it.</span>
-              <button type="button" className="textlink textlink--inline" onClick={() => navigate('/g/e7')}>Review</button></th><td className="amt">{fmt(0)}</td></tr>
-          )}
-          {r.declinedCents > 0 && <tr><th scope="row">Not charged<span className="note">You said no to the extra {fmt(r.declinedCents)}</span></th><td className="amt">{fmt(0)}</td></tr>}
-          <tr className="sec"><th colSpan={2} scope="colgroup">Tip for bar staff</th></tr>
+        <tbody data-testid="bar-section">
+          <tr className="sec"><th colSpan={2} scope="colgroup">Bar sales</th></tr>
+          <tr className="sec sec--sub"><th colSpan={2} scope="colgroup">Drinks</th></tr>
+          {venue.menu.filter((i) => i.kind === 'drink').map((i) => <tr key={i.name} data-kind="bar"><th scope="row">{i.name}</th><td className="amt">{fmt(i.cents)}</td></tr>)}
+          <tr className="sec sec--sub"><th colSpan={2} scope="colgroup">Food</th></tr>
+          {venue.menu.filter((i) => i.kind === 'food').map((i) => <tr key={i.name} data-kind="bar"><th scope="row">{i.name}</th><td className="amt">{fmt(i.cents)}</td></tr>)}
+          <tr data-kind="bar"><th scope="row">{venue.taxLabel}<span className="note">{venue.taxNote}</span></th><td className="amt" data-testid="tax">{fmt(m.taxCents)}</td></tr>
+          <tr className="sec sec--sub"><th colSpan={2} scope="colgroup">Tip for bar staff</th></tr>
           <tr><td colSpan={2}>
             <div className="seg" role="group" aria-label="Staff tip on drinks and food">
               {venue.tipOptions.map((p) => (
@@ -183,14 +184,41 @@ export function P9() {
             </div>
             <span className="note">Tip is on drinks and food ({fmt(m.tipBaseCents)}), not the ride.</span>
           </td></tr>
-          <tr><th scope="row">Staff tip ({s.tipPct}%)</th><td className="amt" data-testid="tip-amt">{fmt(m.tipCents)}</td></tr>
-          <tr className="total"><th scope="row">Total</th><td className="amt" data-testid="total" aria-live="polite">{fmt(m.totalCents)}</td></tr>
+          <tr data-kind="bar"><th scope="row">Staff tip ({s.tipPct}%)</th><td className="amt" data-testid="tip-amt">{fmt(m.tipCents)}</td></tr>
+          <tr className="subtotal"><th scope="row">Bar sales subtotal</th><td className="amt" data-testid="bar-subtotal">{fmt(split.barCents)}</td></tr>
+          <tr><td colSpan={2} className="sec-foot" data-testid="bar-question">Questions about drinks or food go to {venue.name}.</td></tr>
+        </tbody>
+        <tbody data-testid="ride-section">
+          <tr className="sec"><th colSpan={2} scope="colgroup">RideNite rides</th></tr>
+          {tag && <tr data-testid="night-tagline-row"><td colSpan={2} className="night-tagline" data-testid="night-tagline">{tag}</td></tr>}
+          {m.hasRide && <tr data-testid="ride-item" className="ride-item"><th scope="row" colSpan={2}>{rideItemLine(s, N.pickedUp, m.rideCents)}<span className="note" data-testid="ride-id">Ride ID {rideId}. Made up of the lines below.</span></th></tr>}
+          {m.hasRide ? (
+            <tr data-testid="ride-line" data-kind="ride"><th scope="row">{s.bar.settings.tabLineName}, quoted fare<span className="note">{venue.driver.partner}</span>
+              {cl && <><span className="note confirm-record" data-testid="confirm-record">{cl.text}{cl.sample ? ' (sample data)' : ''}</span><span className="note" data-testid="confirm-record-amounts">{cl.amounts}</span></>}</th><td className="amt">{fmt(m.quoteCents)}</td></tr>
+          ) : (
+            <tr data-testid="no-ride-line"><th scope="row">No ride on this {T.bill}<span className="note">Nothing was added for a ride.</span>
+              {nd && <span className="note" data-testid="no-driver-record">{nd}</span>}</th><td className="amt">{fmt(0)}</td></tr>
+          )}
+          {adj && (
+            <tr data-testid="adj-line" data-kind="ride"><th scope="row">{adjName} (final fare {fmt(r.finalCents)}, quoted {fmt(r.quoteCents)})<span className="note">{adj.cents > 0 ? `Within the ${fmt(r.capCents)} you saw before booking.` : 'The fare came in lower than the quote, so this credit lowers your total.'}</span></th><td className="amt">{fmtSigned(adj.cents)}</td></tr>
+          )}
+          {stop && (
+            <tr data-testid="stop-line" data-kind="ride"><th scope="row">Added stop, approved by you<span className="note">{venue.overCapReason}. You said yes to the extra {fmt(stop.cents)}.</span></th><td className="amt">{fmtSigned(stop.cents)}</td></tr>
+          )}
+          {r.heldCents > 0 && (
+            <tr data-testid="held-line" className="needs-ok-row"><th scope="row"><span className="needs-ok__l"><Icon name="help" /><b>Needs your OK</b></span><span className="note">{fmt(r.heldCents)} over the {fmt(r.capCents)} cap. {venue.overCapReason}. Not charged unless you OK it.</span>
+              <button type="button" className="textlink textlink--inline" onClick={() => navigate('/g/e7')}>Review</button></th><td className="amt">{fmt(0)}</td></tr>
+          )}
+          {r.declinedCents > 0 && <tr><th scope="row">Not charged<span className="note">You said no to the extra {fmt(r.declinedCents)}</span></th><td className="amt">{fmt(0)}</td></tr>}
+          <tr className="subtotal"><th scope="row">RideNite rides subtotal</th><td className="amt" data-testid="ride-subtotal">{fmt(split.rideCents)}</td></tr>
+          <tr><td colSpan={2} className="sec-foot"><RideQuestion /></td></tr>
+        </tbody>
+        <tbody>
+          <tr className="total"><th scope="row">Total</th><td className="amt" data-testid="total" aria-live="polite">{fmt(split.totalCents)}</td></tr>
         </tbody>
       </table>
       {!s.paid && <Button testId="pay" onClick={() => { store.pay(); navigate('/g/p11'); }}>Approve and pay {fmt(m.totalCents)}</Button>}
       <Button variant="secondary" onClick={() => navigate('/g/p10')}>Something's wrong</Button>
-      <RideQuestion />
-      <p className="foot">Questions about drinks or food go to {venue.name}.</p>
       <p className="foot" data-testid="hold-line">Card ending {venue.card.last4} is on hold. If you do nothing, it's {holdText(s.tabOpenedAt, s.seededAt)}.</p>
       <Fict>Fictional sample bill. SAMPLE: no real charge.</Fict>
     </Screen>

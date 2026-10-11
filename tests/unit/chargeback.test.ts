@@ -110,7 +110,7 @@ describe('bar POS tab line', () => {
     const name = barRideLineName({ area: 'Clarendon, Arlington, VA 22201' }, at, fmtET);
     expect(name).toBe('RideNite car home, Clarendon area, 11:52 PM');
     const t = tabTotals({ items: tabItems([['Old Fashioned', 1]] as [string, number][]), taxRate: venue.taxRate, tabLineName: 'Courtesy car', rideLineName: name, ride: { quoteCents: 2100, finalCents: null } });
-    const l = t.lines.find((x) => x.kind === 'ride_quote')!;
+    const l = t.lines.find((x) => x.type === 'ride_quote')!;
     expect(l.name).toBe(name);
     expect(l.name).not.toMatch(/Confirmed by guest/);
   });
@@ -147,5 +147,18 @@ describe('venue words and date settings live in venue.config.ts (Maison Cheryl v
     expect(v.nightCutoffHour).toBe(6);
     expect(v.holdHours).toBe(24);
     expect(HOLD_WINDOW_MS).toBe(24 * 3600_000);
+  });
+});
+
+describe('morning heading "Night of ..." follows the night-date rule (6:00 AM cutoff) on the tab-open time', () => {
+  it('viewed Sat 10:52 PM ET and Sun 9:30 AM ET both read "Night of Sat, Oct 10"', async () => {
+    const { nightOfHeading, seededTabOpen } = await import('../../src/lib/night');
+    const sat1052 = Date.parse('2026-10-11T02:52:00Z'); // tab opened Sat 6:52 PM
+    const sun0930 = Date.parse('2026-10-11T13:30:00Z'); // tab opened Sun 5:30 AM, before the 6:00 AM cutoff
+    expect(nightOfHeading(seededTabOpen(sat1052))).toBe('Night of Sat, Oct 10');
+    expect(nightOfHeading(seededTabOpen(sun0930))).toBe('Night of Sat, Oct 10');
+    // the cutoff itself
+    expect(nightOfHeading(Date.parse('2026-10-11T09:59:00Z'))).toBe('Night of Sat, Oct 10'); // Sun 5:59 AM
+    expect(nightOfHeading(Date.parse('2026-10-11T10:00:00Z'))).toBe('Night of Sun, Oct 11'); // Sun 6:00 AM
   });
 });
