@@ -10,7 +10,7 @@ for (const fake of ['2026-10-11T12:00:00Z', '2026-12-03T20:15:00Z']) { // Sun 8:
     await page.clock.install({ time: new Date(fake) });
     await page.goto('/pitch/demo/#/g/p9');
     await page.locator('[data-screen=P9]').waitFor();
-    await expect(page.getByTestId('confirm-record')).toHaveText('Confirmed by guest, 11:26 PM (sample data)');
+    await expect(page.getByTestId('confirm-record')).toHaveText('Confirmed by guest, 11:26 PM');
     await expect(page.getByTestId('ride-route')).toHaveText('Clarendon area to Westover area, picked up 11:32 PM');
     await expect(page.getByTestId('night-heading')).toHaveText('Saturday night');
     for (const t of await times(page)) expect(t, 'live-clock time on /g/p9').toMatch(/^((6|7|8|9|10|11):\d\d PM|11:00 AM)$/);
@@ -27,3 +27,21 @@ for (const fake of ['2026-10-11T12:00:00Z', '2026-12-03T20:15:00Z']) { // Sun 8:
     await expect(page.locator('main')).toContainText('Adds the $3.10 over the cap you approved.');
   });
 }
+
+/** Team lead (Oct 11): with no stored confirm record (fresh storage), the pitch export's fallback reads the story time, untagged. */
+test('pitch demo: fresh storage, browser clock 8:00 AM ET: g10/g12/g18 and /g/p9 read "Confirmed by guest, 11:26 PM"', async ({ browser }) => {
+  for (const route of ['/g/p9', '/g/inbox', '/g/m1']) {
+    const ctx = await browser.newContext(); // fresh storage, no confirm record
+    const page = await ctx.newPage();
+    await page.clock.install({ time: new Date('2026-10-11T12:00:00Z') });
+    await page.goto(`/pitch/demo/#${route}`);
+    await page.locator('[data-screen]').first().waitFor();
+    await page.goto('/pitch/demo/#/g/p9'); // night summary (g10/g12) and morning review (g18) are the P9 screen
+    await page.locator('[data-screen=P9]').waitFor();
+    const rec = page.getByTestId('confirm-record');
+    await expect(rec).toHaveText('Confirmed by guest, 11:26 PM');
+    await expect(page.locator('main')).not.toContainText('(sample data)');
+    await expect(page.locator('main')).not.toContainText('10:04');
+    await ctx.close();
+  }
+});

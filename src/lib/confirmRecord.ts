@@ -3,6 +3,7 @@ import { venue } from '../venue.config';
 import { fmt } from './money';
 import { sampleNightTimes } from './night';
 import { isChargedStage, rideStage } from './rideState';
+import { NO_CALENDAR_DATES } from '../build-info';
 
 const ET = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' });
 /** Clock time in America/New_York, e.g. "11:42 PM". */
@@ -61,5 +62,7 @@ export function confirmLine(s: DemoState, ride: Ride | null = s.ride, now: numbe
   }
   if (ride && ride.pending) return null;
   if (!ride && guestActivity(s)) return null; // undone: no record line
+  // Pitch export (same flag as pinClock): the fallback is the story time, untagged (team lead, Oct 11). Main app: honest tagged sample.
+  if (NO_CALENDAR_DATES) return { text: 'Confirmed by guest, 11:26 PM', amounts: `Quote ${fmt(venue.quoteCents)}, may differ by up to ${fmt(Math.min(Math.round(venue.quoteCents * 0.2), 500))}, as shown at the time.`, sample: false };
   return { text: `Confirmed by guest, ${fmtET(sampleNightTimes(s.tabOpenedAt, s.seededAt).booked)}`, amounts: `Quote ${fmt(venue.quoteCents)}, may differ by up to ${fmt(Math.min(Math.round(venue.quoteCents * 0.2), 500))}, as shown at the time.`, sample: true };
 }
